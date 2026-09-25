@@ -57,4 +57,4 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 
 | Data | Etapa | Resumo |
 |---|---|---|
-| 2026-09-25 | 1 | Criado projeto, documentação (GDD, arquitetura, AGENTS/CLAUDE), implementação completa da Etapa 1 e PR aberto para revisão do Gemini. |
+| 2026-09-25 | 1 | Criado projeto, documentação (GDD, arquitetura, AGENTS/CLAUDE), implementação completa da Etapa 1. PR #1 aberto para revisão do Gemini. Próximo passo: tratar comentários do Gemini no PR #1; depois do merge, iniciar Etapa 2. |
