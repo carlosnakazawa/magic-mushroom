@@ -34,6 +34,20 @@ function controlsHtml(keys: Settings['keys']): string {
   </div>`;
 }
 
+const TOUCH_HELP = `
+  <div class="controls-help touch-help">
+    <div><b>No celular</b><span>🕹️ Arraste o dedo no lado esquerdo para andar</span><span>✋ <b>Pegar</b>: pegar, soltar e servir</span><span>⭐ <b>Usar</b>: cortar, lavar, anotar, ligar, apagar fogo</span><span>🔄 Troca de herói · ⏸ pausa</span></div>
+  </div>`;
+
+/** Tela cheia + deitado (Android/tablets; no iPhone use "Adicionar à Tela de Início"). */
+function goFullscreen(): void {
+  const el = document.documentElement;
+  void el
+    .requestFullscreen?.({ navigationUI: 'hide' })
+    .then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('landscape'))
+    .catch(() => {});
+}
+
 export interface TitleChoice {
   heroes: HeroDef[];
   players: 1 | 2;
@@ -59,7 +73,10 @@ export class Screens {
   private selected: HeroDef[] = [];
   onSelectionChange: (heroes: HeroDef[]) => void = () => {};
 
-  constructor(parent: HTMLElement) {
+  constructor(
+    parent: HTMLElement,
+    private touch = false,
+  ) {
     this.root = el('div', 'screens');
     parent.appendChild(this.root);
   }
@@ -134,10 +151,11 @@ export class Screens {
     };
     const buttons = el('div', 'buttons');
     const solo = button('▶ Jogar sozinho', 'btn big', () => start(1));
-    const duo = button('👥 Jogar em dupla', 'btn big alt', () => start(2));
+    const duo = button(this.touch ? '👥 Em dupla (com controle)' : '👥 Jogar em dupla', 'btn big alt', () => start(2));
     buttons.append(solo, duo, button('⚙️ Opções', 'btn', onOptions));
+    if (this.touch && document.fullscreenEnabled && !document.fullscreenElement) buttons.append(button('⛶ Tela cheia', 'btn', goFullscreen));
     panel.append(cards, buttons);
-    panel.insertAdjacentHTML('beforeend', controlsHtml(save.settings.keys));
+    panel.insertAdjacentHTML('beforeend', this.touch ? TOUCH_HELP : controlsHtml(save.settings.keys));
     render();
     this.onSelectionChange([...this.selected]);
     solo.focus();
@@ -192,7 +210,7 @@ export class Screens {
     });
     buttons.append(resume, music, button('⚙️ Opções', 'btn', opts.onOptions), button('🔄 Recomeçar o dia', 'btn', opts.onRestart), button('🏠 Menu inicial', 'btn', opts.onMenu));
     panel.append(buttons);
-    panel.insertAdjacentHTML('beforeend', controlsHtml(opts.keys));
+    panel.insertAdjacentHTML('beforeend', this.touch ? TOUCH_HELP : controlsHtml(opts.keys));
     resume.focus();
   }
 

@@ -66,6 +66,9 @@ config.ts  — todos os números de balanceamento (TUNING)
 | `ui/screens.ts` | Título (heróis bloqueados), mapa de níveis, pausa, resultado (desbloqueios), opções, contagem |
 | `ui/night.ts` | Painel da loja noturna |
 | `ui/nav.ts` | Foco espacial para menus com controle/setas |
+| `ui/touch.ts` | Controles de toque (joystick + botões), `isTouchDevice`, ícones usados nas dicas |
+| `style-mobile.css` | Layout de celular (telas baixas), botões de toque, aviso de girar |
+| `public/` | `manifest.webmanifest` e ícones (instalar como app). `scripts/icons.mjs` regenera os PNGs a partir do SVG |
 
 ## Coordenadas
 - Célula `(x, z)` do mapa → ponto `(x, 0, z)`. Linha 0 = parede do fundo. Mapas têm 18×11; o salão (colunas 10–17) é igual em todos os níveis.
@@ -86,6 +89,6 @@ config.ts  — todos os números de balanceamento (TUNING)
 
 ## Depuração
 - `window.game` no console (ex.: `game.day.timeLeft = 5`, `game.save`, `game.showLevels()`).
-- `?speed=4` acelera a simulação; `?debug` mostra FPS e draw calls.
+- `?speed=4` acelera a simulação; `?debug` mostra FPS e draw calls; `?touch` força os controles de toque no computador (`?touch=0` desliga).
 - `npm run smoke` gera screenshots em `.screenshots/`.
 - Para zerar o progresso: ⚙️ Opções → Começar do zero (ou apagar `bistro-cogumelo-save-v1` do localStorage).

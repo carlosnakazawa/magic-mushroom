@@ -36,9 +36,13 @@ export class Stage {
   zoom = 1;
   private currentZoom = 1;
 
-  constructor(private container: HTMLElement) {
+  /** `lowPower`: celulares/tablets — menos pixels e sombra mais leve. */
+  constructor(
+    private container: HTMLElement,
+    lowPower = false,
+  ) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPower ? 1.5 : 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -56,7 +60,7 @@ export class Stage {
 
     this.sun = new THREE.DirectionalLight(0xffe0b8, 1.55);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
+    this.sun.shadow.mapSize.set(lowPower ? 1024 : 2048, lowPower ? 1024 : 2048);
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.02;
     this.sun.shadow.radius = 4;

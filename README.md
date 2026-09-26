@@ -20,6 +20,8 @@ Abra http://localhost:5173, escolha 2 heróis e clique em **Jogar sozinho** ou *
 | Trocar de herói (solo) | Q | — | Y |
 | Pausa · Música | Esc / P · M | | Start |
 
+**No celular/tablet:** abra o link, deite o celular e jogue com o joystick (arraste o dedo no lado esquerdo) e os botões ✋ Pegar / ⭐ Usar / 🔄 Trocar. Dica: use "Adicionar à tela inicial" para abrir em tela cheia como um app.
+
 As teclas podem ser trocadas em ⚙️ Opções. Lá também tem o modo **🐢 Sem pressa**, texto grande e menos efeitos.
 
 ## Como se joga
