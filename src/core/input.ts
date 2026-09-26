@@ -1,3 +1,5 @@
+import { DEFAULT_KEYS, type KeyBinds, type Settings } from '../sim/progress';
+
 /** Estado de controle de um jogador em um frame. */
 export interface PlayerInput {
   moveX: number;
@@ -10,72 +12,80 @@ export interface PlayerInput {
   swap: boolean;
 }
 
-interface KeyScheme {
-  up: string[];
-  down: string[];
-  left: string[];
-  right: string[];
-  pick: string[];
-  use: string[];
-  swap: string[];
+/** Navegação em menus (teclado ou controle). */
+export interface MenuInput {
+  dx: number;
+  dy: number;
+  confirm: boolean;
+  back: boolean;
+  pause: boolean;
 }
 
-const SCHEME_P1: KeyScheme = {
-  up: ['KeyW'],
-  down: ['KeyS'],
-  left: ['KeyA'],
-  right: ['KeyD'],
-  pick: ['Space'],
-  use: ['KeyE'],
-  swap: ['KeyQ'],
+const MOVE = {
+  p1: { up: ['KeyW'], down: ['KeyS'], left: ['KeyA'], right: ['KeyD'] },
+  p2: { up: ['ArrowUp'], down: ['ArrowDown'], left: ['ArrowLeft'], right: ['ArrowRight'] },
 };
 
-const SCHEME_P2: KeyScheme = {
-  up: ['ArrowUp'],
-  down: ['ArrowDown'],
-  left: ['ArrowLeft'],
-  right: ['ArrowRight'],
-  pick: ['Enter', 'NumpadEnter'],
-  use: ['ShiftRight', 'Numpad0'],
-  swap: [],
+const KEY_NAMES: Record<string, string> = {
+  Space: 'Espaço',
+  Enter: 'Enter',
+  NumpadEnter: 'Enter',
+  ShiftRight: 'Shift',
+  ShiftLeft: 'Shift esq.',
+  ControlRight: 'Ctrl',
+  ControlLeft: 'Ctrl esq.',
+  AltRight: 'Alt Gr',
+  Slash: '/',
+  Period: '.',
+  Comma: ',',
+  Semicolon: 'Ç',
+  Backslash: '\\',
+  Quote: '~',
+  Numpad0: 'Num 0',
 };
 
-function mergeSchemes(a: KeyScheme, b: KeyScheme): KeyScheme {
-  return {
-    up: [...a.up, ...b.up],
-    down: [...a.down, ...b.down],
-    left: [...a.left, ...b.left],
-    right: [...a.right, ...b.right],
-    pick: [...a.pick, ...b.pick],
-    use: [...a.use, ...b.use],
-    swap: [...a.swap, ...b.swap],
-  };
+/** Nome amigável de uma tecla ("KeyE" → "E", "Space" → "Espaço"). */
+export function keyLabel(code: string): string {
+  if (!code) return '—';
+  if (KEY_NAMES[code]) return KEY_NAMES[code]!;
+  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Digit')) return code.slice(5);
+  if (code.startsWith('Numpad')) return `Num ${code.slice(6)}`;
+  return code;
 }
 
-const GAME_KEYS = new Set(
-  [SCHEME_P1, SCHEME_P2].flatMap((s) => [...s.up, ...s.down, ...s.left, ...s.right, ...s.pick, ...s.use]),
-);
-
-const EMPTY: PlayerInput = { moveX: 0, moveZ: 0, pick: false, use: false, swap: false };
+/** Teclas que o jogo nunca deixa remapear (usadas por menus). */
+const RESERVED = new Set(['Escape', 'KeyP', 'KeyM', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab']);
 
 /**
- * Teclado + gamepads. No modo solo, WASD e setas controlam o mesmo jogador.
- * Gamepad i controla o jogador i (no solo, qualquer gamepad controla o jogador 1).
+ * Teclado + gamepads. No modo solo, WASD e setas (e as teclas dos dois jogadores)
+ * controlam o mesmo herói. Gamepad i controla o jogador i (no solo, qualquer um).
  */
 export class Input {
   private down = new Set<string>();
   private pressed = new Set<string>();
   private padPrev = new Map<number, boolean[]>();
+  private padAxisHeld = new Map<number, { dir: string; t: number }>();
   private listeners: ((code: string) => void)[] = [];
+  private capture: ((code: string) => void) | null = null;
+  private keys: Settings['keys'] = structuredClone(DEFAULT_KEYS);
+  private lastPads: ((PlayerInput & { pause: boolean; back: boolean }) | null)[] = [];
 
   constructor() {
     window.addEventListener('keydown', (e) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.tagName === 'BUTTON' && (e.code === 'Space' || e.code === 'Enter')) {
-        // Deixa o botão focado receber o clique, mas não repassa ao jogo.
+      if (this.capture) {
+        e.preventDefault();
+        if (e.code === 'Escape' || !RESERVED.has(e.code)) {
+          const cb = this.capture;
+          this.capture = null;
+          cb(e.code === 'Escape' ? '' : e.code);
+        }
         return;
       }
-      if (GAME_KEYS.has(e.code)) e.preventDefault();
+      const target = e.target as HTMLElement | null;
+      const onButton = target?.tagName === 'BUTTON';
+      if (onButton && (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter')) return;
+      if (this.isGameKey(e.code)) e.preventDefault();
       if (!e.repeat) {
         this.pressed.add(e.code);
         this.listeners.forEach((l) => l(e.code));
@@ -84,6 +94,24 @@ export class Input {
     });
     window.addEventListener('keyup', (e) => this.down.delete(e.code));
     window.addEventListener('blur', () => this.down.clear());
+  }
+
+  setKeys(keys: Settings['keys']): void {
+    this.keys = structuredClone(keys);
+  }
+
+  binds(slot: 0 | 1): KeyBinds {
+    return slot === 0 ? this.keys.p1 : this.keys.p2;
+  }
+
+  /** Espera a próxima tecla (tela de remapear). Esc cancela (retorna ''). */
+  captureNextKey(cb: (code: string) => void): void {
+    this.capture = cb;
+  }
+
+  private isGameKey(code: string): boolean {
+    const all = [...Object.values(MOVE.p1).flat(), ...Object.values(MOVE.p2).flat(), ...Object.values(this.keys.p1), ...Object.values(this.keys.p2)];
+    return all.includes(code);
   }
 
   /** Callback para teclas globais (pausa, música...). */
@@ -97,21 +125,22 @@ export class Input {
     return p - n;
   }
 
-  private any(keys: string[]): boolean {
-    return keys.some((k) => this.pressed.has(k));
+  private hit(keys: string[]): boolean {
+    return keys.some((k) => !!k && this.pressed.has(k));
   }
 
-  private readKeys(s: KeyScheme): PlayerInput {
+  private readKeys(slots: ('p1' | 'p2')[]): PlayerInput {
+    const move = (d: 'up' | 'down' | 'left' | 'right') => slots.flatMap((s) => MOVE[s][d]);
     return {
-      moveX: this.axis(s.left, s.right),
-      moveZ: this.axis(s.up, s.down),
-      pick: this.any(s.pick),
-      use: this.any(s.use),
-      swap: this.any(s.swap),
+      moveX: this.axis(move('left'), move('right')),
+      moveZ: this.axis(move('up'), move('down')),
+      pick: this.hit(slots.map((s) => this.keys[s].pick)),
+      use: this.hit(slots.map((s) => this.keys[s].use)),
+      swap: this.hit(slots.map((s) => this.keys[s].swap)),
     };
   }
 
-  private readPads(): (PlayerInput | null)[] {
+  private readPads(): ((PlayerInput & { pause: boolean; back: boolean }) | null)[] {
     const pads = navigator.getGamepads?.() ?? [];
     return [0, 1, 2, 3].map((index) => {
       const pad = pads[index];
@@ -120,7 +149,7 @@ export class Input {
       const now = pad.buttons.map((b) => b.pressed);
       this.padPrev.set(index, now);
       const edge = (i: number) => !!now[i] && !prev[i];
-      const dead = (v: number) => (Math.abs(v) < 0.2 ? 0 : v);
+      const dead = (v: number) => (Math.abs(v) < 0.25 ? 0 : v);
       const btn = (i: number) => (now[i] ? 1 : 0);
       return {
         moveX: dead(pad.axes[0] ?? 0) || btn(15) - btn(14),
@@ -129,18 +158,14 @@ export class Input {
         use: edge(2),
         swap: edge(3),
         pause: edge(9),
-      } as PlayerInput & { pause: boolean };
+        back: edge(1),
+      };
     });
   }
 
-  private lastPads: (PlayerInput | null)[] = [];
-
   /** Estado de cada jogador neste frame. Chamar uma vez por frame, depois `endFrame()`. */
   read(playerCount: number): PlayerInput[] {
-    const keys =
-      playerCount === 1
-        ? [this.readKeys(mergeSchemes(SCHEME_P1, SCHEME_P2))]
-        : [this.readKeys(SCHEME_P1), this.readKeys(SCHEME_P2)];
+    const keys = playerCount === 1 ? [this.readKeys(['p1', 'p2'])] : [this.readKeys(['p1']), this.readKeys(['p2'])];
     const pads = this.readPads();
     this.lastPads = pads;
     return keys.map((k, slot) => {
@@ -162,22 +187,56 @@ export class Input {
 
   /** Algum botão Start apertado no último `read()`? */
   padPausePressed(): boolean {
-    return this.lastPads.some((p) => !!p && (p as PlayerInput & { pause?: boolean }).pause);
+    return this.lastPads.some((p) => !!p?.pause);
   }
 
-  /** Lê gamepads fora do jogo (menus/pausa) para detectar Start. */
-  pollMenuPads(): { confirm: boolean; pause: boolean } {
+  /**
+   * Entrada para menus: setas/WASD/D-pad/analógico movem o foco (com repetição),
+   * Enter/A confirma, Esc/B volta. Chamar uma vez por frame fora do jogo.
+   */
+  menu(dt: number): MenuInput {
     const pads = this.readPads();
     this.lastPads = pads;
-    return {
-      confirm: pads.some((p) => !!p?.pick),
-      pause: this.padPausePressed(),
-    };
+    let dx = 0;
+    let dy = 0;
+    const k = (codes: string[]) => codes.some((c) => this.pressed.has(c));
+    if (k(['ArrowLeft', 'KeyA'])) dx = -1;
+    if (k(['ArrowRight', 'KeyD'])) dx = 1;
+    if (k(['ArrowUp', 'KeyW'])) dy = -1;
+    if (k(['ArrowDown', 'KeyS'])) dy = 1;
+    let confirm = false;
+    let back = k(['Escape']);
+    let pause = false;
+    pads.forEach((p, i) => {
+      if (!p) return;
+      confirm ||= p.pick;
+      back ||= p.back;
+      pause ||= p.pause;
+      // Direção com repetição automática enquanto segura
+      const dir = Math.abs(p.moveX) > Math.abs(p.moveZ) ? (p.moveX > 0.5 ? 'r' : p.moveX < -0.5 ? 'l' : '') : p.moveZ > 0.5 ? 'd' : p.moveZ < -0.5 ? 'u' : '';
+      const held = this.padAxisHeld.get(i);
+      let fire = false;
+      if (dir && (!held || held.dir !== dir)) {
+        this.padAxisHeld.set(i, { dir, t: 0.4 });
+        fire = true;
+      } else if (dir && held) {
+        held.t -= dt;
+        if (held.t <= 0) {
+          held.t = 0.14;
+          fire = true;
+        }
+      } else if (!dir) this.padAxisHeld.delete(i);
+      if (fire) {
+        if (dir === 'l') dx = -1;
+        if (dir === 'r') dx = 1;
+        if (dir === 'u') dy = -1;
+        if (dir === 'd') dy = 1;
+      }
+    });
+    return { dx, dy, confirm, back, pause };
   }
 
   endFrame(): void {
     this.pressed.clear();
   }
-
-  static readonly empty = EMPTY;
 }

@@ -1,4 +1,4 @@
-import type { HeroDef, Species } from '../data/characters';
+import { SPECIES_FAMILY_NAME, type HeroDef, type Species } from '../data/characters';
 import { INGREDIENTS } from '../data/ingredients';
 import { RECIPES } from '../data/recipes';
 import type { Party } from '../sim/party';
@@ -14,6 +14,7 @@ export const SPECIES_EMOJI: Record<Species, string> = {
   mouse: '🐭',
   frog: '🐸',
   hedgehog: '🦔',
+  panda: '🐼',
 };
 
 export function patienceColor(p: number): string {
@@ -60,6 +61,8 @@ export class Hud {
   private orders: HTMLDivElement;
   private players: HTMLDivElement;
   private tutorial: HTMLDivElement;
+  private tips: HTMLDivElement;
+  private chips: HTMLDivElement;
   private toastBox: HTMLDivElement;
   private tickets = new Map<number, Ticket>();
   private shownCoins = 0;
@@ -101,12 +104,21 @@ export class Hud {
 
     this.players = el('div', 'players');
     this.tutorial = el('div', 'tutorial hidden');
+    this.tips = el('div', 'tutorial tips hidden');
+    this.chips = el('div', 'chips');
     this.toastBox = el('div', 'toasts');
-    this.root.append(top, this.players, this.tutorial, this.toastBox);
+    this.root.append(top, this.players, this.tutorial, this.tips, this.chips, this.toastBox);
   }
 
   show(v: boolean): void {
     this.root.classList.toggle('hidden', !v);
+    this.root.classList.remove('toasts-only');
+  }
+
+  /** Esconde tudo menos os avisos (usado à noite). */
+  showToastsOnly(v: boolean): void {
+    this.root.classList.toggle('hidden', !v);
+    this.root.classList.toggle('toasts-only', v);
   }
 
   setDay(day: number, goals: readonly [number, number, number]): void {
@@ -163,7 +175,12 @@ export class Hud {
       let t = this.tickets.get(p.id);
       if (!t) {
         const root = el('div', `ticket${p.size >= 3 ? ' family' : ''}`);
-        const head = el('div', 'ticket-head', `${SPECIES_EMOJI[speciesOf(p)]}${p.size > 1 ? `<span>×${p.size}</span>` : ''}`);
+        const sp = speciesOf(p);
+        const head = el(
+          'div',
+          'ticket-head',
+          p.size > 2 ? `${SPECIES_EMOJI[sp]}<span class="fam">Família ${SPECIES_FAMILY_NAME[sp]}</span>` : `${SPECIES_EMOJI[sp]}${p.size > 1 ? `<span>×${p.size}</span>` : ''}`,
+        );
         const list = el('div', 'ticket-dishes');
         const dishes = p.members.map((m) => {
           const r = RECIPES[m.recipe];
@@ -192,6 +209,20 @@ export class Hud {
         window.setTimeout(() => t.root.remove(), 400);
       }
     }
+  }
+
+  /** Dicas de novidade do nível (sem checklist). */
+  setTips(lines: readonly string[] | null, keys = { pick: 'Espaço', use: 'E' }): void {
+    this.tips.classList.toggle('hidden', !lines);
+    if (!lines) return;
+    const fmt = (t: string) => t.replaceAll('{pick}', `<kbd>${keys.pick}</kbd>`).replaceAll('{use}', `<kbd>${keys.use}</kbd>`);
+    const [title, ...rest] = lines;
+    this.tips.innerHTML = `<h3>${fmt(title ?? '')}</h3>${rest.map((l) => `<div class="tstep current">💡 ${fmt(l)}</div>`).join('')}`;
+  }
+
+  /** Selinhos de status (charme, descanso, modo sem pressa). */
+  setChips(chips: string[]): void {
+    this.chips.innerHTML = chips.map((c) => `<span class="chip">${c}</span>`).join('');
   }
 
   setTutorial(steps: { text: string; done: boolean }[] | null, current: number, keys = { pick: 'Espaço', use: 'E' }): void {

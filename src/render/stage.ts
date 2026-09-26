@@ -19,7 +19,8 @@ export class Stage {
   readonly sun: THREE.DirectionalLight;
   readonly hemi: THREE.HemisphereLight;
   private composer: EffectComposer;
-  private bloom: UnrealBloomPass;
+  readonly bloom: UnrealBloomPass;
+  readonly fill: THREE.DirectionalLight;
   private focus = new THREE.Vector3();
   // Vetores temporários reutilizados (evita alocação por frame)
   private tmpOff = new THREE.Vector3();
@@ -27,6 +28,10 @@ export class Stage {
   private tmpProj = new THREE.Vector3();
   private focusSize = new THREE.Vector2(16, 10);
   private shake = 0;
+  /** Pulso de zoom (momentos de festa). Decai sozinho. */
+  private pulse = 0;
+  /** Espaço (px) ocupado por painéis à direita: a cena é enquadrada no resto da tela. */
+  private insetRight = 0;
   /** Zoom extra (1 = normal, <1 aproxima). */
   zoom = 1;
   private currentZoom = 1;
@@ -39,6 +44,8 @@ export class Stage {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.95;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // Contagem de draw calls somando todos os passes (overlay ?debug)
+    this.renderer.info.autoReset = false;
     container.appendChild(this.renderer.domElement);
 
     this.scene.background = new THREE.Color(0x7fbf95);
@@ -62,9 +69,9 @@ export class Stage {
     sc.far = 60;
     this.scene.add(this.sun, this.sun.target);
 
-    const fill = new THREE.DirectionalLight(0xc9e2ff, 0.3);
-    fill.position.set(10, 8, 12);
-    this.scene.add(fill);
+    this.fill = new THREE.DirectionalLight(0xc9e2ff, 0.3);
+    this.fill.position.set(10, 8, 12);
+    this.scene.add(this.fill);
 
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
@@ -81,23 +88,41 @@ export class Stage {
     this.focus.set(cx, 0, cz);
     this.focusSize.set(width, depth);
     this.sun.position.set(cx - 7, 16, cz + 6);
+    this.sun.shadow.camera.left = -Math.max(14, width * 0.9);
+    this.sun.shadow.camera.right = Math.max(14, width * 0.9);
+    this.sun.shadow.camera.updateProjectionMatrix();
     this.sun.target.position.set(cx, 0, cz);
     this.updateCamera();
   }
 
+  /** Desliga o tremor de tela (modo menos efeitos). */
+  shakeEnabled = true;
+
+  /** Aproxima a câmera rapidinho (chegada de família, banquete). */
+  zoomPulse(): void {
+    if (this.shakeEnabled) this.pulse = 1;
+  }
+
+  setInsetRight(px: number): void {
+    this.insetRight = px;
+    this.resize();
+  }
+
   addShake(amount: number): void {
+    if (!this.shakeEnabled) return;
     this.shake = Math.min(0.35, this.shake + amount);
   }
 
   private updateCamera(): void {
     const pitch = THREE.MathUtils.degToRad(PITCH_DEG);
     const vfov = THREE.MathUtils.degToRad(FOV);
-    const aspect = this.camera.aspect;
+    const w = this.container.clientWidth || window.innerWidth;
+    const aspect = this.camera.aspect * Math.max(0.3, (w - this.insetRight) / w);
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
     // Distância para caber a largura e a profundidade projetada.
     const dW = this.focusSize.x / 2 / Math.tan(hfov / 2);
     const dD = ((this.focusSize.y * Math.sin(pitch)) / 2 + 1.2) / Math.tan(vfov / 2);
-    const dist = Math.max(dW, dD) * this.currentZoom;
+    const dist = Math.max(dW, dD) * this.currentZoom * (1 - 0.06 * Math.sin(Math.min(1, this.pulse) * Math.PI));
     const off = this.tmpOff.set(0, Math.sin(pitch), Math.cos(pitch)).multiplyScalar(dist);
     const target = this.tmpTarget.copy(this.focus);
     target.z += 0.4;
@@ -113,6 +138,8 @@ export class Stage {
     const w = this.container.clientWidth || window.innerWidth;
     const h = this.container.clientHeight || window.innerHeight;
     this.camera.aspect = w / h;
+    if (this.insetRight > 0) this.camera.setViewOffset(w, h, this.insetRight / 2, 0, w, h);
+    else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
     this.composer.setSize(w, h);
@@ -123,7 +150,9 @@ export class Stage {
   render(dt: number): void {
     this.shake = Math.max(0, this.shake - dt * 1.5);
     this.currentZoom += (this.zoom - this.currentZoom) * Math.min(1, dt * 3);
+    this.pulse = Math.max(0, this.pulse - dt * 0.8);
     this.updateCamera();
+    this.renderer.info.reset();
     this.composer.render(dt);
   }
 

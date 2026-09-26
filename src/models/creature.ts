@@ -75,11 +75,12 @@ export class Creature {
 
     // Patinhas (mãos) e pés
     for (const side of [-1, 1]) {
-      const paw = ball(0.085, bodyMat);
+      const limbMat = look.species === 'panda' ? accentMat : bodyMat;
+      const paw = ball(0.085, limbMat);
       paw.position.set(side * 0.27, 0.36, 0.1);
       this.body.add(paw);
       this.paws.push(paw);
-      const foot = ball(0.1, look.species === 'frog' ? accentMat : bodyMat, 1.1, 0.6, 1.4);
+      const foot = ball(0.1, look.species === 'frog' ? accentMat : limbMat, 1.1, 0.6, 1.4);
       foot.position.set(side * 0.13, 0.06, 0.08);
       this.rig.add(foot);
       this.feet.push(foot);
@@ -135,6 +136,18 @@ export class Creature {
       shine.position.set(0.018, 0.025, 0.03);
       eye.add(shine);
       if (look.species === 'frog') eye.position.set(side * 0.13, 0.22, 0.14);
+      if (look.species === 'panda') {
+        // Manchinhas pretas em volta dos olhos
+        const patch = ball(0.085, toon(look.accent), 0.9, 1.15, 0.35);
+        patch.position.set(side * 0.115, 0.02, 0.255);
+        patch.rotation.z = side * 0.5;
+        this.head.add(patch);
+        pupil.material = toon(0xffffff);
+        pupil.scale.multiplyScalar(0.8);
+        const dot = ball(0.03, toon(look.eyeColor ?? 0x1d1b22));
+        dot.position.z = 0.03;
+        eye.add(dot);
+      }
       this.head.add(eye);
       this.eyes.push(eye);
 
@@ -228,12 +241,13 @@ export class Creature {
         break;
       case 'bear':
       case 'mouse':
+      case 'panda':
         for (const side of [-1, 1]) {
           const r = look.species === 'mouse' ? 0.14 : 0.1;
-          const ear = ball(r, bodyMat, 1, 1, 0.5);
+          const ear = ball(r, look.species === 'panda' ? accentMat : bodyMat, 1, 1, 0.5);
           ear.position.set(side * 0.2, 0.22, -0.03);
           add(ear);
-          const inner = ball(r * 0.6, look.species === 'mouse' ? accentMat : bellyMat, 1, 1, 0.3);
+          const inner = ball(r * 0.6, look.species === 'mouse' || look.species === 'panda' ? accentMat : bellyMat, 1, 1, 0.3);
           inner.position.set(side * 0.2, 0.22, 0.01);
           add(inner);
         }
@@ -285,6 +299,7 @@ export class Creature {
       }
       case 'bunny':
       case 'bear':
+      case 'panda':
         tail.add(ball(0.08, look.species === 'bunny' ? toon(0xffffff) : bodyMat));
         break;
       case 'cat':

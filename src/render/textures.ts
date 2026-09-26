@@ -91,14 +91,14 @@ export function grass(): THREE.CanvasTexture {
   );
 }
 
-/** Papel de parede listrado com cogumelinhos. */
-export function wallpaper(): THREE.CanvasTexture {
+/** Papel de parede listrado com cogumelinhos (cores escolhidas na loja noturna). */
+export function wallpaper(colors = { base: '#ffe9d2', stripe: '#ffd9bd', motif: '#ff9b8a' }): THREE.CanvasTexture {
   return canvasTexture(256, (ctx, s) => {
-    ctx.fillStyle = '#ffe9d2';
+    ctx.fillStyle = colors.base;
     ctx.fillRect(0, 0, s, s);
-    ctx.fillStyle = '#ffd9bd';
+    ctx.fillStyle = colors.stripe;
     for (let x = 0; x < s; x += 32) ctx.fillRect(x, 0, 16, s);
-    ctx.fillStyle = '#ff9b8a';
+    ctx.fillStyle = colors.motif;
     for (let i = 0; i < 4; i++) {
       const x = 24 + (i % 2) * 128 + 40;
       const y = 40 + i * 60;
@@ -107,7 +107,7 @@ export function wallpaper(): THREE.CanvasTexture {
       ctx.fill();
       ctx.fillStyle = '#fff';
       ctx.fillRect(x - 4, y, 8, 10);
-      ctx.fillStyle = '#ff9b8a';
+      ctx.fillStyle = colors.motif;
     }
   });
 }
