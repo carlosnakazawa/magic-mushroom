@@ -1,7 +1,20 @@
-import * as THREE from 'three';
-import { INGREDIENTS } from '../data/ingredients';
+import type * as THREE from 'three';
 import { TUNING } from '../config';
-import { bowlRecipe, itemName, makeBowl, makeIngredient, tryMerge, type Item } from '../sim/items';
+import { INGREDIENTS } from '../data/ingredients';
+import { needsChopped } from '../data/recipes';
+import {
+  VESSEL_NAMES,
+  dishRecipe,
+  emptyVessel,
+  fillVessel,
+  isEmptyVessel,
+  itemName,
+  makeIngredient,
+  makeVessel,
+  tryMerge,
+  type Item,
+  type VesselItem,
+} from '../sim/items';
 import type { Chef } from './chef';
 import type { Station, Table, World } from './world';
 
@@ -15,7 +28,7 @@ export interface Action {
   run: () => void;
 }
 
-/** O que as ações precisam do jogo (implementado por Game). */
+/** O que as ações precisam do jogo (implementado por DayRun). */
 export interface ActionHost {
   hold(chef: Chef, item: Item | null): void;
   place(station: Station, item: Item | null): void;
@@ -31,6 +44,10 @@ export type GameEvent =
   | { type: 'place'; chef: Chef; item: Item; station: Station }
   | { type: 'merge'; chef: Chef; bowl: Item; at: THREE.Vector3 }
   | { type: 'trash'; chef: Chef; at: THREE.Vector3 }
+  | { type: 'machineAdd'; chef: Chef; station: Station }
+  | { type: 'machineStart'; chef: Chef; station: Station }
+  | { type: 'machineTake'; chef: Chef; station: Station; vessel: VesselItem }
+  | { type: 'dump'; chef: Chef; station: Station }
   | { type: 'deny'; chef: Chef };
 
 /** Encontra a estação/mesa que o herói está "olhando". */
@@ -64,6 +81,13 @@ export function findTarget(world: World, chef: Chef): Target | null {
   return best;
 }
 
+const deny = (host: ActionHost, chef: Chef, label: string): Action => ({ label, disabled: true, run: () => host.emit({ type: 'deny', chef }) });
+
+/** "uma tigela" / "um copo" / "um prato" */
+function aVessel(v: VesselItem['vessel']): string {
+  return `${v === 'bowl' ? 'uma' : 'um'} ${VESSEL_NAMES[v]}`;
+}
+
 /** Ação do botão "pegar/soltar" (Espaço). */
 export function pickAction(host: ActionHost, chef: Chef, target: Target | null): Action | null {
   if (!target) return null;
@@ -84,25 +108,26 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         },
       };
     }
-    case 'bowls': {
-      if (!held && s.bowls > 0) {
+    case 'stack': {
+      const v = s.vessel!;
+      if (!held && s.count > 0) {
         return {
-          label: 'Pegar tigela',
+          label: `Pegar ${VESSEL_NAMES[v]}`,
           run: () => {
-            s.bowls--;
+            s.count--;
             s.refreshStack();
-            const item = makeBowl();
+            const item = makeVessel(v);
             host.hold(chef, item);
             host.emit({ type: 'pickup', chef, item, from: 'stack' });
           },
         };
       }
-      if (!held) return { label: 'Sem tigelas — lave na pia!', disabled: true, run: () => host.emit({ type: 'deny', chef }) };
-      if (held.type === 'bowl' && !held.dirty && held.contents.length === 0) {
+      if (!held) return deny(host, chef, `Sem ${VESSEL_NAMES[v]}s — lave na pia!`);
+      if (isEmptyVessel(held, v)) {
         return {
-          label: 'Guardar tigela',
+          label: 'Guardar',
           run: () => {
-            s.bowls++;
+            s.count++;
             s.refreshStack();
             host.hold(chef, null);
           },
@@ -111,7 +136,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       return null;
     }
     case 'sink': {
-      if (held?.type === 'bowl' && held.dirty) {
+      if (held?.type === 'vessel' && held.dirty) {
         return {
           label: 'Colocar na pia',
           run: () => {
@@ -124,7 +149,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       return null;
     }
     case 'trash': {
-      if (!held) return null;
+      if (!held || held.type === 'tool') return null;
       if (held.type === 'ingredient') {
         return {
           label: 'Jogar fora',
@@ -136,16 +161,17 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       }
       if (!held.dirty && held.contents.length > 0) {
         return {
-          label: 'Esvaziar tigela',
+          label: `Esvaziar ${VESSEL_NAMES[held.vessel]}`,
           run: () => {
-            held.contents = [];
-            held.version++;
+            emptyVessel(held);
             host.emit({ type: 'trash', chef, at: s.worldTop });
           },
         };
       }
-      return held.dirty ? { label: 'Louça suja vai na pia', disabled: true, run: () => host.emit({ type: 'deny', chef }) } : null;
+      return held.dirty ? deny(host, chef, 'Louça suja vai na pia') : null;
     }
+    case 'machine':
+      return machinePickAction(host, chef, s);
     case 'counter':
     case 'board': {
       const onTop = s.item;
@@ -161,7 +187,10 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         };
       }
       if (held && !onTop) {
-        if (s.kind === 'board' && held.type !== 'ingredient') return null;
+        if (s.kind === 'board') {
+          if (held.type !== 'ingredient') return null;
+          if (!INGREDIENTS[held.kind].choppable) return deny(host, chef, `${INGREDIENTS[held.kind].name} não precisa cortar`);
+        }
         return {
           label: s.kind === 'board' ? 'Colocar na tábua' : 'Colocar',
           run: () => {
@@ -172,14 +201,15 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         };
       }
       if (held && onTop) {
-        const bowl = held.type === 'bowl' ? held : onTop.type === 'bowl' ? onTop : null;
+        const bowl = held.type === 'vessel' ? held : onTop.type === 'vessel' ? onTop : null;
         const ing = held.type === 'ingredient' ? held : onTop.type === 'ingredient' ? onTop : null;
         if (!bowl || !ing) return null;
-        if (bowl.dirty) return { label: 'Tigela suja!', disabled: true, run: () => host.emit({ type: 'deny', chef }) };
-        if (!ing.chopped) return { label: 'Corte primeiro na tábua', disabled: true, run: () => host.emit({ type: 'deny', chef }) };
+        if (bowl.dirty) return deny(host, chef, `${VESSEL_NAMES[bowl.vessel]} suja!`);
+        if (bowl.vessel !== 'bowl') return deny(host, chef, 'Saladas vão na tigela 🥣');
+        if (!ing.chopped) return deny(host, chef, INGREDIENTS[ing.kind].choppable ? 'Corte primeiro na tábua' : 'Isso vai na máquina');
         // Testa numa cópia para não alterar o estado só por exibir a dica
         const probe = tryMerge(clone(held), clone(onTop));
-        if (!probe) return { label: 'Não combina', disabled: true, run: () => host.emit({ type: 'deny', chef }) };
+        if (!probe) return deny(host, chef, 'Não combina');
         return {
           label: `Juntar ${INGREDIENTS[ing.kind].name}`,
           run: () => {
@@ -196,20 +226,85 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
   }
 }
 
+function machinePickAction(host: ActionHost, chef: Chef, s: Station): Action | null {
+  const m = s.machine!;
+  const held = chef.held;
+  switch (m.phase) {
+    case 'fire':
+      return held?.type === 'tool' ? null : deny(host, chef, '🔥 Pegue o extintor mágico!');
+    case 'burnt':
+      if (held) return deny(host, chef, 'Queimou! Mãos livres para limpar');
+      return {
+        label: 'Jogar fora o queimado',
+        run: () => {
+          m.dump();
+          host.emit({ type: 'dump', chef, station: s });
+        },
+      };
+    case 'done':
+    case 'warning': {
+      if (isEmptyVessel(held, m.vessel)) {
+        const recipe = m.recipe!;
+        return {
+          label: `Servir ${recipe.name}`,
+          run: () => {
+            const out = m.take();
+            if (!out) return;
+            fillVessel(held, out.method, out.contents);
+            host.emit({ type: 'machineTake', chef, station: s, vessel: held });
+          },
+        };
+      }
+      return deny(host, chef, `Traga ${aVessel(m.vessel)}`);
+    }
+    case 'working':
+      return held?.type === 'ingredient' ? deny(host, chef, 'Trabalhando… espere!') : null;
+    case 'idle': {
+      if (held?.type === 'ingredient') {
+        const def = INGREDIENTS[held.kind];
+        if (m.canAdd(held.kind, held.chopped)) {
+          return {
+            label: `Colocar ${def.name}`,
+            run: () => {
+              if (!m.add(held.kind)) return;
+              host.hold(chef, null);
+              host.emit({ type: 'machineAdd', chef, station: s });
+            },
+          };
+        }
+        const wantsChopped = needsChopped(m.method);
+        if (wantsChopped && !held.chopped && def.choppable) return deny(host, chef, 'Corte primeiro na tábua');
+        if (!wantsChopped && held.chopped) return deny(host, chef, 'Aqui vai inteiro');
+        return deny(host, chef, m.contents.includes(held.kind) ? 'Já tem isso aqui' : 'Não combina aqui');
+      }
+      if (!held && m.contents.length) {
+        return {
+          label: 'Esvaziar',
+          run: () => {
+            m.dump();
+            host.emit({ type: 'dump', chef, station: s });
+          },
+        };
+      }
+      return null;
+    }
+  }
+}
+
 function clone<T extends Item>(item: T): T {
-  return item.type === 'bowl' ? ({ ...item, contents: [...item.contents] } as T) : ({ ...item } as T);
+  return item.type === 'vessel' ? ({ ...item, contents: [...item.contents] } as T) : ({ ...item } as T);
 }
 
 function tablePickAction(host: ActionHost, chef: Chef, table: Table): Action | null {
   const held = chef.held;
   const party = table.party;
   if (held) {
-    const recipe = bowlRecipe(held);
-    if (!recipe) return held.type === 'bowl' && held.contents.length > 0 ? { label: 'Prato incompleto', disabled: true, run: () => host.emit({ type: 'deny', chef }) } : null;
-    if (!party || party.phase === 'waitingOrder') {
-      return party ? { label: 'Anote o pedido primeiro', disabled: true, run: () => host.emit({ type: 'deny', chef }) } : null;
-    }
-    if (party.wants(recipe.id) < 0) return { label: 'Ninguém aqui pediu isso', disabled: true, run: () => host.emit({ type: 'deny', chef }) };
+    if (held.type !== 'vessel') return null;
+    const recipe = dishRecipe(held);
+    if (!recipe) return held.contents.length > 0 && !held.dirty ? deny(host, chef, 'Prato incompleto') : null;
+    if (!party || party.isLeaving) return null;
+    if (party.phase === 'waitingOrder') return deny(host, chef, 'Anote o pedido primeiro');
+    if (party.wants(recipe.id) < 0) return deny(host, chef, 'Ninguém aqui pediu isso');
     return { label: `Servir ${recipe.name}`, run: () => host.serve(table, chef) };
   }
   if (party?.phase === 'waitingOrder') return { label: 'Anotar pedido', run: () => host.takeOrder(table, chef) };
@@ -227,11 +322,26 @@ export function useAction(host: ActionHost, chef: Chef, target: Target | null): 
   }
   const s = target.station;
   if (chef.workingAt === s) return null;
-  if (s.kind === 'board' && s.item?.type === 'ingredient' && !s.item.chopped) {
+  if (s.kind === 'board' && s.item?.type === 'ingredient' && !s.item.chopped && INGREDIENTS[s.item.kind].choppable) {
     return { label: s.progress > 0 ? 'Continuar cortando' : 'Cortar', run: () => host.startWork(chef, s) };
   }
   if (s.kind === 'sink' && s.dirty.length > 0) {
     return { label: s.progress > 0 ? 'Continuar lavando' : 'Lavar', run: () => host.startWork(chef, s) };
+  }
+  if (s.kind === 'machine') {
+    const m = s.machine!;
+    if (m.phase === 'fire') {
+      return chef.held?.type === 'tool' ? { label: 'Apagar o fogo!', run: () => host.startWork(chef, s) } : deny(host, chef, '🔥 Pegue o extintor mágico!');
+    }
+    if (m.kind === 'blender' && m.phase === 'idle' && m.contents.length) {
+      if (!m.recipe) return deny(host, chef, 'Falta ingrediente');
+      return {
+        label: 'Ligar',
+        run: () => {
+          if (m.start()) host.emit({ type: 'machineStart', chef, station: s });
+        },
+      };
+    }
   }
   return null;
 }

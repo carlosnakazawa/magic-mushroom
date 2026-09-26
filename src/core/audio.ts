@@ -129,6 +129,47 @@ class AudioEngine {
   swap(): void {
     this.tone(600, 0.08, { wave: 'triangle', vol: 0.18, slide: 1.4 });
   }
+  blend(): void {
+    this.tone(140, 0.5, { wave: 'sawtooth', vol: 0.04, slide: 1.5 });
+  }
+  sizzle(): void {
+    this.noise(0.25, 0.12, 4000);
+  }
+  bubble(): void {
+    this.tone(300 + Math.random() * 200, 0.08, { vol: 0.1, slide: 1.8 });
+  }
+  warn(): void {
+    this.tone(880, 0.12, { wave: 'square', vol: 0.07 });
+    this.tone(660, 0.12, { wave: 'square', vol: 0.07, delay: 0.14 });
+  }
+  fire(): void {
+    this.noise(0.5, 0.35, 500);
+    this.tone(990, 0.15, { wave: 'square', vol: 0.08 });
+    this.tone(740, 0.15, { wave: 'square', vol: 0.08, delay: 0.18 });
+    this.tone(990, 0.15, { wave: 'square', vol: 0.08, delay: 0.36 });
+  }
+  spray(): void {
+    this.noise(0.2, 0.3, 3000);
+  }
+  poof(): void {
+    this.noise(0.35, 0.3, 700);
+    this.tone(400, 0.3, { vol: 0.1, slide: 0.5 });
+  }
+  buy(): void {
+    this.coin();
+    [1047, 1319, 1568].forEach((f, i) => this.tone(f, 0.15, { wave: 'triangle', vol: 0.15, delay: 0.08 + i * 0.07 }));
+  }
+  place(): void {
+    this.tone(520, 0.1, { wave: 'triangle', vol: 0.2 });
+    this.tone(780, 0.18, { wave: 'triangle', vol: 0.18, delay: 0.08 });
+  }
+  /** Fanfarra de desbloqueio (nível/família nova). */
+  fanfare(): void {
+    [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.28, { wave: 'triangle', vol: 0.2, delay: i * 0.12 }));
+  }
+  yawn(): void {
+    this.tone(500, 0.8, { vol: 0.1, slide: 0.5 });
+  }
 
   /** Música de dia: arpejos pentatônicos alegres, gerados em loop. */
   startDayMusic(): void {
@@ -139,6 +180,7 @@ class AudioEngine {
     const base = 392;
     const stepDur = 60 / 112 / 2;
     let step = 0;
+    this.musicMode = 'day';
     this.musicTimer = window.setInterval(() => {
       if (!this.ctx || this.ctx.state !== 'running') return;
       const chord = chords[Math.floor(step / 16) % chords.length]!;
@@ -153,16 +195,55 @@ class AudioEngine {
     }, stepDur * 1000);
   }
 
+  /** Música da noite: acordes lentos e sininhos, bem calma. */
+  startNightMusic(): void {
+    this.stopMusic();
+    if (!this.ctx || !this.musicOn) return;
+    const chords = [
+      [0, 4, 7, 11],
+      [-3, 0, 4, 7],
+      [-7, -3, 0, 4],
+      [-5, -1, 2, 5],
+    ];
+    const base = 330;
+    const stepDur = 0.62;
+    let step = 0;
+    this.musicMode = 'night';
+    this.musicTimer = window.setInterval(() => {
+      if (!this.ctx || this.ctx.state !== 'running') return;
+      const chord = chords[Math.floor(step / 8) % chords.length]!;
+      const hz = (s: number) => base * Math.pow(2, s / 12);
+      if (step % 8 === 0) chord.forEach((n) => this.tone(hz(n - 12), stepDur * 7, { vol: 0.09, bus: this.musicBus! }));
+      if (step % 2 === 0 || Math.random() < 0.3) {
+        const n = chord[(step * 5 + Math.floor(step / 3)) % chord.length]!;
+        this.tone(hz(n + 12), stepDur * 2.2, { wave: 'triangle', vol: 0.12, bus: this.musicBus! });
+      }
+      step++;
+    }, stepDur * 1000);
+  }
+
+  private musicMode: 'day' | 'night' = 'day';
+
+  /** Retoma a música do modo atual (depois de pausa/menu). */
+  resumeMusic(): void {
+    if (this.musicMode === 'night') this.startNightMusic();
+    else this.startDayMusic();
+  }
+
   stopMusic(): void {
     if (this.musicTimer !== null) window.clearInterval(this.musicTimer);
     this.musicTimer = null;
   }
 
   toggleMusic(): boolean {
-    this.musicOn = !this.musicOn;
-    if (this.musicOn) this.startDayMusic();
-    else this.stopMusic();
+    this.setMusic(!this.musicOn);
     return this.musicOn;
+  }
+
+  setMusic(on: boolean): void {
+    this.musicOn = on;
+    if (on) this.resumeMusic();
+    else this.stopMusic();
   }
 }
 

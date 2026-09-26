@@ -87,59 +87,93 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 |---|---|---|---|
 | Mover | W A S D | Setas | Analógico esquerdo / D-pad |
 | Pegar / Soltar / Entregar | Espaço | Enter | A (Cruz) |
-| Usar (cortar, lavar, anotar pedido) | E | Shift direito | X (Quadrado) |
+| Usar (cortar, lavar, anotar, ligar, apagar fogo) | E | Shift direito | X (Quadrado) |
 | Trocar de personagem (modo solo) | Q | — | Y (Triângulo) |
 | Pausar | Esc / P | Esc / P | Start |
+| Música liga/desliga | M | M | — |
+| Menus | Setas/WASD + Enter, ou mouse | | D-pad + A (B volta) |
 
-- **Modo solo:** o jogador controla 2 personagens e alterna com `Q` (o outro fica parado — estilo Overcooked).
+- As teclas de **pegar/usar/trocar** podem ser **remapeadas** em ⚙️ Opções (movimento é fixo).
+- **Modo solo:** o jogador controla 2 personagens e alterna com `Q` (o outro fica parado — estilo Overcooked). Quem estava cortando/lavando/apagando continua o trabalho.
 - **Modo 2 jogadores:** cooperação local no mesmo teclado (ou teclado + controle).
-- Usar a tábua/pia: apertar `E` **uma vez** inicia o trabalho, que continua sozinho enquanto o personagem fica parado na frente da estação. Andar pausa (o progresso é mantido). Isso é mais gentil para crianças do que segurar o botão.
+- Tábua/pia/extintor: apertar **usar uma vez** inicia o trabalho, que continua sozinho enquanto o personagem fica parado. Andar pausa (o progresso é mantido).
 
-### B3. Itens e estações (Etapa 1)
+### B3. Itens e estações
 | Estação | Símbolo no mapa | O que faz |
 |---|---|---|
+| Parede | `W` | — |
 | Balcão | `#` | Guarda qualquer item |
-| Caixote de ingrediente | `L` alface, `T` tomate, `M` cogumelo-brilhante | Fonte infinita do ingrediente cru |
-| Tábua de corte | `C` | Cru → picado (usar `E`) |
-| Pilha de tigelas | `B` | Pega tigelas limpas (quantidade limitada!) |
-| Pia | `S` | Tigela suja → limpa (usar `E`); volta para a pilha |
-| Lixeira | `X` | Descarta ingrediente / esvazia tigela |
-| Mesa de cogumelo | `t` | Clientes sentam; entrega-se o prato aqui |
-| Porta | `D` | Clientes entram/saem |
+| Caixote | `L` alface, `T` tomate, `M` cogumelo-brilhante, `R` frutinhas, `N` cenoura, `A` massa, `Y` bambu* | Fonte infinita do ingrediente cru (*`Y` só com a Família Panda; senão vira balcão) |
+| Tábua de corte | `C` | Cru → picado (usar). Frutinhas e massa não se cortam |
+| Pilhas de recipientes | `B` tigelas, `U` copos, `O` pratos | Quantidade limitada por nível — lave na pia! |
+| Pia | `S` | Qualquer recipiente sujo → limpo (usar); volta para a pilha certa |
+| Lixeira | `X` | Descarta ingrediente / esvazia recipiente |
+| Liquidificador de Cristal | `J` | Ingredientes **crus**; ligar com **usar**; trabalha sozinho; nunca queima |
+| Caldeirão | `K` | Ingredientes **picados**; começa sozinho quando a receita fica completa; **pode queimar** |
+| Chapa Mágica | `G` | Massa crua; começa sozinha; **pode queimar** |
+| Extintor mágico | `Z` | Balcão que começa com o extintor 🧯 |
+| Mesa de cogumelo | `t` | 2 lugares |
+| Espaço da mesa família | `F F` | 2 células; recebe a mesa comprada na loja (senão é chão livre) |
+| Heróis / Porta | `P` / `D` | Início dos heróis / entrada e saída dos clientes |
 
-- **Montagem:** ingrediente **picado** + tigela limpa (em qualquer ordem: tigela na mão e ingrediente no balcão, ou vice-versa). A tigela vira prato quando o conjunto de ingredientes bate com uma receita.
-- **Louça:** tigelas são limitadas (3 no início). Depois de comer, o cliente deixa a tigela suja e moedas na mesa. Pegar a tigela suja coleta as moedas. A mesa só libera quando toda a louça for retirada.
+- **Montagem (saladas):** ingrediente **picado** + tigela limpa, em qualquer ordem.
+- **Máquinas:** coloque os ingredientes; quando pronto, leve o **recipiente vazio certo** (copo/tigela/prato) e aperte pegar para servir.
+- **Queimar (caldeirão/chapa):** pronto → 7 s seguro → ⚠️ aviso (5 s, bipes e fumaça) → 💨 queimado (dá para limpar com as mãos livres) → 4 s → 🔥 **fogo**. Fogo: pegue o extintor e segure **usar** na frente da máquina. O fogo não se espalha (caos gentil).
+- **Louça:** depois de comer, o cliente deixa o recipiente sujo e moedas. Pegar a louça coleta as moedas. A mesa só libera quando toda a louça sai **e** o último cliente atravessa a porta.
 
 ### B4. Receitas
-| Receita | Ingredientes (picados) | Nível | Preço base |
-|---|---|---|---|
-| Salada Verde 🥬 | alface | 1 | 5 |
-| Salada Rubi 🍅 | alface + tomate | 1 | 8 |
-| Salada Feérica ✨ | alface + tomate + cogumelo-brilhante | 1 | 12 |
-| Suco de Frutinhas (Etapa 2) | frutinhas no liquidificador | 2 | 9 |
-| Poção Borbulhante (Etapa 2) | frutinhas + cogumelo no liquidificador | 2 | 14 |
-| Sopa de Caldeirão (Etapa 3) | cenoura + cogumelo cozidos | 3 | 15 |
-| Panqueca Mágica (Etapa 3) | massa na chapa | 3 | 13 |
+| Receita | Recipiente | Como | Ingredientes | Nível | Preço |
+|---|---|---|---|---|---|
+| Salada Verde | tigela | montar | alface picada | 1 | 5 |
+| Salada Rubi | tigela | montar | alface + tomate picados | 1 | 8 |
+| Salada Feérica | tigela | montar | alface + tomate + cogumelo picados | 1 | 12 |
+| Suco de Frutinhas | copo | liquidificador | frutinhas | 2 | 7 |
+| Poção Borbulhante | copo | liquidificador | frutinhas + cogumelo (inteiro) | 2 | 12 |
+| Sopa de Cenoura | tigela | caldeirão | cenoura picada | 3 | 10 |
+| Sopa de Caldeirão | tigela | caldeirão | cenoura + cogumelo picados | 3 | 15 |
+| Panqueca Mágica | prato | chapa | massa | 3 | 11 |
+| Sopa de Bambu 🐼 | tigela | caldeirão | bambu + cenoura picados | 3 (Família Panda) | 16 |
+
+Comandas e balões mostram os **ingredientes em emoji** e o formato do recipiente (balão arredondado = prato, "copo" = bebida).
 
 ### B5. Grupos, paciência e moedas
-- Todo atendimento é um **grupo** (`Party`): cliente sozinho = grupo de 1; dupla = 2; família = 4–6. Isso unifica os fluxos das seções 4 e 5.
-- **Estados do grupo:** `chegando` → `esperando anotar` (balão ❗) → `esperando comida` (comanda no topo) → `comendo` → `saindo` (deixa louça + moedas).
-- **Paciência compartilhada** (0–100%): cai devagar enquanto espera anotar e mais rápido esperando comida. Cada prato entregue recupera **+35%** para o grupo todo. Em 0% o grupo vai embora bravo (💢), sem pagar.
-- **Moedas:** preço do prato + gorjeta pela paciência restante (até +50%). Grupo de 3+ que recebe tudo ganha **bônus de banquete** (+5 por membro) e celebra com brilhos.
-- **Fim do dia:** estrelas por meta de moedas (1★/2★/3★). Clientes já sentados continuam sendo atendidos até o relógio zerar.
+- Todo atendimento é um **grupo** (`Party`): 1–2 clientes nas mesas pequenas; **famílias de 3–6** só na mesa família (quando comprada e posicionada).
+- **Estados:** `chegando` → `esperando anotar` (❗, ou 📜 para famílias) → `pedido anotado` (comanda no topo; famílias com banner "Família …") → `comendo` → `saindo`.
+- **Paciência compartilhada**: cai devagar esperando anotar e mais rápido esperando comida; cada prato entregue recupera **+35%** para o grupo todo; em 0% o grupo vai embora (💢), sem pagar.
+- **Moedas:** preço + gorjeta pela paciência (até +50%). Grupo de 3+ que recebe tudo ganha **bônus de banquete** (+5 por membro), com brilhos e zoom de câmera.
+- **Fim do dia:** estrelas por meta de moedas. Moedas esquecidas nas mesas entram mesmo assim. As moedas vão para a **carteira** (loja noturna).
+- Clientes caminham por **A\*** (desviam de balcões, mesas e móveis).
 
-### B6. Ciclo dia/noite (Etapa 2)
-- **Noite:** sem cronômetro, iluminação azul com vaga-lumes, música calma.
-- **Loja noturna:** mesa família (Tronco Encantado), luminárias mágicas, plantas, tapetes, cores de parede — comprados com moedas e posicionados em espaços pré-definidos do salão (grade simples, sem risco de bloquear o caminho).
-- **Descanso dos ajudantes:** animação dos personagens dormindo/sentados; efeito de gameplay leve (ex.: ajudante descansado começa o dia com um brilho que acelera o corte por 30 s).
-- **Progresso salvo** em `localStorage` (moedas, dia, itens comprados, níveis liberados).
+### B6. Ciclo dia/noite
+- Fluxo: **Título** (escolha 2 heróis, solo/dupla) → **Mapa de níveis** → contagem → **Dia** → **Resultado** → **Noite** → Mapa de níveis…
+- **Noite:** sem relógio; transição de luz (céu azul-escuro, janelas/lanternas/cogumelos brilham mais, vaga-lumes maiores); música calma; toda a equipe liberada dorme em volta de uma lanterna (💤).
+- **Descanso dos ajudantes:** depois de uma noite, a equipe corta, lava, cozinha e apaga fogo **30% mais rápido nos primeiros 60 s** do dia (selo "😴 Descansados").
+- **Loja noturna** (painel à direita; a cena é reenquadrada para não ficar coberta):
+  - Abas: Mesas, Luzes, Enfeites, Tapetes, Parede, Cores e Meus móveis.
+  - Comprar leva direto a escolher o lugar. Os espaços brilham no salão, com um "fantasma" translúcido do móvel e um feixe de luz. Dá para escolher pelos botões (teclado/controle) ou clicando no círculo.
+  - Espaço ocupado → o móvel antigo volta para o inventário ("Meus móveis" → Colocar/Guardar).
+- **Charme ✨:** soma do charme dos móveis e da parede. Cada ponto reduz 1% a perda de paciência dos clientes (máx. 30%).
+- **Catálogo:** `src/data/furniture.ts` (mesas de família com 4 ou 6 lugares, 3 luminárias com luz real, 5 enfeites de chão, 3 tapetes, 3 enfeites de parede, 4 cores de parede).
+- **Progresso salvo** em `localStorage`: dia, carteira, total de moedas, melhores estrelas por nível, móveis, parede, famílias, opções. Saves corrompidos voltam ao padrão sem travar.
 
-### B7. Níveis (Etapas 2 e 3)
-| Nível | Novidade | Receitas |
+### B7. Níveis
+| Nível | Novidade | Libera com |
 |---|---|---|
-| 1 — Tutorial | Mover, pegar, cortar, montar, servir, lavar (guia passo a passo na tela) | Saladas |
-| 2 — Cristal | Liquidificador (tempo de espera da máquina) | Saladas + sucos/poções |
-| 3 — Caldeirão | Caldeirão e chapa: comida pode **queimar** e pegar **fogo**; extintor mágico | Tudo |
+| 1 — Salada Feérica | Tutorial guiado (relógio pausado até a 1ª entrega) | — |
+| 2 — Liquidificador de Cristal | Máquina que trabalha sozinha; copos | ⭐ no Nível 1 |
+| 3 — Caldeirão & Chapa | Pratos quentes, queimar, fogo, extintor; pratos | ⭐ no Nível 2 |
 
-### B8. Famílias (conteúdo futuro, pós-Etapa 3)
-Panda, Ovelha, Axolote, Esquilo — cada uma liberada por marco (ex.: total de moedas, estrelas). Trazem clientes, ajudantes contratáveis, receitas e móveis temáticos. A arquitetura de dados (`src/data/`) já prevê essas listas.
+Na primeira vez em cada nível novo, um painel "Novidades" explica as máquinas (some sozinho).
+
+### B8. Famílias
+| Família | Libera com | Traz |
+|---|---|---|
+| 🐼 Panda (implementada) | ⭐ 4 estrelas no total | Clientes panda (em grupos), **Mochi** (herói contratável), **Sopa de Bambu** + caixote de bambu no Nível 3, **Lanterna de Bambu** na loja |
+| 🐑 Ovelha, 🦎 Axolote, 🐿️ Esquilo | ⭐ 7 / 8 / 9 | Aparecem no mapa como "em breve" — próximas a implementar (mesmo padrão da Panda) |
+
+### B9. Acessibilidade e opções
+- 🐢 **Sem pressa:** clientes nunca perdem a paciência e nada queima.
+- 🔠 **Texto grande**, ✨ **Menos efeitos** (menos partículas, sem tremor/zoom, bloom suave), 🎵 **Música**.
+- ⌨️ **Remapear teclas** (pegar/usar/trocar dos dois jogadores) e voltar ao padrão.
+- 🗑️ **Começar do zero** (confirmação em dois cliques).
+

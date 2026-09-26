@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { IngredientKind } from '../data/ingredients';
 import { glow, mesh, toon } from '../render/materials';
-import { bowlMesh, rawIngredientMesh } from './food';
+import { rawIngredientMesh } from './food';
 
 /** Altura do tampo dos balcões (onde itens ficam). */
 export const COUNTER_TOP = 0.92;
@@ -79,24 +79,6 @@ export function cuttingBoard(): { group: THREE.Group; knife: THREE.Object3D } {
   knife.rotation.y = 0.3;
   g.add(knife);
   return { group: g, knife };
-}
-
-export function bowlStack(): { group: THREE.Group; stack: THREE.Group } {
-  const g = counter();
-  const stack = new THREE.Group();
-  stack.position.y = COUNTER_TOP;
-  g.add(stack);
-  return { group: g, stack };
-}
-
-export function refreshBowlStack(stack: THREE.Group, count: number): void {
-  stack.clear();
-  for (let i = 0; i < count; i++) {
-    const b = bowlMesh([], false, false);
-    b.position.y = i * 0.07;
-    b.rotation.y = i * 0.7;
-    stack.add(b);
-  }
 }
 
 export function sink(): { group: THREE.Group; dirtyStack: THREE.Group; water: THREE.Mesh } {

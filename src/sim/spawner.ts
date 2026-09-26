@@ -13,14 +13,22 @@ export function pickWeighted<T>(items: readonly { value: T; weight: number }[], 
   return items[items.length - 1]!.value;
 }
 
-/** Sorteia um grupo que caiba em `maxSeats` lugares. */
-export function rollParty(level: LevelDef, maxSeats: number, rng: Rng): RecipeId[] {
+/** Sorteia o tamanho do grupo entre `minSeats` e `maxSeats` (pesos do nível). */
+export function rollPartySize(level: LevelDef, minSeats: number, maxSeats: number, rng: Rng): number {
   const sizes = level.partySizeWeights
-    .map((weight, size) => ({ value: size, weight: size <= maxSeats ? weight : 0 }))
+    .map((weight, size) => ({ value: size, weight: size >= minSeats && size <= maxSeats ? weight : 0 }))
     .filter((s) => s.weight > 0);
-  const size = sizes.length ? pickWeighted(sizes, rng) : 1;
-  const recipes = level.recipes.map((r) => ({ value: r.id, weight: r.weight }));
-  return Array.from({ length: size }, () => pickWeighted(recipes, rng));
+  return sizes.length ? pickWeighted(sizes, rng) : Math.max(1, Math.min(minSeats, maxSeats));
+}
+
+export function rollRecipes(pool: readonly { id: RecipeId; weight: number }[], size: number, rng: Rng): RecipeId[] {
+  const items = pool.map((r) => ({ value: r.id, weight: r.weight }));
+  return Array.from({ length: size }, () => pickWeighted(items, rng));
+}
+
+/** Sorteia um grupo que caiba em `maxSeats` lugares (e tenha pelo menos `minSeats`). */
+export function rollParty(level: LevelDef, maxSeats: number, rng: Rng, minSeats = 1): RecipeId[] {
+  return rollRecipes(level.recipes, rollPartySize(level, minSeats, maxSeats, rng), rng);
 }
 
 export function nextSpawnDelay(level: LevelDef, rng: Rng): number {

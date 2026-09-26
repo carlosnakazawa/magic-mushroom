@@ -3,74 +3,89 @@
 ## Por que esta stack
 | Escolha | Motivo |
 |---|---|
-| **Three.js (WebGL)** | Visual 3D com câmera aérea inclinada (Overcooked também é 3D por baixo). Dá luz dinâmica, sombras, bloom (brilho mágico) e a transição dia/noite fica linda. Roda no navegador — qualquer PC, sem instalar nada. |
-| **Modelos procedurais** (primitivas em código) | Não depende de arquivos de arte; qualquer agente consegue criar/ajustar personagens e móveis editando TypeScript. Estilo "toon" fofo e coerente. |
-| **TypeScript estrito + Vite** | Segurança de tipos, recarga instantânea, build estático simples (GitHub Pages). |
-| **Vitest** | Testes rápidos da lógica pura (grupos, receitas, economia, tutorial). |
-| **Playwright (smoke)** | Joga o tutorial num navegador real e tira screenshots — agentes conseguem *ver* o jogo. |
-| **Web Audio sintetizado** | Efeitos e música sem arquivos de áudio. |
-| **HTML/CSS para HUD** | Texto nítido, emoji coloridos, animações CSS fáceis. Rótulos 3D (balões, dicas) são HTML posicionados por projeção. |
+| **Three.js (WebGL)** | Visual 3D com câmera aérea inclinada (Overcooked também é 3D por baixo). Luz dinâmica, sombras, bloom (brilho mágico) e a transição dia/noite. Roda no navegador — qualquer PC, sem instalar nada, publicável no GitHub Pages. |
+| **Modelos procedurais** (primitivas em código) | Sem arquivos de arte; qualquer agente cria/ajusta personagens, máquinas e móveis editando TypeScript. |
+| **TypeScript estrito + Vite** | Segurança de tipos, recarga instantânea, build estático. |
+| **Vitest** | Testes rápidos da lógica pura (grupos, receitas, máquinas, caminhos, save/loja). |
+| **Playwright (smoke)** | Joga o ciclo inteiro num navegador real e tira screenshots — agentes conseguem *ver* o jogo. |
+| **Web Audio sintetizado** | Efeitos e músicas (dia/noite) sem arquivos de áudio. |
+| **HTML/CSS para HUD e menus** | Texto nítido, emoji, animações CSS, navegação por teclado/controle. |
 
 ## Camadas (regra de dependência: de cima para baixo)
 ```
-main.ts ─► game/Game.ts (orquestra estados, regras do dia, efeitos, HUD)
-              │
-              ├─ game/*        entidades com visual: World, Chef, Customer, ItemViews, interact, tutorial
-              ├─ ui/*          HTML: Hud, Screens (título/pausa/resultado), WorldUI (rótulos 3D)
-              ├─ models/*      construtores de malhas 3D (Creature, props, food)
-              ├─ render/*      Stage (renderer, câmera, luzes, bloom), materiais, texturas em canvas
-              ├─ fx/*          partículas e vaga-lumes
-              ├─ core/*        Input (teclado + gamepad), audio
-              ├─ sim/*         LÓGICA PURA — sem Three.js, sem DOM. Testada com Vitest.
-              └─ data/*        definições: personagens, ingredientes, receitas, níveis
+main.ts ─► game/Game.ts         estados: título → níveis → dia → resultado → noite → níveis…
+              ├─ game/Day.ts     DayRun: um dia (heróis, clientes, estações, máquinas, fogo, tutorial)
+              ├─ game/Night.ts   NightRun: noite (descanso, loja, posicionar móveis)
+              ├─ game/*          World, Chef, Customer, ItemViews, interact (regras), tutorial, fx
+              ├─ ui/*            HTML: Hud, Screens, NightPanel, WorldUI (rótulos 3D), nav (foco p/ controle)
+              ├─ models/*        malhas 3D: creature, props, food, machines, decor
+              ├─ render/*        Stage, Lighting (dia/noite), materiais, texturas, merge (otimização)
+              ├─ fx/*            partículas e vaga-lumes
+              ├─ core/*          Input (teclado/gamepad/remap), audio, storage (localStorage)
+              ├─ sim/*           LÓGICA PURA — sem Three.js, sem DOM. Testada com Vitest.
+              └─ data/*          definições: personagens, famílias, ingredientes, receitas, níveis, móveis
 config.ts  — todos os números de balanceamento (TUNING)
 ```
 **Regras:**
-- `sim/` e `data/` **nunca** importam `three` nem acessam `document`/`window`. Toda regra de jogo que puder ser pura vai para `sim/` com teste.
-- Números de balanceamento ficam em `src/config.ts` (`TUNING`), não espalhados.
-- Conteúdo novo (receita, ingrediente, nível, herói, cliente) começa em `src/data/`.
+- `sim/` e `data/` **nunca** importam `three` nem acessam `document`/`window`. Regra de jogo nova → primeiro em `sim/` com teste.
+- Balanceamento só em `src/config.ts` (`TUNING`).
+- Conteúdo novo (receita, ingrediente, nível, herói, móvel, família) começa em `src/data/`.
+- `Game` só orquestra; regras do dia ficam em `DayRun`, da noite em `NightRun`.
 
 ## Mapa de arquivos
 | Arquivo | Responsabilidade |
 |---|---|
-| `src/data/levels.ts` | Níveis: mapa ASCII (legenda no GDD B3), receitas, ritmo de clientes, metas de estrelas |
-| `src/data/recipes.ts` | Receitas + `matchRecipe`/`canAddToBowl` |
-| `src/data/characters.ts` | 5 heróis (cores, espécie, asas, efeito de comemoração) e visuais de clientes |
-| `src/sim/party.ts` | `Party`: fluxo do grupo (chegando → anotar → comer → sair), paciência, pagamentos |
-| `src/sim/items.ts` | Itens (ingrediente/tigela), `tryMerge` (montagem em qualquer ordem) |
-| `src/sim/economy.ts` | Gorjeta, bônus de banquete, estrelas |
-| `src/sim/spawner.ts` | Sorteio de grupos e intervalos (+ RNG determinístico) |
-| `src/game/world.ts` | Lê o mapa e monta o restaurante 3D: `Station`, `Table` (assentos, pratos, moedas), cenário externo |
-| `src/game/interact.ts` | **Regras de interação**: `findTarget`, `pickAction` (Espaço), `useAction` (E). Cada `Action` gera a dica *e* executa — nunca divergem |
-| `src/game/Game.ts` | Estados (título/contagem/jogando/pausa/resultado), trabalho nas estações, clientes, spawn, efeitos, tutorial |
-| `src/game/chef.ts` | Herói controlável: movimento, colisão círculo×grade, segurar item |
-| `src/game/customer.ts` | Cliente: caminha por waypoints, senta, come |
-| `src/game/itemviews.ts` | Liga item lógico ↔ malha 3D (reconstrói quando `item.version` muda) |
-| `src/game/tutorial.ts` | Passos do Dia 1 (concluíveis fora de ordem), congela relógio até 1ª entrega |
-| `src/models/creature.ts` | Criatura chibi procedural (corpo, cabeça, orelhas/cauda por espécie, asas por estilo, piscar, andar, comemorar) |
-| `src/models/props.ts` | Balcões, caixotes, tábua, pia, lixeira, mesa/banquinho de cogumelo, árvores, placa, janelas |
-| `src/models/food.ts` | Ingredientes crus/picados, tigelas, moedas |
-| `src/render/stage.ts` | Renderer, câmera inclinada (56°), luzes, sombras, bloom, `toScreen` |
-| `src/ui/hud.ts` | Relógio, comandas (selo dourado), moedas, metas, cartões de jogador, tutorial, avisos |
-| `src/ui/screens.ts` | Título/seleção de heróis, pausa, resultado, contagem regressiva |
-| `src/ui/worldui.ts` | Rótulos HTML presos a pontos 3D (balões, barras de progresso, dicas) |
+| `data/levels.ts` | 3 níveis: mapa ASCII (legenda no GDD B3), receitas, ritmo, metas, recipientes, dicas de novidade |
+| `data/recipes.ts` | Receitas com `vessel` (tigela/copo/prato) e `method` (montar/bater/cozinhar/grelhar); `matchRecipe`, `canAddIngredient` |
+| `data/ingredients.ts` | Ingredientes (cor, emoji, se pode picar) |
+| `data/characters.ts` | Heróis (incl. Mochi, liberado pela Família Panda), clientes, visuais de família |
+| `data/families.ts` | Famílias desbloqueáveis e metas de estrelas |
+| `data/furniture.ts` | Catálogo da loja, cores de parede e **espaços de decoração** (`DECOR_SLOTS`) do salão |
+| `sim/party.ts` | `Party`: fluxo do grupo, paciência (com `drainScale` do charme/sem pressa), pagamentos |
+| `sim/items.ts` | Itens: ingrediente, recipiente (`VesselItem`), ferramenta (extintor); `tryMerge`, `dishRecipe` |
+| `sim/machine.ts` | `Machine`: idle → working → done → warning → burnt → fire; `take`, `dump`, `spray` |
+| `sim/pathfind.ts` | A* em grade + simplificação de caminho (clientes) |
+| `sim/progress.ts` | Save (validação), níveis liberados, `recordDay`, famílias, loja, posicionamento, charme |
+| `sim/economy.ts`, `sim/spawner.ts` | Gorjeta/banquete/estrelas; sorteio de grupos (tamanho mín./máx.) |
+| `game/world.ts` | Monta o restaurante 3D a partir do mapa + decoração do save; `Station` (com `Machine`), `Table` (pequena/família), rotas, noite, marcadores de espaço |
+| `game/interact.ts` | **Regras de interação**: `findTarget`, `pickAction`, `useAction` (cada `Action` gera a dica *e* executa) |
+| `game/Day.ts` | Dia: movimento, ações, trabalho manual, máquinas/fogo, clientes/famílias, spawn, HUD, tutorial, dicas, bônus de descanso |
+| `game/Night.ts` | Noite: equipe dormindo, loja, pré-visualização, clique no salão (raycast) |
+| `game/Game.ts` | Estados, configurações, pausa, menus com controle, música, overlay `?debug` |
+| `game/fx.ts` | Partículas (respeitam "menos efeitos"), comemoração de cada herói, moedas voando |
+| `models/machines.ts` | Liquidificador, caldeirão e chapa animados conforme a fase (chamas, bolhas, líquido) |
+| `models/decor.ts` | Mesas de família, luminárias (com `PointLight`), enfeites, tapetes, parede |
+| `models/creature.ts` | Criatura chibi procedural (inclui panda) |
+| `models/food.ts` | Ingredientes crus/picados, tigela/copo/prato, extintor, moedas |
+| `render/stage.ts` | Renderer, câmera (56°), sombras, bloom, `zoomPulse`, `setInsetRight` (painel da noite) |
+| `render/lighting.ts` | Presets dia/noite interpolados |
+| `render/merge.ts` | Junta malhas estáticas por material (menos draw calls) |
+| `core/input.ts` | Teclado (teclas remapeáveis), gamepad (jogo e menus), `keyLabel` |
+| `core/storage.ts` | Lê/grava o save no `localStorage` sem nunca quebrar |
+| `ui/hud.ts` | Relógio, comandas (banner de família, selo dourado), moedas, metas, cartões, tutorial, dicas, selos |
+| `ui/screens.ts` | Título (heróis bloqueados), mapa de níveis, pausa, resultado (desbloqueios), opções, contagem |
+| `ui/night.ts` | Painel da loja noturna |
+| `ui/nav.ts` | Foco espacial para menus com controle/setas |
 
 ## Coordenadas
-- Célula `(x, z)` do mapa ASCII → centro no ponto `(x, 0, z)` do mundo. Linha 0 = parede do fundo (longe da câmera).
-- A câmera olha do **sul** (+z) para o norte. "Frente" de um personagem = `+z` local; `facing = atan2(dx, dz)`.
-- Alturas: tampo dos balcões `COUNTER_TOP = 0.92`, tampo das mesas `TABLE_TOP = 0.74`.
+- Célula `(x, z)` do mapa → ponto `(x, 0, z)`. Linha 0 = parede do fundo. Mapas têm 18×11; o salão (colunas 10–17) é igual em todos os níveis.
+- Câmera olha do **sul** (+z). "Frente" de um personagem = `+z` local; `facing = atan2(dx, dz)`.
+- Alturas: balcões `COUNTER_TOP = 0.92`, mesas `TABLE_TOP = 0.74`.
 
-## Brilho mágico (bloom)
-O bloom tem `threshold = 1.0`: só brilha o que tem **emissivo forte** (`glow()` em `render/materials.ts`). Para algo brilhar, use `glow(cor, intensidade>1)`. Superfícies comuns usam `toon(cor)`. Se a cena ficar "lavada", reduza luzes em `Stage` antes de mexer no bloom.
+## Brilho mágico (bloom) e noite
+- Bloom com `threshold = 1.0`: só brilha o que tem emissivo forte (`glow(cor, >1)`).
+- `Lighting` interpola céu/luzes/exposição/bloom; `World.setNight(v)` realça emissivos (janelas, lanternas, cogumelos) e luminárias compradas.
 
 ## Como adicionar…
-- **Receita:** `data/recipes.ts` (ingredientes + preço) → incluir no `recipes` do nível em `data/levels.ts` → teste em `sim/items.test.ts`.
-- **Ingrediente:** `data/ingredients.ts` → modelo cru/picado em `models/food.ts` → letra no mapa (`world.ts` `CRATE_KINDS`).
-- **Estação nova (ex.: liquidificador):** novo `StationKind` + modelo em `props.ts` + letra no mapa em `world.ts` + regras em `interact.ts` (`pickAction`/`useAction`) + progresso em `Game.updateWork`.
-- **Mesa família:** `Table` já aceita qualquer lista de assentos e `Party` já suporta 1–6 membros; basta um modelo novo e uma letra no mapa (ou posicionamento pela loja noturna).
-- **Herói/cliente:** `data/characters.ts`; espécies novas precisam de orelhas/cauda em `models/creature.ts` e emoji em `ui/hud.ts` (`SPECIES_EMOJI`).
+- **Receita:** `data/recipes.ts` (vessel + method + ingredientes) → pesos no nível → teste.
+- **Ingrediente:** `data/ingredients.ts` → modelo em `models/food.ts` → letra em `world.ts` (`CRATE_KINDS`).
+- **Máquina nova:** `MachineKind` + tempos em `TUNING.machines` + visual em `models/machines.ts` + letra em `world.ts` (`MACHINE_KINDS`) + testes.
+- **Móvel:** `FURNITURE` + modelo em `models/decor.ts` (`decorMesh`). Novo tipo de espaço → `SlotKind` + `DECOR_SLOTS`.
+- **Família:** `data/families.ts` (`available: true`) + `FAMILY_LOOKS` + espécie em `creature.ts`/`SPECIES_EMOJI`/`SPECIES_FAMILY_NAME` + herói com `family` + receita/móvel com `family`.
+- **Nível:** novo item em `LEVELS` (copie o salão das colunas 10–17), `intro` com dicas.
 
 ## Depuração
-- `window.game` no console dá acesso ao estado (ex.: `game.timeLeft = 5`, `game.coins`).
-- `?speed=4` na URL acelera a simulação (usado pelo smoke test).
+- `window.game` no console (ex.: `game.day.timeLeft = 5`, `game.save`, `game.showLevels()`).
+- `?speed=4` acelera a simulação; `?debug` mostra FPS e draw calls.
 - `npm run smoke` gera screenshots em `.screenshots/`.
+- Para zerar o progresso: ⚙️ Opções → Começar do zero (ou apagar `bistro-cogumelo-save-v1` do localStorage).
