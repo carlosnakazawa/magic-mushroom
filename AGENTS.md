@@ -16,10 +16,11 @@ npm install
 npm run dev        # http://localhost:5173
 npm run check      # typecheck + testes — rode antes de todo commit
 npm run build      # build de produção (dist/)
-npm run smoke      # joga o tutorial num navegador headless e salva .screenshots/*.png
+npm run smoke      # joga o ciclo inteiro (tutorial, noite/loja, nível 3 com fogo, família) e salva .screenshots/*.png
                    # (1ª vez: npx playwright install chromium)
 ```
-Debug: `window.game` no console; `?speed=4` acelera a simulação.
+Debug: `window.game` no console; `?speed=4` acelera a simulação; `?debug` mostra FPS/draw calls.
+Publicação: cada merge na `main` publica em https://carlosnakazawa.github.io/magic-mushroom/ (workflow `deploy.yml`).
 
 ## Pilares — use para desempatar decisões
 1. **É um JOGO visual.** Toda ação importante precisa de feedback: animação (squash/pulo), partículas, som. Prefira algo que brilha, pula e comemora.
@@ -29,6 +30,8 @@ Debug: `window.game` no console; `?speed=4` acelera a simulação.
 
 ## Regras de código
 - `src/sim/` e `src/data/` são **puros** (sem `three`, sem DOM) e têm testes. Regra de jogo nova → primeiro em `sim/` com teste.
+- `Game.ts` só orquestra estados; regras do dia em `game/Day.ts`, da noite em `game/Night.ts`.
+- Save: qualquer campo novo precisa de valor padrão e validação em `parseSave` (saves antigos não podem quebrar).
 - Balanceamento só em `src/config.ts` (`TUNING`).
 - Identificadores em inglês; textos da interface, comentários e docs em português.
 - Siga o estilo existente: funções pequenas, comentários curtos explicando o *porquê*.
@@ -48,7 +51,7 @@ O projeto tem **3 etapas** (ver ROADMAP). Cada etapa:
 3. PR para `main` com: resumo, o que testar (passo a passo jogável), screenshots, checklist da etapa.
 4. **Revisão do Gemini Code Assist:** ele revisa automaticamente ao abrir o PR (configuração em `.gemini/`). Se não aparecer, comente `/gemini review` no PR.
 5. Trate os comentários do Gemini: corrija o que fizer sentido, responda o que não for aplicar (com o porquê), rode a verificação de novo e faça push.
-6. O **Carlos faz o merge**. Agentes não fazem merge nem push em `main`.
+6. O **Carlos decide o merge**. Agentes só fazem merge quando ele pedir explicitamente naquela conversa; nunca fazem push direto em `main`.
 
 Para ler a revisão: `gh pr view <n> --comments` e `gh api repos/carlosnakazawa/magic-mushroom/pulls/<n>/comments`.
 
