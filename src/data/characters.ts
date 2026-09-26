@@ -1,6 +1,8 @@
 /** Heróis jogáveis e clientes. Descrições completas em docs/GDD.md (seção 2). */
 
-export type Species = 'bunny' | 'fox' | 'dragon' | 'wolf' | 'owl' | 'bear' | 'cat' | 'mouse' | 'frog' | 'hedgehog';
+import type { FamilyId } from './families';
+
+export type Species = 'bunny' | 'fox' | 'dragon' | 'wolf' | 'owl' | 'bear' | 'cat' | 'mouse' | 'frog' | 'hedgehog' | 'panda';
 
 export type WingStyle = 'dragonfly' | 'leaf' | 'bat' | 'constellation' | 'feather';
 
@@ -21,6 +23,8 @@ export interface HeroDef {
   celebrate: CelebrateFx;
   /** Frase curta para o menu de seleção. */
   blurb: string;
+  /** Herói contratado ao desbloquear uma família (não aparece antes). */
+  family?: FamilyId;
 }
 
 export const HEROES: readonly HeroDef[] = [
@@ -94,6 +98,21 @@ export const HEROES: readonly HeroDef[] = [
     celebrate: 'dust',
     blurb: 'Graciosa e organizada, nunca esquece um pedido.',
   },
+  {
+    id: 'mochi',
+    name: 'Mochi',
+    title: 'O Pandinha do Bambu',
+    species: 'panda',
+    wing: 'leaf',
+    body: 0xfbfbf8,
+    belly: 0xffffff,
+    accent: 0x2e2c36,
+    wingColor: 0x8fd16a,
+    eyeColor: 0x1d1b22,
+    celebrate: 'leaves',
+    blurb: 'Calmo e forte, adora uma sopinha de bambu.',
+    family: 'panda',
+  },
 ];
 
 export interface CustomerLook {
@@ -113,3 +132,23 @@ export const CUSTOMER_LOOKS: readonly CustomerLook[] = [
   { species: 'frog', body: 0x8fd16a, belly: 0xe9f7c9, accent: 0x5a9a3f },
   { species: 'hedgehog', body: 0x9b7b64, belly: 0xf1dcc4, accent: 0x5c4332 },
 ];
+
+/** Visual dos clientes de famílias desbloqueáveis. */
+export const FAMILY_LOOKS: Partial<Record<FamilyId, CustomerLook>> = {
+  panda: { species: 'panda', body: 0xfbfbf8, belly: 0xffffff, accent: 0x2e2c36 },
+};
+
+/** Nome da espécie no plural, para o banner de família ("Família Ursos"). */
+export const SPECIES_FAMILY_NAME: Record<Species, string> = {
+  bunny: 'Coelhos',
+  fox: 'Raposas',
+  dragon: 'Dragões',
+  wolf: 'Lobos',
+  owl: 'Corujas',
+  bear: 'Ursos',
+  cat: 'Gatos',
+  mouse: 'Ratinhos',
+  frog: 'Sapos',
+  hedgehog: 'Ouriços',
+  panda: 'Pandas',
+};

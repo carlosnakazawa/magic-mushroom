@@ -29,3 +29,14 @@ describe('spawner', () => {
     }
   });
 });
+
+describe('spawner: famílias', () => {
+  it('respeita o tamanho mínimo (mesa família)', () => {
+    const rng = seededRng(7);
+    for (let i = 0; i < 50; i++) {
+      const n = rollParty(LEVELS[0]!, 6, rng, 3).length;
+      expect(n).toBeGreaterThanOrEqual(3);
+      expect(n).toBeLessThanOrEqual(6);
+    }
+  });
+});

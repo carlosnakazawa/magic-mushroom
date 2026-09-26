@@ -81,13 +81,14 @@ export class Party {
     return i;
   }
 
-  update(dt: number): PartyEvent[] {
+  /** `drainScale` < 1 deixa os clientes mais pacientes (charme, modo sem pressa). */
+  update(dt: number, drainScale = 1): PartyEvent[] {
     const events: PartyEvent[] = [];
     if (this.isLeaving || this.phase === 'arriving') return events;
 
     if (this.phase === 'waitingOrder' || (this.phase === 'ordered' && !this.allServed)) {
       const drain = this.phase === 'waitingOrder' ? TUNING.patience.orderDrain : TUNING.patience.foodDrain;
-      this.patience = Math.max(0, this.patience - drain * dt);
+      this.patience = Math.max(0, this.patience - drain * dt * drainScale);
       if (this.patience <= 0) {
         this.phase = 'angry';
         events.push({ type: 'angry' });
