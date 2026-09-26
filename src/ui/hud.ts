@@ -194,13 +194,13 @@ export class Hud {
     }
   }
 
-  setTutorial(steps: { text: string; done: boolean }[] | null, current: number): void {
+  setTutorial(steps: { text: string; done: boolean }[] | null, current: number, keys = { pick: 'Espaço', use: 'E' }): void {
     this.tutorial.classList.toggle('hidden', !steps);
     if (!steps) return;
     this.tutorial.innerHTML =
       `<h3>🍄 Aprendendo!</h3>` +
       steps
-        .map((s, i) => `<div class="tstep${s.done ? ' done' : ''}${i === current ? ' current' : ''}">${s.done ? '✅' : i === current ? '👉' : '⬜'} ${s.text}</div>`)
+        .map((s, i) => `<div class="tstep${s.done ? ' done' : ''}${i === current ? ' current' : ''}">${s.done ? '✅' : i === current ? '👉' : '⬜'} ${s.text.replaceAll('{pick}', `<kbd>${keys.pick}</kbd>`).replaceAll('{use}', `<kbd>${keys.use}</kbd>`)}</div>`)
         .join('');
   }
 

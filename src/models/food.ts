@@ -7,6 +7,10 @@ const sphere = new THREE.SphereGeometry(1, 16, 12);
 const cube = new THREE.BoxGeometry(1, 1, 1);
 const cone = new THREE.ConeGeometry(1, 1, 8);
 const cyl = new THREE.CylinderGeometry(1, 1, 1, 16);
+// Geometrias/materiais compartilhados: tigelas e moedas são recriadas com frequência.
+const rimGeo = new THREE.TorusGeometry(0.225, 0.015, 8, 28);
+const coinGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16);
+const coinMat = new THREE.MeshStandardMaterial({ color: 0xffc83d, emissive: 0xffa000, emissiveIntensity: 0.9, metalness: 0.6, roughness: 0.3 });
 
 const bowlGeo = (() => {
   const pts: THREE.Vector2[] = [];
@@ -93,7 +97,7 @@ export function bowlMesh(contents: readonly IngredientKind[], dirty: boolean, co
   const g = new THREE.Group();
   const b = mesh(bowlGeo, toon(dirty ? 0xd8cfc0 : 0xfdfbff));
   g.add(b);
-  const rim = mesh(new THREE.TorusGeometry(0.225, 0.015, 8, 28), toon(dirty ? 0xa89886 : 0x8fd3ff));
+  const rim = mesh(rimGeo, toon(dirty ? 0xa89886 : 0x8fd3ff));
   rim.rotation.x = Math.PI / 2;
   rim.position.y = 0.17;
   g.add(rim);
@@ -126,11 +130,9 @@ export function itemMesh(item: Item): THREE.Group {
 /** Pilha de moedas douradas (deixadas na mesa). */
 export function coinPile(count: number): THREE.Group {
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffc83d, emissive: 0xffa000, emissiveIntensity: 0.9, metalness: 0.6, roughness: 0.3 });
-  const coin = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16);
   const n = Math.min(8, Math.max(1, Math.ceil(count / 4)));
   for (let i = 0; i < n; i++) {
-    const c = new THREE.Mesh(coin, mat);
+    const c = new THREE.Mesh(coinGeo, coinMat);
     c.castShadow = true;
     c.position.set((i % 3) * 0.05 - 0.05, 0.012 + Math.floor(i / 3) * 0.022, (i % 2) * 0.04);
     c.rotation.z = (i % 2) * 0.2;

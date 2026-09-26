@@ -35,7 +35,8 @@ export type GameEvent =
 
 /** Encontra a estação/mesa que o herói está "olhando". */
 export function findTarget(world: World, chef: Chef): Target | null {
-  const f = chef.forward;
+  const fx = Math.sin(chef.facing);
+  const fz = Math.cos(chef.facing);
   const cx = Math.round(chef.pos.x);
   const cz = Math.round(chef.pos.z);
   let best: Target | null = null;
@@ -47,10 +48,12 @@ export function findTarget(world: World, chef: Chef): Target | null {
       const station = world.stationAt(x, z);
       const table = station ? null : world.tableAt(x, z);
       if (!station && !table) continue;
-      const to = new THREE.Vector3(x - chef.pos.x, 0, z - chef.pos.z);
-      const dist = to.length();
+      // Escalares em vez de Vector3: roda todo frame para cada herói.
+      const tx = x - chef.pos.x;
+      const tz = z - chef.pos.z;
+      const dist = Math.hypot(tx, tz);
       if (dist > TUNING.player.reach + 0.55) continue;
-      const dot = dist > 0.001 ? to.divideScalar(dist).dot(f) : 1;
+      const dot = dist > 0.001 ? (tx * fx + tz * fz) / dist : 1;
       if (dot < 0.3) continue;
       const score = dist - dot * 0.9;
       if (score < bestScore) {

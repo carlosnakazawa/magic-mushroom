@@ -658,6 +658,7 @@ export class Game implements ActionHost {
         ap.labels.forEach((l) => this.worldUI.remove(l));
         this.worldUI.remove(ap.orderBubble);
         this.parties.splice(this.parties.indexOf(ap), 1);
+        if (table.party === party) table.party = null;
         table.seats.forEach((s) => {
           if (ap.customers.includes(s.customer!)) s.customer = null;
         });
@@ -718,7 +719,8 @@ export class Game implements ActionHost {
 
   private leave(ap: ActiveParty): void {
     const { table } = ap;
-    table.party = null;
+    // A mesa só é liberada quando o último cliente sair (ver updateParties),
+    // para um novo grupo não vir sentar enquanto este ainda se levanta.
     const door = this.world.door;
     ap.customers.forEach((c, i) => {
       c.creature.eating = false;
@@ -882,7 +884,8 @@ export class Game implements ActionHost {
 
   private refreshTutorial(): void {
     const tut = this.tutorial;
-    this.hud.setTutorial(tut ? tut.steps : null, tut?.current ?? 0);
+    const keys = this.playerCount === 2 ? { pick: 'Espaço / Enter', use: 'E / Shift' } : KEYS_BY_SLOT[0]!;
+    this.hud.setTutorial(tut ? tut.steps : null, tut?.current ?? 0, keys);
   }
 
   private updateArrow(dt: number): void {

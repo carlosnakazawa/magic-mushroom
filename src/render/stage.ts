@@ -21,6 +21,10 @@ export class Stage {
   private composer: EffectComposer;
   private bloom: UnrealBloomPass;
   private focus = new THREE.Vector3();
+  // Vetores temporários reutilizados (evita alocação por frame)
+  private tmpOff = new THREE.Vector3();
+  private tmpTarget = new THREE.Vector3();
+  private tmpProj = new THREE.Vector3();
   private focusSize = new THREE.Vector2(16, 10);
   private shake = 0;
   /** Zoom extra (1 = normal, <1 aproxima). */
@@ -94,8 +98,9 @@ export class Stage {
     const dW = this.focusSize.x / 2 / Math.tan(hfov / 2);
     const dD = ((this.focusSize.y * Math.sin(pitch)) / 2 + 1.2) / Math.tan(vfov / 2);
     const dist = Math.max(dW, dD) * this.currentZoom;
-    const off = new THREE.Vector3(0, Math.sin(pitch), Math.cos(pitch)).multiplyScalar(dist);
-    const target = this.focus.clone().add(new THREE.Vector3(0, 0, 0.4));
+    const off = this.tmpOff.set(0, Math.sin(pitch), Math.cos(pitch)).multiplyScalar(dist);
+    const target = this.tmpTarget.copy(this.focus);
+    target.z += 0.4;
     this.camera.position.copy(target).add(off);
     if (this.shake > 0) {
       this.camera.position.x += (Math.random() - 0.5) * this.shake;
@@ -124,7 +129,7 @@ export class Stage {
 
   /** Projeta um ponto do mundo para pixels da tela (para rótulos HTML). */
   toScreen(p: THREE.Vector3, out: { x: number; y: number; visible: boolean }): void {
-    const v = p.clone().project(this.camera);
+    const v = this.tmpProj.copy(p).project(this.camera);
     out.x = (v.x * 0.5 + 0.5) * this.renderer.domElement.clientWidth;
     out.y = (-v.y * 0.5 + 0.5) * this.renderer.domElement.clientHeight;
     out.visible = v.z < 1;

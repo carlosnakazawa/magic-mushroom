@@ -5,6 +5,7 @@ export type TutorialEvent = 'orderTaken' | 'pickLettuce' | 'chopped' | 'saladRea
 export type TutorialFocus = 'firstTable' | 'crateLettuce' | 'board' | 'bowls' | 'sink';
 
 interface Step {
+  /** Usa {pick}/{use}: o HUD troca pelas teclas dos jogadores ativos. */
   text: string;
   event: TutorialEvent;
   focus: TutorialFocus;
@@ -17,13 +18,13 @@ interface Step {
  */
 export class Tutorial {
   readonly steps: Step[] = [
-    { text: 'Chegue perto do cliente ❗ e aperte <kbd>E</kbd> para anotar o pedido', event: 'orderTaken', focus: 'firstTable', done: false },
-    { text: 'Pegue uma alface 🥬 no caixote com <kbd>Espaço</kbd>', event: 'pickLettuce', focus: 'crateLettuce', done: false },
-    { text: 'Coloque na tábua 🔪 (<kbd>Espaço</kbd>) e corte com <kbd>E</kbd>', event: 'chopped', focus: 'board', done: false },
+    { text: 'Chegue perto do cliente ❗ e aperte {use} para anotar o pedido', event: 'orderTaken', focus: 'firstTable', done: false },
+    { text: 'Pegue uma alface 🥬 no caixote com {pick}', event: 'pickLettuce', focus: 'crateLettuce', done: false },
+    { text: 'Coloque na tábua 🔪 ({pick}) e corte com {use}', event: 'chopped', focus: 'board', done: false },
     { text: 'Pegue uma tigela 🥣 e junte a alface picada', event: 'saladReady', focus: 'bowls', done: false },
     { text: 'Leve a salada até a mesa do cliente 🍽️', event: 'served', focus: 'firstTable', done: false },
     { text: 'Quando ele terminar, recolha a louça e as moedas 🪙', event: 'cleared', focus: 'firstTable', done: false },
-    { text: 'Lave a tigela na pia 🫧 (<kbd>Espaço</kbd> coloca, <kbd>E</kbd> lava)', event: 'washed', focus: 'sink', done: false },
+    { text: 'Lave a tigela na pia 🫧 ({pick} coloca, {use} lava)', event: 'washed', focus: 'sink', done: false },
   ];
 
   get current(): number {
