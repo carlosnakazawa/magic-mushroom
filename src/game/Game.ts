@@ -11,6 +11,7 @@ import { defaultSave, recordDay, type SaveData, type Settings } from '../sim/pro
 import { Hud } from '../ui/hud';
 import { moveFocus } from '../ui/nav';
 import { Screens } from '../ui/screens';
+import { TouchControls, isTouchDevice } from '../ui/touch';
 import { WorldUI } from '../ui/worldui';
 import { DayRun, type DayStats } from './Day';
 import { Fx } from './fx';
@@ -46,6 +47,8 @@ export class Game {
   private t = 0;
   private lastNight = -1;
   private debugEl: HTMLDivElement | null = null;
+  private touch: TouchControls | null = null;
+  private touchShown = false;
   /** Depuração: `?speed=4` roda a simulação 4× mais rápido (útil em testes automatizados). */
   private timeScale = Math.max(1, Math.min(8, Number(new URLSearchParams(location.search).get('speed')) || 1));
 
@@ -53,13 +56,24 @@ export class Game {
     const stageEl = document.createElement('div');
     stageEl.className = 'stage';
     container.appendChild(stageEl);
-    this.stage = new Stage(stageEl);
+    const touch = isTouchDevice();
+    document.documentElement.classList.toggle('touch', touch);
+    this.stage = new Stage(stageEl, touch);
     const labelLayer = document.createElement('div');
     labelLayer.className = 'world-ui';
     container.appendChild(labelLayer);
     this.worldUI = new WorldUI(labelLayer);
     this.hud = new Hud(container);
-    this.screens = new Screens(container);
+    this.screens = new Screens(container, touch);
+    if (touch) {
+      this.touch = new TouchControls(container);
+      this.touch.onPause = () => {
+        audio.unlock();
+        if (this.state === 'day') this.togglePause();
+      };
+      this.input.attachTouch(this.touch);
+      this.buildRotateNotice();
+    }
     this.fx = new Fx(this.stage, container);
     this.lighting = new Lighting(this.stage);
     this.save = loadSave();
@@ -88,6 +102,15 @@ export class Game {
     this.buildWorld();
     this.showTitle();
     this.loop();
+  }
+
+  /** Celular em pé: pede para girar (dá para dispensar). */
+  private buildRotateNotice(): void {
+    const el = document.createElement('div');
+    el.className = 'rotate';
+    el.innerHTML = `<div><div class="rotate-icon">📱</div><p>Gire o celular para jogar deitado!</p><button class="btn small">Jogar assim mesmo</button></div>`;
+    el.querySelector('button')!.onclick = () => el.remove();
+    this.container.appendChild(el);
   }
 
   // ───────────────────────────── configurações ─────────────────────────────
@@ -253,6 +276,7 @@ export class Game {
 
   startNight(): void {
     this.endRuns();
+    this.clearTitle();
     this.hud.show(false);
     this.state = 'night';
     this.save = { ...this.save, rested: true };
@@ -346,6 +370,11 @@ export class Game {
       });
     }
     this.input.endFrame();
+    const showTouch = this.state === 'day' || this.state === 'countdown';
+    if (this.touch && showTouch !== this.touchShown) {
+      this.touchShown = showTouch;
+      this.touch.show(showTouch, this.playerCount === 1);
+    }
 
     this.lighting.update(dt);
     if (this.lighting.value !== this.lastNight) {

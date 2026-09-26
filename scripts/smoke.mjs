@@ -7,6 +7,7 @@
  *  2. Fim do dia → resultado → noite: compra e posiciona o Tronco Encantado e uma luminária
  *  3. Mapa de níveis → Nível 3: chapa pega fogo e o extintor apaga; família de pandas
  *     senta na mesa grande
+ *  4. Celular (toque, deitado): joystick move o herói, botão ✋ pega, aviso de girar em pé
  *
  * Uso:  npm run smoke            (1ª vez: npx playwright install chromium)
  * Dica: abra as imagens em .screenshots/ para conferir o visual depois de mudanças.
@@ -189,6 +190,62 @@ try {
   });
   await page.waitForTimeout(1500);
   await shot('12-familia-panda');
+
+  // ───────── 4. Celular (toque, deitado) ─────────
+  await page.close(); // libera a GPU por software para a próxima página
+  const phone = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
+  const mob = await phone.newPage();
+  mob.on('pageerror', (e) => errors.push(`[celular] ${e.message}`));
+  const mshot = (name) => mob.screenshot({ path: `${OUT}/${name}.png` });
+  const muntil = async (fn, label, ms = 90_000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) {
+      if (await mob.evaluate(fn)) return;
+      await mob.waitForTimeout(200);
+    }
+    throw new Error(`Timeout (celular) esperando: ${label}`);
+  };
+  await mob.goto('http://localhost:5199/?speed=4', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+  await mob.waitForSelector('text=Jogar sozinho', { timeout: 60_000 });
+  await mob.waitForTimeout(2000);
+  if (!(await mob.evaluate(() => document.documentElement.classList.contains('touch')))) throw new Error('Modo toque não foi detectado no celular');
+  await mshot('13-celular-titulo');
+  await mob.getByText('Jogar sozinho').first().tap();
+  await mob.getByText('Salada Feérica').first().tap();
+  await muntil(() => window.game.state === 'day', 'dia começar (celular)');
+  await mob.waitForTimeout(800);
+  await mshot('14-celular-dia');
+  if (await mob.locator('.touch-controls.hidden').count()) throw new Error('Controles de toque não apareceram');
+  // Arrasta o joystick para a direita com o "dedo" (Pointer Events)
+  const x0 = await mob.evaluate(() => window.game.day.chefs[0].pos.x);
+  await mob.mouse.move(150, 300);
+  await mob.mouse.down();
+  await mob.mouse.move(200, 300, { steps: 4 });
+  await mob.mouse.move(240, 300, { steps: 4 });
+  await mob.waitForTimeout(1500);
+  await mshot('15-celular-joystick');
+  await mob.mouse.up();
+  const x1 = await mob.evaluate(() => window.game.day.chefs[0].pos.x);
+  console.log(`Joystick: x ${x0.toFixed(2)} → ${x1.toFixed(2)}`);
+  if (x1 - x0 < 0.5) throw new Error('Joystick não moveu o herói');
+  // Botão ✋ pega a alface
+  await mob.evaluate(() => {
+    const c = window.game.day.chefs[0];
+    c.pos.set(1, 0, 2);
+    c.vel.set(0, 0, 0);
+    c.facing = Math.PI;
+  });
+  await mob.waitForTimeout(600);
+  await mob.locator('.tbtn.pick').tap();
+  await muntil(() => window.game.day.chefs[0].held?.kind === 'lettuce', 'botão pegar (celular)', 20_000);
+  await mob.waitForTimeout(600);
+  await mshot('16-celular-pegou');
+  // Em pé: aviso para girar
+  await mob.setViewportSize({ width: 390, height: 844 });
+  await mob.waitForTimeout(800);
+  if (!(await mob.locator('.rotate').isVisible())) throw new Error('Aviso de girar o celular não apareceu');
+  await mshot('17-celular-em-pe');
+  await phone.close();
 
   if (errors.length) throw new Error(`Erros no console:\n${errors.join('\n')}`);
   ok = true;

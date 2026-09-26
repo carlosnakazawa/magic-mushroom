@@ -12,6 +12,14 @@ export interface PlayerInput {
   swap: boolean;
 }
 
+/** Fonte de toque (joystick + botões na tela) — implementada por ui/touch.ts. */
+export interface TouchSource {
+  moveX: number;
+  moveZ: number;
+  hit(action: 'pick' | 'use' | 'swap'): boolean;
+  endFrame(): void;
+}
+
 /** Navegação em menus (teclado ou controle). */
 export interface MenuInput {
   dx: number;
@@ -70,6 +78,17 @@ export class Input {
   private capture: ((code: string) => void) | null = null;
   private keys: Settings['keys'] = structuredClone(DEFAULT_KEYS);
   private lastPads: ((PlayerInput & { pause: boolean; back: boolean }) | null)[] = [];
+  private touch: TouchSource | null = null;
+
+  /** Liga os controles de toque (sempre controlam o jogador 1). */
+  attachTouch(t: TouchSource): void {
+    this.touch = t;
+  }
+
+  /** Jogando por toque: dicas mostram ícones dos botões em vez de teclas. */
+  get touchMode(): boolean {
+    return !!this.touch;
+  }
 
   constructor() {
     window.addEventListener('keydown', (e) => {
@@ -171,6 +190,16 @@ export class Input {
     return keys.map((k, slot) => {
       const padsForSlot = playerCount === 1 ? pads : [pads[slot] ?? null];
       let out = { ...k };
+      const t = slot === 0 ? this.touch : null;
+      if (t) {
+        out = {
+          moveX: out.moveX || t.moveX,
+          moveZ: out.moveZ || t.moveZ,
+          pick: out.pick || t.hit('pick'),
+          use: out.use || t.hit('use'),
+          swap: out.swap || t.hit('swap'),
+        };
+      }
       for (const p of padsForSlot) {
         if (!p) continue;
         out = {
@@ -238,5 +267,6 @@ export class Input {
 
   endFrame(): void {
     this.pressed.clear();
+    this.touch?.endFrame();
   }
 }

@@ -93,6 +93,8 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 | Música liga/desliga | M | M | — |
 | Menus | Setas/WASD + Enter, ou mouse | | D-pad + A (B volta) |
 
+**Celular/tablet (toque, jogador 1):** joystick que aparece onde o polegar encosta na metade esquerda da tela; botões grandes à direita — ✋ **Pegar**, ⭐ **Usar**, 🔄 **Trocar** (solo) — e ⏸ pausa. As dicas e o tutorial mostram esses ícones no lugar das teclas. O jogo pede para girar o celular (deitado); tem botão de tela cheia e pode ser instalado com "Adicionar à tela inicial". Modo dupla no celular precisa de um controle Bluetooth.
+
 - As teclas de **pegar/usar/trocar** podem ser **remapeadas** em ⚙️ Opções (movimento é fixo).
 - **Modo solo:** o jogador controla 2 personagens e alterna com `Q` (o outro fica parado — estilo Overcooked). Quem estava cortando/lavando/apagando continua o trabalho.
 - **Modo 2 jogadores:** cooperação local no mesmo teclado (ou teclado + controle).

@@ -1,0 +1,303 @@
+/* Celular e tablet: controles de toque, layout compacto, aviso de girar a tela. */
+
+html.touch,
+html.touch body {
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Listas que rolam precisam aceitar o arrastar vertical */
+html.touch .screens.open,
+html.touch .np-list {
+  touch-action: pan-y;
+}
+
+/* ───────── Controles na tela ───────── */
+.touch-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.stick-zone {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 45%;
+  height: 72%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.stick-hint {
+  position: absolute;
+  left: calc(28px + env(safe-area-inset-left));
+  bottom: 28px;
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  border: 3px dashed rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  transition: opacity 0.4s;
+}
+
+.touch-controls.touched .stick-hint {
+  opacity: 0;
+}
+
+.stick-base {
+  position: absolute;
+  width: 124px;
+  height: 124px;
+  margin: -62px 0 0 -62px;
+  border-radius: 50%;
+  background: rgba(255, 250, 240, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  display: none;
+  place-items: center;
+}
+
+.stick-base.on {
+  display: grid;
+}
+
+.stick-knob {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #ffe9c7);
+  box-shadow: 0 4px 0 rgba(74, 47, 35, 0.3);
+}
+
+.touch-buttons {
+  position: absolute;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: 210px;
+  height: 190px;
+  pointer-events: none;
+}
+
+.tbtn {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  border: none;
+  border-radius: 50%;
+  font: 700 30px 'Fredoka', sans-serif;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 6px 0 rgba(74, 47, 35, 0.35);
+  transition: transform 0.06s;
+  user-select: none;
+}
+
+.tbtn small {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.tbtn.down {
+  transform: translateY(4px) scale(0.94);
+  box-shadow: 0 2px 0 rgba(74, 47, 35, 0.35);
+}
+
+.tbtn.pick {
+  right: 0;
+  bottom: 0;
+  width: 96px;
+  height: 96px;
+  background: linear-gradient(180deg, #7fe0a0, #4cc27a);
+  color: #fff;
+}
+
+.tbtn.use {
+  right: 104px;
+  bottom: 14px;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(180deg, #ffe07a, #ffc83d);
+}
+
+.tbtn.swap {
+  right: 18px;
+  bottom: 110px;
+  width: 62px;
+  height: 62px;
+  font-size: 24px;
+  background: linear-gradient(180deg, #bfe8ff, #7fc8ff);
+}
+
+.tbtn.pause {
+  top: 118px;
+  left: calc(20px + env(safe-area-inset-left));
+  width: 46px;
+  height: 46px;
+  font-size: 20px;
+  background: var(--cream);
+}
+
+/* No toque os cartões de jogador dariam lugar ao joystick */
+html.touch .players {
+  display: none;
+}
+
+/* Selos no rodapé, entre o joystick e os botões */
+html.touch .chips {
+  top: auto;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
+  justify-content: center;
+}
+
+html.touch .toasts {
+  bottom: 48px;
+}
+
+.touch-help span {
+  font-size: 14px;
+}
+
+/* ───────── Aviso de girar o celular ───────── */
+.rotate {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 700px) {
+  html.touch .rotate {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, #7fbf95, #4f9a6c);
+    color: #fff;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    padding: 24px;
+  }
+}
+
+.rotate-icon {
+  font-size: 80px;
+  animation: rotate-hint 2s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%,
+  30% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+/* ───────── Telas baixas (celular deitado) ───────── */
+@media (max-height: 520px) {
+  .hud-top {
+    zoom: 0.72;
+  }
+
+  .tbtn.pause {
+    top: 84px;
+  }
+
+  html.touch .chips {
+    zoom: 0.8;
+  }
+
+  /* Título: 6 heróis numa linha só, sem a descrição longa */
+  .hero-cards.n6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .hero-card p {
+    display: none;
+  }
+
+  .tutorial {
+    top: 66px;
+    width: 250px;
+    zoom: 0.82;
+    padding: 6px 10px 8px;
+  }
+
+  .tutorial h3 {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  /* Só o passo atual para não cobrir o jogo */
+  .tutorial .tstep:not(.current) {
+    display: none;
+  }
+
+  .tutorial.tips {
+    top: 66px;
+    bottom: auto;
+  }
+
+  .tutorial.tips .tstep {
+    display: block;
+  }
+
+  .toasts {
+    zoom: 0.82;
+  }
+
+  .screens.open {
+    padding: 8px;
+    place-items: start center;
+  }
+
+  .screens.open .panel {
+    zoom: 0.68;
+  }
+
+  .screens.title .panel {
+    zoom: 0.62;
+  }
+
+  .night-panel {
+    width: 330px;
+    zoom: 0.76;
+    top: 8px;
+    bottom: 8px;
+  }
+
+  .cd-word {
+    font-size: 64px;
+  }
+
+  .wl .hint {
+    font-size: 13px;
+  }
+}
+
+/* Telas bem estreitas deitadas (celular pequeno) */
+@media (max-height: 420px) {
+  .touch-buttons {
+    zoom: 0.85;
+  }
+}

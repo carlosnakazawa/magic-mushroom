@@ -3,6 +3,7 @@ import '@fontsource/fredoka/600.css';
 import '@fontsource/fredoka/700.css';
 import './style.css';
 import './style-menus.css';
+import './style-mobile.css';
 import { Game } from './game/Game';
 
 const app = document.getElementById('app')!;

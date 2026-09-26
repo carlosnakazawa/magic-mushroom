@@ -19,7 +19,8 @@ npm run build      # build de produção (dist/)
 npm run smoke      # joga o ciclo inteiro (tutorial, noite/loja, nível 3 com fogo, família) e salva .screenshots/*.png
                    # (1ª vez: npx playwright install chromium)
 ```
-Debug: `window.game` no console; `?speed=4` acelera a simulação; `?debug` mostra FPS/draw calls.
+Debug: `window.game` no console; `?speed=4` acelera a simulação; `?debug` mostra FPS/draw calls; `?touch` força os controles de celular.
+**Celular:** toda interface nova precisa funcionar no toque e em tela baixa (celular deitado, ~844×390). O smoke tem uma seção de celular emulado — estenda-a se criar fluxos novos.
 Publicação: cada merge na `main` publica em https://carlosnakazawa.github.io/magic-mushroom/ (workflow `deploy.yml`).
 
 ## Pilares — use para desempatar decisões

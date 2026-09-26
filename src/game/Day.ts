@@ -16,6 +16,7 @@ import { Party, type PartyEvent } from '../sim/party';
 import { charm, patienceScale, type SaveData } from '../sim/progress';
 import { nextSpawnDelay, rollPartySize, rollRecipes } from '../sim/spawner';
 import { patienceColor, type Hud } from '../ui/hud';
+import { TOUCH_ICONS } from '../ui/touch';
 import { PLAYER_COLORS } from '../ui/screens';
 import type { WorldLabel, WorldUI } from '../ui/worldui';
 import { Chef } from './chef';
@@ -141,6 +142,7 @@ export class DayRun implements ActionHost {
   }
 
   private keyNames(): { pick: string; use: string } {
+    if (this.ctx.input.touchMode && this.opts.playerCount === 1) return { pick: TOUCH_ICONS.pick, use: TOUCH_ICONS.use };
     const p1 = this.ctx.input.binds(0);
     const p2 = this.ctx.input.binds(1);
     return this.opts.playerCount === 2
@@ -149,6 +151,7 @@ export class DayRun implements ActionHost {
   }
 
   private slotKeys(slot: number): { pick: string; use: string; swap: string } {
+    if (this.ctx.input.touchMode && slot === 0) return { ...TOUCH_ICONS };
     const b = this.ctx.input.binds(slot === 1 ? 1 : 0);
     return { pick: keyLabel(b.pick), use: keyLabel(b.use), swap: keyLabel(b.swap) };
   }
@@ -831,7 +834,7 @@ export class DayRun implements ActionHost {
         return {
           hero: c.hero,
           label: two ? `Jogador ${i + 1}` : c.controller === 0 ? 'Você' : `Esperando (${k.swap})`,
-          keys: two && i === 1 ? `Setas · ${k.pick} · ${k.use}` : `WASD · ${k.pick} · ${k.use}`,
+          keys: this.ctx.input.touchMode && slot === 0 ? `🕹️ · ${k.pick} pegar · ${k.use} usar` : two && i === 1 ? `Setas · ${k.pick} · ${k.use}` : `WASD · ${k.pick} · ${k.use}`,
           color: PLAYER_COLORS[slot]!,
           active: c.controller >= 0,
         };
