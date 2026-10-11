@@ -85,3 +85,35 @@ describe('loja e decoração', () => {
     expect(patienceScale(0, true)).toBe(0);
   });
 });
+
+describe('heróis e presente', () => {
+  it('contrata heróis com moedas do jogo', async () => {
+    const { hireHero, teamHeroes, heroesForSale } = await import('./progress');
+    let s = defaultSave();
+    expect(teamHeroes(s).map((h) => h.id)).toEqual(['puff', 'florzinha', 'pipoca', 'astro', 'estrelinha']);
+    expect(hireHero(s, 'bolota')).toBe('noMoney');
+    expect(hireHero(s, 'puff')).toBe('locked');
+    s.wallet = 200;
+    s = hireHero(s, 'bolota') as SaveData;
+    expect(s.wallet).toBe(80);
+    expect(teamHeroes(s).some((h) => h.id === 'bolota')).toBe(true);
+    expect(heroesForSale(s).some((h) => h.id === 'bolota')).toBe(false);
+    expect(hireHero(s, 'bolota')).toBe('owned');
+  });
+
+  it('presente de boas-vindas só uma vez', async () => {
+    const { claimWelcomeGift } = await import('./progress');
+    const first = claimWelcomeGift(defaultSave());
+    expect(first.amount).toBeGreaterThan(0);
+    expect(claimWelcomeGift(first.save).amount).toBe(0);
+  });
+
+  it('save antigo (sem campos novos) continua válido', () => {
+    const old = JSON.parse(JSON.stringify(defaultSave()));
+    delete old.heroesOwned;
+    delete old.welcomeGift;
+    const s = parseSave(JSON.stringify({ ...old, heroesOwned: ['xyz', 'puff', 'gota'] }));
+    expect(s.heroesOwned).toEqual(['gota']);
+    expect(parseSave(JSON.stringify(old)).welcomeGift).toBe(false);
+  });
+});

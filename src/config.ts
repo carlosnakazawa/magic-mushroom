@@ -1,10 +1,13 @@
 /** Números de ajuste do jogo. Mude aqui para balancear — nunca espalhe "números mágicos" pelo código. */
 export const TUNING = {
   player: {
-    speed: 4.6,
-    accel: 30,
+    /** Um pouco mais rápido que antes (4.6): o teste com crianças achou lento. */
+    speed: 5.3,
+    accel: 42,
     radius: 0.36,
     reach: 0.95,
+    /** Quanto a mira "puxa" para estações onde há algo útil para fazer. */
+    usefulTargetBonus: 0.6,
   },
   work: {
     /** Segundos para picar um ingrediente na tábua. */
@@ -53,6 +56,24 @@ export const TUNING = {
     /** ...até no máximo 30%. */
     maxCharmBonus: 0.3,
   },
+  /** Super-poderes dos heróis (ver data/characters.ts e sim/perks.ts). */
+  perks: {
+    tipsBonus: 2,
+    speed: 1.15,
+    chop: 1.35,
+    fireSpray: 2,
+    fireWash: 1.2,
+    memoryPatience: 0.25,
+    soupBoost: 1.3,
+    wash: 1.6,
+    reachExtra: 0.7,
+    /** Lumi: perda de paciência de todos os clientes × este valor. */
+    calmDrain: 0.85,
+  },
+  /** Segundos até o próximo cliente depois da 1ª entrega do tutorial. */
+  tutorialNextCustomer: 4,
+  /** Presente de boas-vindas na primeira noite (o teste mostrou que a 1ª loja ficava vazia). */
+  welcomeGift: 40,
   rest: {
     /** Heróis descansados trabalham mais rápido no começo do dia. */
     workSpeed: 1.3,
