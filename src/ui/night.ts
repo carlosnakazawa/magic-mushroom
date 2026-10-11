@@ -1,10 +1,11 @@
 import { audio } from '../core/audio';
 import { familyDef } from '../data/families';
 import { DECOR_SLOTS, WALLS, furnitureDef, type FurnitureDef, type FurnitureId, type SlotKind, type WallId } from '../data/furniture';
-import { charm, nextFamily, placedCount, shopCatalog, totalStars, unplaced, type SaveData } from '../sim/progress';
+import { charm, heroesForSale, nextFamily, placedCount, shopCatalog, teamHeroes, totalStars, unplaced, type SaveData } from '../sim/progress';
+import { SPECIES_EMOJI } from './hud';
 import { TUNING } from '../config';
 
-type Tab = SlotKind | 'colors' | 'mine';
+type Tab = SlotKind | 'colors' | 'mine' | 'heroes';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'family', label: '🪑 Mesas' },
@@ -13,6 +14,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'rug', label: '🧶 Tapetes' },
   { id: 'wall', label: '🖼️ Parede' },
   { id: 'colors', label: '🎨 Cores' },
+  { id: 'heroes', label: '🦸 Heróis' },
   { id: 'mine', label: '📦 Meus móveis' },
 ];
 
@@ -28,6 +30,7 @@ export interface NightActions {
   cancelPlace(): void;
   store(slotId: string): void;
   morning(): void;
+  hire(heroId: string): void;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, html = ''): HTMLElementTagNameMap[K] {
@@ -99,6 +102,7 @@ export class NightPanel {
       this.root.appendChild(tabs);
       const list = el('div', 'np-list');
       if (this.tab === 'colors') this.renderWalls(list, save);
+      else if (this.tab === 'heroes') this.renderHeroes(list, save);
       else if (this.tab === 'mine') this.renderMine(list, save);
       else for (const f of shopCatalog(save).filter((f) => f.kind === this.tab)) list.appendChild(this.card(f, save));
       this.root.appendChild(list);
@@ -131,7 +135,8 @@ export class NightPanel {
       place.onclick = () => this.actions.choose(f.id);
       btns.appendChild(place);
     }
-    const buy = el('button', 'btn small buy', save.wallet >= f.price ? `Comprar 🪙${f.price}` : `🪙${f.price}`);
+    // "Faltam N" visível no botão (no toque não existe tooltip)
+    const buy = el('button', 'btn small buy', save.wallet >= f.price ? `Comprar 🪙${f.price}` : `🪙${f.price}<small>faltam ${f.price - save.wallet}</small>`);
     buy.dataset.key = `buy-${f.id}`;
     buy.disabled = save.wallet < f.price;
     buy.title = buy.disabled ? `Faltam ${f.price - save.wallet} moedas` : '';
@@ -139,6 +144,31 @@ export class NightPanel {
     btns.appendChild(buy);
     card.appendChild(btns);
     return card;
+  }
+
+  private renderHeroes(list: HTMLElement, save: SaveData): void {
+    const forSale = heroesForSale(save);
+    const team = teamHeroes(save);
+    list.appendChild(el('p', 'np-empty', `Sua equipe: ${team.map((h) => h.name).join(', ')}`));
+    if (!forSale.length) {
+      list.appendChild(el('p', 'np-empty', 'Todos os heróis já estão na equipe! 🎉'));
+      return;
+    }
+    for (const h of forSale) {
+      const card = el(
+        'div',
+        'np-card hero',
+        `<div class="np-emoji face" style="background:#${h.body.toString(16).padStart(6, '0')}">${SPECIES_EMOJI[h.species]}</div>
+         <div class="np-info"><b>${h.name}</b><small>${h.title} — ${h.blurb}</small><span class="np-tags">⚡ ${h.perkText}</span></div>`,
+      );
+      const price = h.price ?? 0;
+      const b = el('button', 'btn small buy', save.wallet >= price ? `Contratar 🪙${price}` : `🪙${price}<small>faltam ${price - save.wallet}</small>`);
+      b.dataset.key = `hire-${h.id}`;
+      b.disabled = save.wallet < price;
+      b.onclick = () => this.actions.hire(h.id);
+      card.appendChild(b);
+      list.appendChild(card);
+    }
   }
 
   private renderWalls(list: HTMLElement, save: SaveData): void {

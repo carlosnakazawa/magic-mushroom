@@ -14,6 +14,7 @@ import { dishRecipe, makeExtinguisher, soil, type Item } from '../sim/items';
 import type { MachineEvent } from '../sim/machine';
 import { Party, type PartyEvent } from '../sim/party';
 import { charm, patienceScale, type SaveData } from '../sim/progress';
+import { teamDrainScale } from '../sim/perks';
 import { nextSpawnDelay, rollPartySize, rollRecipes } from '../sim/spawner';
 import { patienceColor, type Hud } from '../ui/hud';
 import { TOUCH_ICONS } from '../ui/touch';
@@ -94,7 +95,7 @@ export class DayRun implements ActionHost {
     const { level, save } = opts;
     this.timeLeft = level.dayLength;
     this.restLeft = save.rested ? TUNING.rest.duration : 0;
-    this.drainScale = patienceScale(charm(save), save.settings.noRush);
+    this.drainScale = patienceScale(charm(save), save.settings.noRush) * teamDrainScale(opts.heroes.slice(0, 2).map((h) => h.perk));
 
     for (const s of world.stations) {
       if (s.kind === 'stack' && s.vessel) {
@@ -114,6 +115,7 @@ export class DayRun implements ActionHost {
       stage.scene.add(chef.root);
       chef.creature.celebrate();
       this.chefs.push(chef);
+      window.setTimeout(() => this.say(chef, 'start', true), 700 + i * 2600);
     });
     this.refreshChefRings();
 
@@ -179,6 +181,7 @@ export class DayRun implements ActionHost {
       this.chefs[cur]!.controller = -1;
       this.chefs[next]!.controller = 0;
       this.chefs[next]!.creature.hop();
+      this.say(this.chefs[next]!, 'swap');
       audio.swap();
       this.ctx.fx.burst(this.chefs[next]!.pos.clone().setY(0.5), { kind: 'sparkle', count: 10, colors: [0x4fc3ff, 0xffffff] });
       this.refreshChefRings();
@@ -196,7 +199,12 @@ export class DayRun implements ActionHost {
         continue;
       }
       const input = inputs[chef.controller]!;
-      const target = findTarget(world, chef);
+      // Mira inteligente: entre os vizinhos, prefere onde há algo útil para fazer agora
+      const target = findTarget(world, chef, (t) => {
+        const p = pickAction(this, chef, t);
+        const u = useAction(this, chef, t);
+        return (!!p && !p.disabled) || (!!u && !u.disabled);
+      });
       this.highlight(target, PLAYER_COLORS[chef.controller]!);
       const pick = pickAction(this, chef, target);
       const use = useAction(this, chef, target);
@@ -222,6 +230,7 @@ export class DayRun implements ActionHost {
     this.updateStationBars();
     this.updateTrails(dt);
     this.updateArrow(dt);
+    this.updateSpeech(dt);
 
     const frozen = !!this.tutorial?.clockFrozen;
     if (!frozen) this.timeLeft -= dt;
@@ -241,6 +250,7 @@ export class DayRun implements ActionHost {
 
   /** Animação enquanto o jogo não roda (pausa, contagem, resultado). */
   idle(dt: number): void {
+    this.updateSpeech(dt);
     this.chefs.forEach((c) => {
       c.creature.moving = 0;
       c.creature.update(dt);
@@ -274,6 +284,7 @@ export class DayRun implements ActionHost {
     this.chefs.forEach((c) => {
       stage.scene.remove(c.root);
       worldUI.remove(c.hint);
+      worldUI.remove(c.speech);
     });
     this.parties.forEach((p) => {
       p.customers.forEach((c) => stage.scene.remove(c.root));
@@ -344,6 +355,7 @@ export class DayRun implements ActionHost {
         fx.burst(e.at.clone().setY(0.9), { kind: 'leaf', count: 6, colors: [0x8fd16a, 0xd8f7a5], additive: false });
         break;
       case 'machineAdd': {
+        if (e.station.machine!.kind !== 'blender' && e.chef.mods.machineBoost > 1) e.station.machine!.boost = e.chef.mods.machineBoost;
         audio.drop();
         e.chef.creature.hop();
         const m = e.station.machine!;
@@ -380,6 +392,11 @@ export class DayRun implements ActionHost {
   takeOrder(table: Table, chef: Chef): void {
     const ap = this.parties.find((p) => p.table === table);
     if (!ap || !ap.party.takeOrder()) return;
+    if (chef.mods.orderPatience > 0) {
+      ap.party.patience = Math.min(1, ap.party.patience + chef.mods.orderPatience);
+      this.ctx.worldUI.popup('📜 +paciência', new THREE.Vector3(table.x, 1.9, table.z));
+    }
+    chef.faceTo(table.x, table.z);
     audio.order();
     chef.creature.hop();
     this.ctx.fx.burst(new THREE.Vector3(table.x, 1.6, table.z), { kind: 'sparkle', count: ap.party.size > 2 ? 24 : 10, colors: [0xfff27a, 0xffffff] });
@@ -401,12 +418,17 @@ export class DayRun implements ActionHost {
     this.ctx.views.attach(dish, seat.plate, 0);
     this.ctx.views.pop(dish);
     ap.customers[idx]!.creature.eating = true;
+    seat.tipBonus = chef.mods.tips;
+    chef.faceTo(table.x, table.z);
+    if (Math.random() < 0.45) this.say(chef, 'serve');
     ap.customers[idx]!.creature.hop();
     this.stats.served++;
     audio.serve();
     chef.creature.celebrate();
     this.ctx.fx.heroBurst(chef.hero, chef.pos.clone().setY(1.2));
     this.ctx.fx.burst(seat.plate.getWorldPosition(new THREE.Vector3()).setY(1.1), { kind: 'sparkle', count: 16, colors: [0xffd700, 0xfff27a, 0xffffff] });
+    // Fim da "aula": o próximo cliente chega logo (o salão vazio desanimava)
+    if (this.tutorial && !this.tutorial.isDone('served')) this.spawnIn = Math.min(this.spawnIn, TUNING.tutorialNextCustomer);
     this.tutorialEvent('served');
   }
 
@@ -432,7 +454,7 @@ export class DayRun implements ActionHost {
   startWork(chef: Chef, station: Station): void {
     chef.workingAt = station;
     chef.vel.set(0, 0, 0);
-    chef.facing = Math.atan2(station.x - chef.pos.x, station.z - chef.pos.z);
+    chef.faceTo(station.x, station.z);
   }
 
   // ───────────────────────────── sistemas ─────────────────────────────
@@ -457,7 +479,7 @@ export class DayRun implements ActionHost {
       if (spraying) {
         fx.burst(chef.pos.clone().setY(0.9).addScaledVector(chef.forward, 0.5), { kind: 'dot', count: 2, colors: [0xdff6ff, 0xffffff, 0x9fe8ff], speed: 1.2, up: 0.8, size: 0.2, gravity: 0 });
         if (Math.random() < dt * 5) audio.spray();
-        if (s.machine!.spray(dt * this.workSpeed)) {
+        if (s.machine!.spray(dt * this.workSpeed * chef.mods.spray)) {
           chef.workingAt = null;
           audio.poof();
           fx.burst(s.worldTop.setY(1.2), { kind: 'dot', count: 20, colors: [0xffffff, 0xdff6ff], additive: false, up: 2, gravity: -0.3 });
@@ -469,7 +491,8 @@ export class DayRun implements ActionHost {
       }
       const before = s.progress;
       const total = s.kind === 'board' ? TUNING.work.chopTime : TUNING.work.washTime;
-      s.progress = Math.min(1, s.progress + (dt * this.workSpeed) / total);
+      const perk = s.kind === 'board' ? chef.mods.chop : chef.mods.wash;
+      s.progress = Math.min(1, s.progress + (dt * this.workSpeed * perk) / total);
       const beat = 0.22;
       if (Math.floor(before / (beat / total)) !== Math.floor(s.progress / (beat / total))) {
         if (s.kind === 'board') {
@@ -546,12 +569,15 @@ export class DayRun implements ActionHost {
         audio.poof();
         hud.toast('💨 Queimou! Limpe antes que pegue fogo', 'bad');
         break;
-      case 'fire':
+      case 'fire': {
+        const near = [...this.chefs].sort((a, b) => a.pos.distanceTo(s.worldTop) - b.pos.distanceTo(s.worldTop))[0];
+        if (near) this.say(near, 'fire', true);
         audio.fire();
         this.stats.fires++;
         stage.addShake(0.18);
         hud.toast('🔥 Fogo! Pegue o extintor mágico 🧯', 'bad', 3000);
         break;
+      }
       case 'extinguished':
         break;
     }
@@ -730,7 +756,9 @@ export class DayRun implements ActionHost {
         const seat = table.seats[e.member]!;
         if (seat.dish?.type === 'vessel') soil(seat.dish);
         ap.customers[e.member]!.creature.eating = false;
-        table.coins += e.coins;
+        table.coins += e.coins + seat.tipBonus;
+        if (seat.tipBonus) e.coins += seat.tipBonus;
+        seat.tipBonus = 0;
         this.refreshCoinPile(table);
         audio.coin();
         worldUI.popup(`+${e.coins} 🪙`, seat.plate.getWorldPosition(new THREE.Vector3()).setY(1.3), 'pop coin');
@@ -840,6 +868,30 @@ export class DayRun implements ActionHost {
         };
       }),
     );
+  }
+
+  /** Balão de fala com a "voz" do herói. Com `force`, ignora o intervalo mínimo entre falas. */
+  say(chef: Chef, kind: keyof Chef['hero']['phrases'], force = false): void {
+    if (this.ended || (!force && chef.speechCooldown > 0)) return;
+    const list = chef.hero.phrases[kind];
+    const text = list[Math.floor(Math.random() * list.length)];
+    if (!text) return;
+    if (!chef.speech) chef.speech = this.ctx.worldUI.add('speech', chef.creature.head, 1.45);
+    chef.speech.html = `<div class="bubble-say" style="--hc:#${chef.hero.accent.toString(16).padStart(6, '0')}">${text}</div>`;
+    chef.speech.visible = true;
+    chef.speechLeft = 2.1;
+    chef.speechCooldown = 6;
+    audio.voice(chef.hero.voice);
+  }
+
+  private updateSpeech(dt: number): void {
+    for (const c of this.chefs) {
+      c.speechCooldown = Math.max(0, c.speechCooldown - dt);
+      if (c.speechLeft > 0) {
+        c.speechLeft -= dt;
+        if (c.speechLeft <= 0 && c.speech) c.speech.visible = false;
+      }
+    }
   }
 
   /** Rastro sutil: pó cintilante da Estrelinha e faíscas do Pipoca ao correr. */

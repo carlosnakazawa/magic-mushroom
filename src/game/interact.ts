@@ -50,16 +50,23 @@ export type GameEvent =
   | { type: 'dump'; chef: Chef; station: Station }
   | { type: 'deny'; chef: Chef };
 
-/** Encontra a estação/mesa que o herói está "olhando". */
-export function findTarget(world: World, chef: Chef): Target | null {
+/**
+ * Encontra a estação/mesa que o herói vai usar.
+ * Mira tolerante (teste de usabilidade): prefere o que está à frente, mas aceita vizinhos
+ * ao lado quando há algo útil para fazer neles (`useful`), e alcança mais longe com o
+ * super-poder "língua comprida".
+ */
+export function findTarget(world: World, chef: Chef, useful?: (t: Target) => boolean): Target | null {
   const fx = Math.sin(chef.facing);
   const fz = Math.cos(chef.facing);
   const cx = Math.round(chef.pos.x);
   const cz = Math.round(chef.pos.z);
+  const reach = TUNING.player.reach + 0.55 + chef.mods.reach;
+  const span = reach > 1.6 ? 2 : 1;
   let best: Target | null = null;
   let bestScore = Infinity;
-  for (let dz = -1; dz <= 1; dz++)
-    for (let dx = -1; dx <= 1; dx++) {
+  for (let dz = -span; dz <= span; dz++)
+    for (let dx = -span; dx <= span; dx++) {
       const x = cx + dx;
       const z = cz + dz;
       const station = world.stationAt(x, z);
@@ -69,13 +76,16 @@ export function findTarget(world: World, chef: Chef): Target | null {
       const tx = x - chef.pos.x;
       const tz = z - chef.pos.z;
       const dist = Math.hypot(tx, tz);
-      if (dist > TUNING.player.reach + 0.55) continue;
+      if (dist > reach) continue;
       const dot = dist > 0.001 ? (tx * fx + tz * fz) / dist : 1;
-      if (dot < 0.3) continue;
-      const score = dist - dot * 0.9;
+      const target: Target = station ? { kind: 'station', station } : { kind: 'table', table: table! };
+      const helps = useful?.(target) ?? false;
+      // À frente: sempre vale. Ao lado: só se for útil e estiver colado.
+      if (dot < 0.3 && !(helps && dot > -0.25 && dist < 1.15)) continue;
+      const score = dist - dot * 0.9 - (helps ? TUNING.player.usefulTargetBonus : 0);
       if (score < bestScore) {
         bestScore = score;
-        best = station ? { kind: 'station', station } : { kind: 'table', table: table! };
+        best = target;
       }
     }
   return best;
@@ -97,7 +107,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
   const s = target.station;
   switch (s.kind) {
     case 'crate': {
-      if (held) return null;
+      if (held) return deny(host, chef, 'Mãos cheias — solte num balcão');
       const kind = s.ingredient!;
       return {
         label: `Pegar ${INGREDIENTS[kind].name}`,
@@ -123,6 +133,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         };
       }
       if (!held) return deny(host, chef, `Sem ${VESSEL_NAMES[v]}s — lave na pia!`);
+      if (held.type === 'ingredient') return deny(host, chef, `Solte ${itemName(held).toLowerCase()} num balcão primeiro`);
       if (isEmptyVessel(held, v)) {
         return {
           label: 'Guardar',

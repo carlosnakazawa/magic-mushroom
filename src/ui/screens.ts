@@ -3,7 +3,8 @@ import { FAMILIES, familyDef, type FamilyId } from '../data/families';
 import { LEVELS, levelDef } from '../data/levels';
 import { audio } from '../core/audio';
 import { keyLabel } from '../core/input';
-import { DEFAULT_KEYS, isLevelUnlocked, totalStars, type SaveData, type Settings } from '../sim/progress';
+import { DEFAULT_KEYS, isLevelUnlocked, teamHeroes, totalStars, type SaveData, type Settings } from '../sim/progress';
+import { entitlements, parentalChallenge } from '../platform/entitlements';
 import { SPECIES_EMOJI, hex } from './hud';
 
 export const PLAYER_COLORS = [0x4fc3ff, 0xff7fb0] as const;
@@ -100,7 +101,7 @@ export class Screens {
 
   title(save: SaveData, onStart: (c: TitleChoice) => void, onOptions: () => void): void {
     const panel = this.open('title');
-    const team = HEROES.filter((h) => !h.family || save.families.includes(h.family));
+    const team = teamHeroes(save);
     this.selected = this.selected.filter((h) => team.includes(h));
     if (!this.selected.length) this.selected = [HEROES[0]!, HEROES[2]!];
     const progress = save.day > 1 ? `<p class="save-line">📅 Dia ${save.day} · 🪙 ${save.wallet} · ⭐ ${totalStars(save)}</p>` : '';
@@ -108,7 +109,23 @@ export class Screens {
       <h1 class="logo"><span>Bistrô do</span> Cogumelo Mágico <i>🍄</i></h1>
       ${progress}
       <p class="subtitle">Escolha <b>2 heróis</b> para abrir o bistrô hoje!</p>`;
-    const cards = el('div', `hero-cards n${HEROES.length}`);
+    // Cards compactos (rosto + nome) e um painel de detalhes do herói em foco:
+    // cabe em celular deitado e continua legível com muitos heróis.
+    const cards = el('div', 'hero-cards compact');
+    const detail = el('div', 'hero-detail');
+    const showDetail = (h: HeroDef) => {
+      const locked = !team.includes(h);
+      const how = h.price ? `🔒 Contrate na loja da noite por 🪙 ${h.price}` : h.family ? `🔒 ${familyDef(h.family).emoji} Chega com a ${familyDef(h.family).name} (⭐ ${familyDef(h.family).starsToUnlock})` : '';
+      detail.style.setProperty('--hc', hex(h.body));
+      detail.innerHTML = `
+        <div class="hd-face">${locked && h.family ? '❔' : SPECIES_EMOJI[h.species]}</div>
+        <div class="hd-text">
+          <b>${locked && h.family ? '???' : h.name}</b> <small>${locked && h.family ? '' : h.title}</small>
+          <p>${locked && h.family ? 'Um novo amigo da floresta…' : h.blurb}</p>
+          <p class="perk">${locked && h.family ? '' : `⚡ ${h.perkText}`}</p>
+          ${locked ? `<p class="how">${how}</p>` : ''}
+        </div>`;
+    };
     const render = () => {
       cards.innerHTML = '';
       for (const h of HEROES) {
@@ -117,28 +134,31 @@ export class Screens {
         const card = el('button', `hero-card${idx >= 0 ? ' picked' : ''}${locked ? ' locked' : ''}`);
         card.style.setProperty('--hc', hex(h.body));
         card.style.setProperty('--ha', hex(h.accent));
-        if (locked) {
-          const fam = familyDef(h.family!);
-          card.innerHTML = `<div class="hero-face">🔒</div><b>???</b><small>${fam.emoji} ${fam.name}</small><p>Consiga ⭐ ${fam.starsToUnlock} estrelas para conhecer!</p>`;
-          card.disabled = true;
-        } else {
-          card.innerHTML = `
-            ${idx >= 0 ? `<span class="badge" style="background:${hex(PLAYER_COLORS[idx]!)}">${idx + 1}</span>` : ''}
-            <div class="hero-face">${SPECIES_EMOJI[h.species]}</div>
-            <b>${h.name}</b><small>${h.title}</small><p>${h.blurb}</p>`;
-          card.onclick = () => {
-            audio.unlock();
-            audio.click();
-            if (idx >= 0) this.selected.splice(idx, 1);
-            else {
-              if (this.selected.length >= 2) this.selected.shift();
-              this.selected.push(h);
-            }
-            render();
-            this.onSelectionChange([...this.selected]);
-            (cards.querySelectorAll('button')[HEROES.indexOf(h)] as HTMLElement | undefined)?.focus();
-          };
-        }
+        card.dataset.key = `hero-${h.id}`;
+        card.innerHTML = `
+          ${idx >= 0 ? `<span class="badge" style="background:${hex(PLAYER_COLORS[idx]!)}">${idx + 1}</span>` : ''}
+          <div class="hero-face">${locked ? (h.family ? '🔒' : `<span class="dim">${SPECIES_EMOJI[h.species]}</span><i class="lock">🔒</i>`) : SPECIES_EMOJI[h.species]}</div>
+          <b>${locked && h.family ? '???' : h.name}</b>`;
+        card.onmouseenter = () => showDetail(h);
+        card.onfocus = () => showDetail(h);
+        card.onclick = () => {
+          audio.unlock();
+          showDetail(h);
+          if (locked) {
+            audio.deny();
+            return;
+          }
+          audio.click();
+          if (idx < 0) audio.voice(h.voice);
+          if (idx >= 0) this.selected.splice(idx, 1);
+          else {
+            if (this.selected.length >= 2) this.selected.shift();
+            this.selected.push(h);
+          }
+          render();
+          this.onSelectionChange([...this.selected]);
+          cards.querySelector<HTMLElement>(`[data-key="hero-${h.id}"]`)?.focus();
+        };
         cards.appendChild(card);
       }
       solo.disabled = this.selected.length < 1;
@@ -152,16 +172,18 @@ export class Screens {
     const buttons = el('div', 'buttons');
     const solo = button('▶ Jogar sozinho', 'btn big', () => start(1));
     const duo = button(this.touch ? '👥 Em dupla (com controle)' : '👥 Jogar em dupla', 'btn big alt', () => start(2));
-    buttons.append(solo, duo, button('⚙️ Opções', 'btn', onOptions));
+    const help = el('div', `help-box${this.touch ? ' hidden' : ''}`, this.touch ? TOUCH_HELP : controlsHtml(save.settings.keys));
+    const helpBtn = button('❓ Como jogar', 'btn', () => help.classList.toggle('hidden'));
+    buttons.append(solo, duo, button('⚙️ Opções', 'btn', onOptions), helpBtn);
     if (this.touch && document.fullscreenEnabled && !document.fullscreenElement) buttons.append(button('⛶ Tela cheia', 'btn', goFullscreen));
-    panel.append(cards, buttons);
-    panel.insertAdjacentHTML('beforeend', this.touch ? TOUCH_HELP : controlsHtml(save.settings.keys));
+    panel.append(cards, detail, buttons, help);
     render();
+    showDetail(this.selected[this.selected.length - 1] ?? HEROES[0]!);
     this.onSelectionChange([...this.selected]);
     solo.focus();
   }
 
-  levels(save: SaveData, onPick: (levelId: number) => void, onBack: () => void): void {
+  levels(save: SaveData, onPick: (levelId: number) => void, onBack: () => void, available: (levelId: number) => boolean = () => true): void {
     const panel = this.open('levels');
     panel.innerHTML = `<h2>🗺️ Qual cozinha abrimos hoje?</h2><p class="save-line">📅 Dia ${save.day} · 🪙 ${save.wallet} · ⭐ ${totalStars(save)}${save.rested ? ' · 😴 Equipe descansada!' : ''}</p>`;
     const grid = el('div', 'level-cards');
@@ -176,7 +198,8 @@ export class Screens {
         <b>Nível ${lv.id}</b><strong>${lv.name}</strong>
         <small>${unlocked ? lv.blurb : `Consiga ⭐ no Nível ${lv.id - 1} para liberar`}</small>
         <div class="lv-stars">${stars}</div>
-        ${unlocked && !save.played.includes(lv.id) ? '<span class="lv-new">NOVO!</span>' : ''}`;
+        ${unlocked && !save.played.includes(lv.id) ? '<span class="lv-new">NOVO!</span>' : ''}
+        ${unlocked && !available(lv.id) ? '<span class="lv-full">⭐ Versão completa</span>' : ''}`;
       card.disabled = !unlocked;
       card.onclick = () => {
         audio.click();
@@ -320,6 +343,44 @@ export class Screens {
     buttons.append(back, reset);
     panel.appendChild(buttons);
     back.focus();
+  }
+
+  /**
+   * Versão completa: portão dos pais (continha) antes de qualquer compra.
+   * Obrigatório para jogos infantis na App Store e recomendado no Google Play.
+   */
+  fullGameGate(onDone: () => void, onCancel: () => void): void {
+    const panel = this.open('gate');
+    const ch = parentalChallenge();
+    panel.innerHTML = `
+      <h2>⭐ Bistrô Completo</h2>
+      <p>Todos os níveis, máquinas, a loja da noite inteira e as famílias da floresta — uma compra só, sem anúncios.</p>
+      <p class="gate-q">👨‍👩‍👧 <b>Pergunta para um adulto:</b> ${ch.question}</p>`;
+    const input = el('input', 'gate-input');
+    input.type = 'number';
+    input.inputMode = 'numeric';
+    input.placeholder = '?';
+    panel.appendChild(input);
+    const msg = el('p', 'gate-msg');
+    panel.appendChild(msg);
+    const buttons = el('div', 'buttons');
+    buttons.append(
+      button('Continuar', 'btn big', async () => {
+        if (Number(input.value) !== ch.answer) {
+          audio.deny();
+          msg.textContent = 'Resposta errada. Peça ajuda para um adulto 🙂';
+          return;
+        }
+        msg.textContent = 'Abrindo a loja…';
+        if (await entitlements.purchaseFull()) {
+          audio.fanfare();
+          onDone();
+        } else msg.textContent = 'Não foi possível concluir a compra.';
+      }),
+      button('Agora não', 'btn', onCancel),
+    );
+    panel.appendChild(buttons);
+    input.focus();
   }
 
   /** Contagem "3, 2, 1" antes do dia começar. */

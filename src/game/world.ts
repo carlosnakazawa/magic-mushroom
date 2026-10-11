@@ -110,6 +110,8 @@ export interface Seat {
   plate: THREE.Object3D;
   dish: Item | null;
   customer: Customer | null;
+  /** Gorjeta extra do herói que serviu (super-poder da Puff). */
+  tipBonus: number;
 }
 
 export class Table {
@@ -144,6 +146,7 @@ export class Table {
         plate,
         dish: null,
         customer: null,
+        tipBonus: 0,
       });
     }
   }

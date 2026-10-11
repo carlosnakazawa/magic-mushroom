@@ -1,3 +1,5 @@
+import { platform } from '../platform/platform';
+
 /**
  * Controles de toque para celular/tablet: joystick que aparece onde o polegar
  * encosta (metade esquerda) + botões grandes à direita. Usa Pointer Events,
@@ -56,7 +58,7 @@ export class TouchControls {
         e.preventDefault();
         this.pressed.add(b.dataset.act as Action);
         b.classList.add('down');
-        navigator.vibrate?.(12);
+        platform.vibrate(12);
       });
       const up = () => b.classList.remove('down');
       b.addEventListener('pointerup', up);

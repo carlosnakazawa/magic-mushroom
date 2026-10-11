@@ -576,3 +576,193 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ───────── Título: cards compactos + detalhes do herói ───────── */
+.hero-cards.compact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hero-cards.compact .hero-card {
+  width: 92px;
+  padding: 8px 4px 6px;
+  gap: 4px;
+}
+
+.hero-cards.compact .hero-card b {
+  font-size: 15px;
+}
+
+.hero-card .hero-face {
+  position: relative;
+}
+
+.hero-card .dim {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.hero-card .lock {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  font-size: 18px;
+  font-style: normal;
+}
+
+.hero-card.locked {
+  cursor: pointer;
+}
+
+.hero-detail {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  margin: 10px auto 0;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 8px 14px;
+  box-shadow: inset 0 -4px 0 #f0e2cf;
+  min-height: 86px;
+}
+
+.hd-face {
+  flex-shrink: 0;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  background: var(--hc);
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.1);
+}
+
+.hd-text b {
+  font-size: 19px;
+}
+
+.hd-text small {
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.hd-text p {
+  margin: 2px 0 0;
+  font-size: 15px;
+}
+
+.hd-text .perk,
+.hero-card .perk {
+  color: #8a5cff;
+  font-weight: 600;
+}
+
+.hd-text .how {
+  color: #d4507f;
+  font-weight: 600;
+}
+
+.help-box .controls-help {
+  margin-top: 10px;
+}
+
+/* ───────── Balão de fala dos heróis ───────── */
+.bubble-say {
+  position: relative;
+  background: #fff;
+  border: 3px solid var(--hc);
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 15px;
+  max-width: 220px;
+  white-space: normal;
+  text-align: center;
+  box-shadow: 0 4px 0 rgba(74, 47, 35, 0.2);
+  animation: say-in 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.bubble-say::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  translate: -50% 0;
+  border: 7px solid transparent;
+  border-top-color: var(--hc);
+  border-bottom: 0;
+}
+
+@keyframes say-in {
+  from {
+    transform: scale(0.3) translateY(10px);
+    opacity: 0;
+  }
+}
+
+/* "faltam N" no botão de compra desabilitado */
+.btn.small.buy small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.np-emoji.face {
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+}
+
+/* Texto mínimo de 13px nos cards (teste de usabilidade) */
+.hero-card small,
+.level-card small,
+.pcard-info small {
+  font-size: 13px;
+}
+
+/* Versão completa e portão dos pais */
+.lv-full {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  background: linear-gradient(180deg, #ffe07a, #ffc83d);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 #d49a00;
+}
+
+.gate .panel {
+  max-width: 480px;
+}
+
+.gate-q {
+  font-size: 18px;
+}
+
+.gate-input {
+  font: 700 28px 'Fredoka', sans-serif;
+  width: 140px;
+  text-align: center;
+  border: 3px solid #eadbc6;
+  border-radius: 16px;
+  padding: 6px;
+}
+
+.gate-msg {
+  min-height: 1.2em;
+  color: #d4507f;
+  font-weight: 600;
+}

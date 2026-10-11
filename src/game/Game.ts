@@ -7,17 +7,22 @@ import { levelDef, type LevelDef } from '../data/levels';
 import { Creature } from '../models/creature';
 import { Lighting } from '../render/lighting';
 import { Stage } from '../render/stage';
-import { defaultSave, recordDay, type SaveData, type Settings } from '../sim/progress';
+import { claimWelcomeGift, defaultSave, recordDay, teamHeroes, type SaveData, type Settings } from '../sim/progress';
 import { Hud } from '../ui/hud';
 import { moveFocus } from '../ui/nav';
 import { Screens } from '../ui/screens';
 import { TouchControls, isTouchDevice } from '../ui/touch';
+import { entitlements } from '../platform/entitlements';
+import { platform } from '../platform/platform';
 import { WorldUI } from '../ui/worldui';
 import { DayRun, type DayStats } from './Day';
 import { Fx } from './fx';
 import { ItemViews } from './itemviews';
 import { NightRun } from './Night';
 import { World } from './world';
+
+/** Câmera que segue no celular: largura (em células) da faixa visível. */
+const TUNING_CAM = { width: 14.5 };
 
 type GameState = 'title' | 'levels' | 'settings' | 'countdown' | 'day' | 'paused' | 'results' | 'night';
 
@@ -49,6 +54,9 @@ export class Game {
   private debugEl: HTMLDivElement | null = null;
   private touch: TouchControls | null = null;
   private touchShown = false;
+  /** Celular: a câmera segue os heróis de perto (no salão inteiro eles ficavam pequenos). */
+  private followCam = false;
+  private camX = 8.6;
   /** Depuração: `?speed=4` roda a simulação 4× mais rápido (útil em testes automatizados). */
   private timeScale = Math.max(1, Math.min(8, Number(new URLSearchParams(location.search).get('speed')) || 1));
 
@@ -59,6 +67,7 @@ export class Game {
     const touch = isTouchDevice();
     document.documentElement.classList.toggle('touch', touch);
     this.stage = new Stage(stageEl, touch);
+    this.followCam = touch && Math.min(window.innerWidth, window.innerHeight) < 600;
     const labelLayer = document.createElement('div');
     labelLayer.className = 'world-ui';
     container.appendChild(labelLayer);
@@ -91,6 +100,15 @@ export class Game {
       if (code === 'KeyM' && this.state !== 'settings') this.setMusic(!this.save.settings.music);
     });
     window.addEventListener('pointerdown', () => audio.unlock());
+    // App em segundo plano (trocou de app, bloqueou a tela): pausa o dia e a música.
+    platform.onVisibility((visible) => {
+      if (!visible) {
+        if (this.state === 'day') this.togglePause();
+        audio.stopMusic();
+      } else if (this.state === 'night' && this.save.settings.music) {
+        audio.startNightMusic();
+      }
+    });
 
     if (new URLSearchParams(location.search).has('debug')) {
       this.debugEl = document.createElement('div');
@@ -175,7 +193,7 @@ export class Game {
     this.hud.show(false);
     this.lighting.set(false);
     this.clearTitle();
-    const team = HEROES.filter((h) => !h.family || this.save.families.includes(h.family));
+    const team = teamHeroes(this.save);
     const x0 = 13.5 - ((team.length - 1) * 1.15) / 2;
     this.titleCreatures = team.map((hero, i) => {
       const creature = new Creature(hero, 1.35);
@@ -209,8 +227,12 @@ export class Game {
     this.hud.show(false);
     this.screens.levels(
       this.save,
-      (id) => this.startDay(id),
+      (id) => {
+        if (entitlements.levelAvailable(id)) this.startDay(id);
+        else this.screens.fullGameGate(() => this.showLevels(), () => this.showLevels());
+      },
       () => this.showTitle(),
+      (id) => entitlements.levelAvailable(id),
     );
   }
 
@@ -245,6 +267,7 @@ export class Game {
     this.buildWorld();
     this.screens.hide();
     this.stage.frame(8.6, 5.2, 20.2, 11.4);
+    this.camX = 4;
     const day = new DayRun(
       { stage: this.stage, world: this.world, hud: this.hud, worldUI: this.worldUI, fx: this.fx, views: this.views, input: this.input },
       { level: this.level, heroes: this.heroes, playerCount: this.playerCount, save: this.save },
@@ -280,6 +303,8 @@ export class Game {
     this.hud.show(false);
     this.state = 'night';
     this.save = { ...this.save, rested: true };
+    const gift = claimWelcomeGift(this.save);
+    this.save = gift.save;
     writeSave(this.save);
     this.buildWorld();
     this.lighting.set(true);
@@ -311,6 +336,14 @@ export class Game {
     });
     // O HUD de avisos (toasts) continua visível à noite
     this.hud.showToastsOnly(true);
+    if (gift.amount) {
+      // Presente de boas-vindas: a 1ª loja não fica com tudo bloqueado
+      window.setTimeout(() => {
+        audio.buy();
+        this.hud.toast(`🎁 Presente da floresta: +${gift.amount} 🪙 para decorar!`, 'good', 4500);
+        this.fx.burst(new THREE.Vector3(4.5, 1.5, 6.5), { kind: 'sparkle', count: 40, speed: 3, up: 3, colors: [0xffd700, 0xff7fb0, 0x7fd8ff] });
+      }, 1800);
+    }
   }
 
   private togglePause(): void {
@@ -335,6 +368,18 @@ export class Game {
       this.state = 'day';
       if (this.save.settings.music) audio.startDayMusic();
     }
+  }
+
+  /** Celular: enquadra uma faixa do restaurante centrada nos heróis (eles ficam ~35% maiores). */
+  private updateFollowCam(dt: number): void {
+    if (!this.followCam || !this.day || (this.state !== 'day' && this.state !== 'countdown' && this.state !== 'paused')) return;
+    const active = this.day.chefs.filter((c) => c.controller >= 0);
+    const xs = (active.length ? active : this.day.chefs).map((c) => c.pos.x);
+    const avg = xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
+    const half = TUNING_CAM.width / 2;
+    const target = Math.max(half - 0.9, Math.min(this.world.width - half + 0.4, avg));
+    this.camX += (target - this.camX) * Math.min(1, dt * 3);
+    this.stage.frame(this.camX, 5.2, TUNING_CAM.width, 11.4);
   }
 
   // ───────────────────────────── loop ─────────────────────────────
@@ -376,6 +421,7 @@ export class Game {
       this.touch.show(showTouch, this.playerCount === 1);
     }
 
+    this.updateFollowCam(dt);
     this.lighting.update(dt);
     if (this.lighting.value !== this.lastNight) {
       this.lastNight = this.lighting.value;
