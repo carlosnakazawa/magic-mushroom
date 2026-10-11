@@ -1,5 +1,6 @@
 import { INGREDIENTS, type IngredientKind } from '../data/ingredients';
 import { canAddIngredient, matchRecipe, type Method, type RecipeDef, type Vessel } from '../data/recipes';
+import { t, tk } from '../i18n';
 
 let nextItemId = 1;
 
@@ -32,8 +33,6 @@ export interface ToolItem {
 }
 
 export type Item = IngredientItem | VesselItem | ToolItem;
-
-export const VESSEL_NAMES: Record<Vessel, string> = { bowl: 'tigela', cup: 'copo', plate: 'prato' };
 
 export function makeIngredient(kind: IngredientKind, chopped = false): IngredientItem {
   return { id: nextItemId++, type: 'ingredient', kind, chopped, version: 0 };
@@ -85,19 +84,21 @@ export function emptyVessel(item: VesselItem): void {
 }
 
 export function itemName(item: Item): string {
-  if (item.type === 'tool') return 'Extintor mágico';
+  if (item.type === 'tool') return t('item.extinguisher');
   if (item.type === 'ingredient') {
     const n = INGREDIENTS[item.kind].name;
-    return item.chopped ? `${n} picado` : n;
+    return item.chopped ? t('item.chopped', { name: n }) : n;
   }
-  if (item.dirty) return DIRTY_NAMES[item.vessel];
+  if (item.dirty) return tk(`item.dirty.${item.vessel}`);
   const r = dishRecipe(item);
   if (r) return r.name;
-  return item.contents.length ? 'Tigela montando' : EMPTY_NAMES[item.vessel];
+  return item.contents.length ? t('item.assembling') : tk(`item.empty.${item.vessel}`);
 }
 
-const DIRTY_NAMES: Record<Vessel, string> = { bowl: 'Tigela suja', cup: 'Copo sujo', plate: 'Prato sujo' };
-const EMPTY_NAMES: Record<Vessel, string> = { bowl: 'Tigela vazia', cup: 'Copo vazio', plate: 'Prato vazio' };
+/** Nome do recipiente no idioma atual ("tigela", "bowl", "碗"…). */
+export function vesselName(v: Vessel): string {
+  return tk(`vessel.${v}`);
+}
 
 function canMerge(bowl: VesselItem, ing: IngredientItem): boolean {
   return (

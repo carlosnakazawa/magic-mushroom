@@ -1,18 +1,19 @@
 import * as THREE from 'three';
 import { audio } from '../core/audio';
 import { writeSave } from '../core/storage';
-import { HEROES, type HeroDef } from '../data/characters';
+import { heroDef, type HeroDef } from '../data/characters';
 import { DECOR_SLOTS, furnitureDef, type FurnitureId } from '../data/furniture';
 import { Creature } from '../models/creature';
 import { decorMesh } from '../models/decor';
 import { glow, mesh, toon } from '../render/materials';
 import type { Stage } from '../render/stage';
-import { buyFurniture, buyWall, placeFurniture, removeFurniture, type SaveData } from '../sim/progress';
+import { buyFurniture, buyWall, hireHero, placeFurniture, removeFurniture, teamHeroes, type SaveData } from '../sim/progress';
 import type { Hud } from '../ui/hud';
 import { NightPanel } from '../ui/night';
 import type { WorldLabel, WorldUI } from '../ui/worldui';
 import type { Fx } from './fx';
 import type { World } from './world';
+import { t } from '../i18n';
 
 export interface NightContext {
   stage: Stage;
@@ -31,7 +32,7 @@ export interface NightContext {
  */
 export class NightRun {
   private panel: NightPanel;
-  private resting: { creature: Creature; zzz: WorldLabel; phase: number }[] = [];
+  private resting: { hero: HeroDef; creature: Creature; zzz: WorldLabel; phase: number }[] = [];
   private campfire: THREE.Group;
   private placing: FurnitureId | null = null;
   private preview: THREE.Group | null = null;
@@ -46,6 +47,7 @@ export class NightRun {
   ) {
     this.panel = new NightPanel(ctx.container, {
       buy: (id) => this.buy(id),
+      hire: (id) => this.hire(id),
       buyWall: (id) => {
         const r = buyWall(this.save, id);
         if (typeof r === 'string') return audio.deny();
@@ -89,30 +91,62 @@ export class NightRun {
     this.campfire.add(light);
     ctx.stage.scene.add(this.campfire);
 
-    const team = HEROES.filter((h: HeroDef) => !h.family || save.families.includes(h.family));
+    this.buildResting();
+    audio.yawn();
+  }
+
+  /** Toda a equipe (incluindo contratados) dorme em volta da lanterna. */
+  private buildResting(): void {
+    for (const r of this.resting) {
+      this.ctx.stage.scene.remove(r.creature.root);
+      this.ctx.worldUI.remove(r.zzz);
+    }
+    this.resting = [];
+    const team = teamHeroes(this.save);
     team.forEach((hero, i) => {
       const creature = new Creature(hero, 1.1);
       const a = (i / team.length) * Math.PI * 2 + 0.3;
-      creature.root.position.set(4.5 + Math.cos(a) * 1.15, 0, 6.5 + Math.sin(a) * 1.15);
+      const r = team.length > 6 ? 1.45 : 1.15;
+      creature.root.position.set(4.5 + Math.cos(a) * r, 0, 6.5 + Math.sin(a) * r);
       creature.root.rotation.y = Math.atan2(-Math.cos(a), -Math.sin(a));
       creature.sitting = true;
-      ctx.stage.scene.add(creature.root);
-      const zzz = ctx.worldUI.add('zzz', creature.head, 0.45);
+      creature.mood = 'sleepy';
+      this.ctx.stage.scene.add(creature.root);
+      const zzz = this.ctx.worldUI.add('zzz', creature.head, 0.45);
       zzz.html = '💤';
-      this.resting.push({ creature, zzz, phase: Math.random() * 6 });
+      this.resting.push({ hero, creature, zzz, phase: Math.random() * 6 });
     });
-    audio.yawn();
+  }
+
+  private hire(id: string): void {
+    const r = hireHero(this.save, id);
+    if (typeof r === 'string') {
+      audio.deny();
+      return;
+    }
+    const h = heroDef(id)!;
+    audio.fanfare();
+    audio.voice(h.voice);
+    this.ctx.hud.toast(t('night.joined', { name: h.name }), 'good', 3000);
+    this.commit(r);
+    this.buildResting();
+    const newbie = this.resting.find((x) => x.hero === h);
+    if (newbie) {
+      newbie.creature.mood = 'normal';
+      newbie.creature.celebrate();
+      this.ctx.fx.heroBurst(h, newbie.creature.root.position.clone().setY(1.2));
+    }
   }
 
   private buy(id: FurnitureId): void {
     const r = buyFurniture(this.save, id);
     if (typeof r === 'string') {
       audio.deny();
-      this.ctx.hud.toast(r === 'noMoney' ? '🪙 Moedas insuficientes — sirva mais clientes amanhã!' : '🔒 Ainda bloqueado', 'bad');
+      this.ctx.hud.toast(r === 'noMoney' ? t('night.noMoney') : t('night.locked'), 'bad');
       return;
     }
     audio.buy();
-    this.ctx.hud.toast(`🛍️ ${furnitureDef(id).name} comprado! Agora escolha um lugar.`, 'good');
+    this.ctx.hud.toast(t('night.bought', { name: furnitureDef(id).name }), 'good');
     this.commit(r);
     this.startPlacing(id);
   }

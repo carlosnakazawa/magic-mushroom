@@ -1,3 +1,5 @@
+import { t, type TKey } from '../i18n';
+
 /** Eventos que o tutorial observa. */
 export type TutorialEvent = 'orderTaken' | 'pickLettuce' | 'chopped' | 'saladReady' | 'served' | 'cleared' | 'washed';
 
@@ -5,8 +7,8 @@ export type TutorialEvent = 'orderTaken' | 'pickLettuce' | 'chopped' | 'saladRea
 export type TutorialFocus = 'firstTable' | 'crateLettuce' | 'board' | 'bowls' | 'sink';
 
 interface Step {
-  /** Usa {pick}/{use}: o HUD troca pelas teclas dos jogadores ativos. */
-  text: string;
+  /** Chave da frase em src/i18n (usa {pick}/{use}: o HUD troca pelas teclas). */
+  key: TKey;
   event: TutorialEvent;
   focus: TutorialFocus;
   done: boolean;
@@ -17,14 +19,19 @@ interface Step {
  * (a criança pode explorar) — o "passo atual" é sempre o primeiro não concluído.
  */
 export class Tutorial {
+  /** Passos com o texto no idioma atual. */
+  get view(): { text: string; done: boolean }[] {
+    return this.steps.map((s) => ({ text: t(s.key), done: s.done }));
+  }
+
   readonly steps: Step[] = [
-    { text: 'Chegue perto do cliente ❗ e aperte {use} para anotar o pedido', event: 'orderTaken', focus: 'firstTable', done: false },
-    { text: 'Pegue uma alface 🥬 no caixote com {pick}', event: 'pickLettuce', focus: 'crateLettuce', done: false },
-    { text: 'Coloque na tábua 🔪 ({pick}) e corte com {use}', event: 'chopped', focus: 'board', done: false },
-    { text: 'Pegue uma tigela 🥣 e junte a alface picada', event: 'saladReady', focus: 'bowls', done: false },
-    { text: 'Leve a salada até a mesa do cliente 🍽️', event: 'served', focus: 'firstTable', done: false },
-    { text: 'Quando ele terminar, recolha a louça e as moedas 🪙', event: 'cleared', focus: 'firstTable', done: false },
-    { text: 'Lave a tigela na pia 🫧 ({pick} coloca, {use} lava)', event: 'washed', focus: 'sink', done: false },
+    { key: 'tut.1', event: 'orderTaken', focus: 'firstTable', done: false },
+    { key: 'tut.2', event: 'pickLettuce', focus: 'crateLettuce', done: false },
+    { key: 'tut.3', event: 'chopped', focus: 'board', done: false },
+    { key: 'tut.4', event: 'saladReady', focus: 'bowls', done: false },
+    { key: 'tut.5', event: 'served', focus: 'firstTable', done: false },
+    { key: 'tut.6', event: 'cleared', focus: 'firstTable', done: false },
+    { key: 'tut.7', event: 'washed', focus: 'sink', done: false },
   ];
 
   get current(): number {

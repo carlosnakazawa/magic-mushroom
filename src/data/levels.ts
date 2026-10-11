@@ -1,4 +1,5 @@
 import type { RecipeId, Vessel } from './recipes';
+import { tk, tl } from '../i18n';
 
 export interface LevelDef {
   id: number;
@@ -28,12 +29,10 @@ export interface LevelDef {
   intro: readonly string[];
 }
 
-export const LEVELS: readonly LevelDef[] = [
+export const LEVELS: readonly LevelDef[] = ([
   {
     id: 1,
-    name: 'Salada Feérica',
     emoji: '🥗',
-    blurb: 'Aprenda a cortar e montar saladas.',
     dayLength: 210,
     map: [
       'WWWWWWWWWWWWWWWWWW',
@@ -58,13 +57,10 @@ export const LEVELS: readonly LevelDef[] = [
     starGoals: [40, 90, 150],
     vessels: { bowl: 3 },
     tutorial: true,
-    intro: [],
   },
   {
     id: 2,
-    name: 'Liquidificador de Cristal',
     emoji: '🧃',
-    blurb: 'Sucos e poções que batem sozinhos.',
     dayLength: 210,
     map: [
       'WWWWWWWWWWWWWWWWWW',
@@ -91,18 +87,10 @@ export const LEVELS: readonly LevelDef[] = [
     starGoals: [60, 130, 210],
     vessels: { bowl: 3, cup: 3 },
     tutorial: false,
-    intro: [
-      'Novo: <b>Liquidificador de Cristal</b> 🧃',
-      'Coloque 🫐 frutinhas (e 🍄 para a poção) no liquidificador',
-      'Aperte {use} para ligar — ele trabalha sozinho!',
-      'Quando ficar pronto, leve um <b>copo</b> 🥤 até ele com {pick}',
-    ],
   },
   {
     id: 3,
-    name: 'Caldeirão & Chapa',
     emoji: '🔥',
-    blurb: 'Sopas e panquecas… sem deixar queimar!',
     dayLength: 240,
     map: [
       'WWWWWWWWWWWWWWWWWW',
@@ -131,14 +119,15 @@ export const LEVELS: readonly LevelDef[] = [
     starGoals: [80, 170, 270],
     vessels: { bowl: 4, cup: 3, plate: 3 },
     tutorial: false,
-    intro: [
-      'Novo: <b>Caldeirão</b> 🍲 e <b>Chapa Mágica</b> 🥞',
-      'Caldeirão: cenoura 🥕 picada (e 🍄 picado) — cozinha sozinho',
-      'Chapa: massa 🥚 crua vira panqueca — sirva no <b>prato</b> 🍽️',
-      'Cuidado: esqueceu? ⚠️ queima e pega 🔥! Use o <b>extintor mágico</b> 🧯 com {use}',
-    ],
   },
-];
+] as unknown as LevelDef[]).map((l) =>
+  Object.defineProperties(l, {
+    name: { get: () => tk(`level.${l.id}.name`), enumerable: true },
+    blurb: { get: () => tk(`level.${l.id}.blurb`), enumerable: true },
+    // Lista de dicas; vazia quando o dicionário não tem dicas para o nível
+    intro: { get: () => tl(`level.${l.id}.intro`).filter(Boolean), enumerable: true },
+  }),
+);
 
 export function levelDef(id: number): LevelDef {
   return LEVELS.find((l) => l.id === id) ?? LEVELS[0]!;

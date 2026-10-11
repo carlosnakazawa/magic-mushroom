@@ -8,6 +8,8 @@
  *  3. Mapa de níveis → Nível 3: chapa pega fogo e o extintor apaga; família de pandas
  *     senta na mesa grande
  *  4. Celular (toque, deitado): joystick move o herói, botão ✋ pega, aviso de girar em pé
+ *  5. Idiomas: inglês por padrão; título, níveis e um dia em cada idioma (sem chaves cruas
+ *     nem texto estourando botões)
  *
  * Uso:  npm run smoke            (1ª vez: npx playwright install chromium)
  * Dica: abra as imagens em .screenshots/ para conferir o visual depois de mudanças.
@@ -66,7 +68,7 @@ try {
   };
 
   // ───────── 1. Nível 1 com tutorial ─────────
-  await page.goto('http://localhost:5199/?speed=4');
+  await page.goto('http://localhost:5199/?speed=4&lang=pt');
   await page.waitForSelector('text=Jogar sozinho', { timeout: 60_000 });
   await page.waitForTimeout(2500);
   await shot('01-titulo');
@@ -141,6 +143,12 @@ try {
   const placed = await page.evaluate(() => window.game.save.placed);
   console.log('Decoração:', JSON.stringify(placed));
   if (placed.family1 !== 'enchanted_log' || placed.light1 !== 'lamp_crystal') throw new Error('Móveis não foram posicionados');
+  // Contratar um herói novo na loja da noite
+  await click('🦸 Heróis');
+  await page.locator('.np-card', { hasText: 'Bolota' }).locator('button.buy').click();
+  await page.waitForTimeout(2000);
+  await shot('09b-heroi-contratado');
+  if (!(await page.evaluate(() => window.game.save.heroesOwned.includes('bolota')))) throw new Error('Herói não foi contratado');
   await click('Abrir o bistrô');
   await page.waitForSelector('.level-card');
 
@@ -205,16 +213,28 @@ try {
     }
     throw new Error(`Timeout (celular) esperando: ${label}`);
   };
-  await mob.goto('http://localhost:5199/?speed=4', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+  await mob.goto('http://localhost:5199/?speed=4&lang=pt', { waitUntil: 'domcontentloaded', timeout: 90_000 });
   await mob.waitForSelector('text=Jogar sozinho', { timeout: 60_000 });
   await mob.waitForTimeout(2000);
   if (!(await mob.evaluate(() => document.documentElement.classList.contains('touch')))) throw new Error('Modo toque não foi detectado no celular');
   await mshot('13-celular-titulo');
   await mob.getByText('Jogar sozinho').first().tap();
+  await mob.waitForSelector('.level-card');
+  await mob.waitForTimeout(600);
+  await mshot('13b-celular-niveis');
+  // Teste de usabilidade: os 3 níveis e o botão Menu cabem na tela sem rolar
+  const outside = await mob.evaluate(() =>
+    [...document.querySelectorAll('.level-card, .screens.open .buttons .btn')]
+      .filter((e) => { const r = e.getBoundingClientRect(); return r.bottom > innerHeight || r.right > innerWidth; })
+      .map((e) => e.textContent.trim().slice(0, 20)),
+  );
+  if (outside.length) throw new Error(`Mapa de níveis não cabe no celular: ${outside.join(' | ')}`);
   await mob.getByText('Salada Feérica').first().tap();
   await muntil(() => window.game.state === 'day', 'dia começar (celular)');
   await mob.waitForTimeout(800);
   await mshot('14-celular-dia');
+  const tutPx = await mob.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.tutorial .tstep.current')).fontSize));
+  if (tutPx < 13) throw new Error(`Texto do tutorial pequeno demais no celular: ${tutPx}px`);
   if (await mob.locator('.touch-controls.hidden').count()) throw new Error('Controles de toque não apareceram');
   // Arrasta o joystick para a direita com o "dedo" (Pointer Events)
   const x0 = await mob.evaluate(() => window.game.day.chefs[0].pos.x);
@@ -246,6 +266,58 @@ try {
   if (!(await mob.locator('.rotate').isVisible())) throw new Error('Aviso de girar o celular não apareceu');
   await mshot('17-celular-em-pe');
   await phone.close();
+
+  // ───────── 5. Idiomas ─────────
+  const langCtx = await browser.newContext({ viewport: { width: 1280, height: 720 }, locale: 'en-US', deviceScaleFactor: 1 });
+  const lp = await langCtx.newPage();
+  lp.on('pageerror', (e) => errors.push(`[idiomas] ${e.message}`));
+  // Sem ?lang e com o navegador em inglês: o jogo abre em inglês (padrão)
+  await lp.goto('http://localhost:5199/', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+  await lp.waitForSelector('.screens.open .btn.big', { timeout: 90_000 });
+  const defaultSolo = await lp.locator('.screens.open .btn.big').first().textContent();
+  if (!defaultSolo?.includes('Play solo')) throw new Error(`Idioma padrão não é inglês: "${defaultSolo}"`);
+  // Texto de interface que não pode aparecer: chave crua do dicionário
+  const rawKey = /(title|hero|night|act|deny|levels|hud|set|results|item|furn|recipe|level|tut|day|gate|family|species|ing)\.[a-z_]+/;
+  for (const lang of ['en', 'es', 'pt', 'fr', 'zh', 'ja']) {
+    await lp.goto(`http://localhost:5199/?speed=4&lang=${lang}`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await lp.waitForSelector('.screens.open .hero-card', { timeout: 90_000 });
+    await lp.waitForTimeout(1200);
+    await lp.screenshot({ path: `${OUT}/18-idioma-${lang}-titulo.png` });
+    const check = async (where) => {
+      const text = await lp.evaluate(() => document.body.innerText);
+      const m = text.match(rawKey);
+      if (m) throw new Error(`[${lang}/${where}] chave sem tradução na tela: ${m[0]}`);
+      const overflow = await lp.evaluate(() =>
+        [...document.querySelectorAll('.screens.open .btn')]
+          .filter((b) => b.scrollWidth > b.clientWidth + 2)
+          .map((b) => b.textContent.trim().slice(0, 25)),
+      );
+      if (overflow.length) throw new Error(`[${lang}/${where}] texto estourando o botão: ${overflow.join(' | ')}`);
+    };
+    await check('título');
+    await lp.locator('.screens.open .btn.big').first().click();
+    await lp.waitForSelector('.level-card');
+    await lp.waitForTimeout(400);
+    await check('níveis');
+    await lp.locator('.level-card').first().click();
+    await lp.waitForFunction(() => window.game?.state === 'day', null, { timeout: 60_000 });
+    await lp.waitForFunction(() => window.game.day.parties[0]?.party.phase === 'waitingOrder', null, { timeout: 90_000 });
+    await lp.evaluate(() => {
+      const d = window.game.day;
+      const tbl = d.parties[0].table;
+      const c = d.chefs[0];
+      c.pos.set(tbl.x, 0, tbl.z - 0.85);
+      c.facing = 0;
+    });
+    await lp.waitForTimeout(1200);
+    await lp.screenshot({ path: `${OUT}/19-idioma-${lang}-dia.png` });
+    const hint = await lp.evaluate(() => window.game.day.chefs[0].hint.el.innerText);
+    if (!hint.trim()) throw new Error(`[${lang}] dica sobre o herói vazia`);
+    const m = (await lp.evaluate(() => document.body.innerText)).match(rawKey);
+    if (m) throw new Error(`[${lang}/dia] chave sem tradução na tela: ${m[0]}`);
+    console.log(`Idioma ${lang}: ok (dica: "${hint.replace(/\s+/g, ' ').trim()}")`);
+  }
+  await langCtx.close();
 
   if (errors.length) throw new Error(`Erros no console:\n${errors.join('\n')}`);
   ok = true;

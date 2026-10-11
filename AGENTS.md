@@ -29,6 +29,12 @@ Publicação: cada merge na `main` publica em https://carlosnakazawa.github.io/m
 3. **Caos gentil.** Sem game over; errar custa pouco. Nada de punição dura.
 4. **Cooperação.** Qualquer herói faz qualquer tarefa; modo solo troca de herói com `Q`.
 
+## Regras para o lançamento (lojas)
+- **Nenhum SDK de terceiros que colete dados** (analytics, anúncios, rastreadores). O jogo é para crianças: ver `docs/LANCAMENTO.md` §6.
+- **Nunca** vender moedas/heróis por dinheiro real, nem caixas-surpresa ou anúncios. Compras reais só da "versão completa"/expansões, sempre atrás do **portão dos pais** (`platform/entitlements.ts`).
+- Tudo que depende da plataforma (compras, vibração, salvar, segundo plano) passa por `src/platform/`.
+- **Nenhum texto visível escrito direto no código:** use `t('chave')` e adicione a frase nos **6 dicionários** de `src/i18n/` (en, es, pt, fr, zh, ja). Frases curtas, sem concatenar pedaços; use `{variáveis}`.
+
 ## Regras de código
 - `src/sim/` e `src/data/` são **puros** (sem `three`, sem DOM) e têm testes. Regra de jogo nova → primeiro em `sim/` com teste.
 - `Game.ts` só orquestra estados; regras do dia em `game/Day.ts`, da noite em `game/Night.ts`.

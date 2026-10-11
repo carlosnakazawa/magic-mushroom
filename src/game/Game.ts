@@ -7,17 +7,23 @@ import { levelDef, type LevelDef } from '../data/levels';
 import { Creature } from '../models/creature';
 import { Lighting } from '../render/lighting';
 import { Stage } from '../render/stage';
-import { defaultSave, recordDay, type SaveData, type Settings } from '../sim/progress';
+import { claimWelcomeGift, defaultSave, recordDay, teamHeroes, type SaveData, type Settings } from '../sim/progress';
 import { Hud } from '../ui/hud';
 import { moveFocus } from '../ui/nav';
 import { Screens } from '../ui/screens';
 import { TouchControls, isTouchDevice } from '../ui/touch';
+import { LANGS, resolveLang, setLang, t, type Lang } from '../i18n';
+import { entitlements } from '../platform/entitlements';
+import { platform } from '../platform/platform';
 import { WorldUI } from '../ui/worldui';
 import { DayRun, type DayStats } from './Day';
 import { Fx } from './fx';
 import { ItemViews } from './itemviews';
 import { NightRun } from './Night';
 import { World } from './world';
+
+/** Câmera que segue no celular: largura (em células) da faixa visível. */
+const TUNING_CAM = { width: 14.5 };
 
 type GameState = 'title' | 'levels' | 'settings' | 'countdown' | 'day' | 'paused' | 'results' | 'night';
 
@@ -49,6 +55,9 @@ export class Game {
   private debugEl: HTMLDivElement | null = null;
   private touch: TouchControls | null = null;
   private touchShown = false;
+  /** Celular: a câmera segue os heróis de perto (no salão inteiro eles ficavam pequenos). */
+  private followCam = false;
+  private camX = 8.6;
   /** Depuração: `?speed=4` roda a simulação 4× mais rápido (útil em testes automatizados). */
   private timeScale = Math.max(1, Math.min(8, Number(new URLSearchParams(location.search).get('speed')) || 1));
 
@@ -56,9 +65,12 @@ export class Game {
     const stageEl = document.createElement('div');
     stageEl.className = 'stage';
     container.appendChild(stageEl);
+    this.save = loadSave();
+    this.applyLanguage();
     const touch = isTouchDevice();
     document.documentElement.classList.toggle('touch', touch);
     this.stage = new Stage(stageEl, touch);
+    this.followCam = touch && Math.min(window.innerWidth, window.innerHeight) < 600;
     const labelLayer = document.createElement('div');
     labelLayer.className = 'world-ui';
     container.appendChild(labelLayer);
@@ -76,7 +88,6 @@ export class Game {
     }
     this.fx = new Fx(this.stage, container);
     this.lighting = new Lighting(this.stage);
-    this.save = loadSave();
     this.applySettings();
 
     this.input.onKey((code) => {
@@ -91,6 +102,15 @@ export class Game {
       if (code === 'KeyM' && this.state !== 'settings') this.setMusic(!this.save.settings.music);
     });
     window.addEventListener('pointerdown', () => audio.unlock());
+    // App em segundo plano (trocou de app, bloqueou a tela): pausa o dia e a música.
+    platform.onVisibility((visible) => {
+      if (!visible) {
+        if (this.state === 'day') this.togglePause();
+        audio.stopMusic();
+      } else if (this.state === 'night' && this.save.settings.music) {
+        audio.startNightMusic();
+      }
+    });
 
     if (new URLSearchParams(location.search).has('debug')) {
       this.debugEl = document.createElement('div');
@@ -105,15 +125,40 @@ export class Game {
   }
 
   /** Celular em pé: pede para girar (dá para dispensar). */
+  private rotateEl: HTMLDivElement | null = null;
+
   private buildRotateNotice(): void {
+    this.rotateEl?.remove();
     const el = document.createElement('div');
+    this.rotateEl = el;
     el.className = 'rotate';
-    el.innerHTML = `<div><div class="rotate-icon">📱</div><p>Gire o celular para jogar deitado!</p><button class="btn small">Jogar assim mesmo</button></div>`;
+    el.innerHTML = `<div><div class="rotate-icon">📱</div><p>${t('game.rotate')}</p><button class="btn small">${t('game.rotateAnyway')}</button></div>`;
     el.querySelector('button')!.onclick = () => el.remove();
     this.container.appendChild(el);
   }
 
   // ───────────────────────────── configurações ─────────────────────────────
+
+  /** Idioma: `?lang=xx` > escolha salva > idioma do aparelho > inglês. */
+  private applyLanguage(): void {
+    const lang = resolveLang(this.save.settings.lang, navigator.languages ?? [navigator.language], new URLSearchParams(location.search).get('lang'));
+    setLang(lang);
+    const meta = LANGS.find((l) => l.id === lang)!;
+    document.documentElement.lang = meta.html;
+    document.title = t('game.name');
+  }
+
+  /** Troca de idioma ao vivo (título ou opções): salva e redesenha tudo que tem texto. */
+  private changeLanguage(lang: Lang, reopen: () => void): void {
+    this.save = { ...this.save, settings: { ...this.save.settings, lang } };
+    writeSave(this.save);
+    this.applyLanguage();
+    this.touch?.relabel();
+    if (this.rotateEl) this.buildRotateNotice();
+    // A placa do restaurante é desenhada em 3D: recria o salão com o texto novo
+    if (this.state === 'title' || this.state === 'settings') this.buildWorld();
+    reopen();
+  }
 
   private applySettings(): void {
     const s = this.save.settings;
@@ -140,7 +185,7 @@ export class Game {
     writeSave(this.save);
     if (this.state === 'day' || this.state === 'night') audio.setMusic(on);
     else audio.musicOn = on;
-    this.hud.toast(on ? '🎵 Música ligada' : '🔇 Música desligada');
+    this.hud.toast(on ? t('game.musicOn') : t('game.musicOff'));
   }
 
   // ───────────────────────────── estados ─────────────────────────────
@@ -175,7 +220,7 @@ export class Game {
     this.hud.show(false);
     this.lighting.set(false);
     this.clearTitle();
-    const team = HEROES.filter((h) => !h.family || this.save.families.includes(h.family));
+    const team = teamHeroes(this.save);
     const x0 = 13.5 - ((team.length - 1) * 1.15) / 2;
     this.titleCreatures = team.map((hero, i) => {
       const creature = new Creature(hero, 1.35);
@@ -200,6 +245,7 @@ export class Game {
         this.showLevels();
       },
       () => this.showSettings('title'),
+      (lang) => this.changeLanguage(lang, () => this.showTitle()),
     );
   }
 
@@ -209,14 +255,19 @@ export class Game {
     this.hud.show(false);
     this.screens.levels(
       this.save,
-      (id) => this.startDay(id),
+      (id) => {
+        if (entitlements.levelAvailable(id)) this.startDay(id);
+        else this.screens.fullGameGate(() => this.showLevels(), () => this.showLevels());
+      },
       () => this.showTitle(),
+      (id) => entitlements.levelAvailable(id),
     );
   }
 
   private showSettings(from: 'title' | 'paused'): void {
     this.state = 'settings';
     this.screens.settings(this.save, {
+      onLang: (lang) => this.changeLanguage(lang, () => this.showSettings(from)),
       onChange: (s) => this.updateSettings(s),
       onRebind: (_player, _action, done) => this.input.captureNextKey(done),
       onReset: () => {
@@ -245,6 +296,7 @@ export class Game {
     this.buildWorld();
     this.screens.hide();
     this.stage.frame(8.6, 5.2, 20.2, 11.4);
+    this.camX = 4;
     const day = new DayRun(
       { stage: this.stage, world: this.world, hud: this.hud, worldUI: this.worldUI, fx: this.fx, views: this.views, input: this.input },
       { level: this.level, heroes: this.heroes, playerCount: this.playerCount, save: this.save },
@@ -280,12 +332,14 @@ export class Game {
     this.hud.show(false);
     this.state = 'night';
     this.save = { ...this.save, rested: true };
+    const gift = claimWelcomeGift(this.save);
+    this.save = gift.save;
     writeSave(this.save);
     this.buildWorld();
     this.lighting.set(true);
     this.stage.frame(8.6, 5.2, 20.2, 11.4);
     audio.startNightMusic();
-    this.screens.banner('🌙 Anoitece no bistrô…', 1500, () => {
+    this.screens.banner(t('night.banner'), 1500, () => {
       if (this.state !== 'night') return;
       this.night = new NightRun(
         {
@@ -311,6 +365,14 @@ export class Game {
     });
     // O HUD de avisos (toasts) continua visível à noite
     this.hud.showToastsOnly(true);
+    if (gift.amount) {
+      // Presente de boas-vindas: a 1ª loja não fica com tudo bloqueado
+      window.setTimeout(() => {
+        audio.buy();
+        this.hud.toast(t('game.gift', { n: gift.amount }), 'good', 4500);
+        this.fx.burst(new THREE.Vector3(4.5, 1.5, 6.5), { kind: 'sparkle', count: 40, speed: 3, up: 3, colors: [0xffd700, 0xff7fb0, 0x7fd8ff] });
+      }, 1800);
+    }
   }
 
   private togglePause(): void {
@@ -335,6 +397,18 @@ export class Game {
       this.state = 'day';
       if (this.save.settings.music) audio.startDayMusic();
     }
+  }
+
+  /** Celular: enquadra uma faixa do restaurante centrada nos heróis (eles ficam ~35% maiores). */
+  private updateFollowCam(dt: number): void {
+    if (!this.followCam || !this.day || (this.state !== 'day' && this.state !== 'countdown' && this.state !== 'paused')) return;
+    const active = this.day.chefs.filter((c) => c.controller >= 0);
+    const xs = (active.length ? active : this.day.chefs).map((c) => c.pos.x);
+    const avg = xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
+    const half = TUNING_CAM.width / 2;
+    const target = Math.max(half - 0.9, Math.min(this.world.width - half + 0.4, avg));
+    this.camX += (target - this.camX) * Math.min(1, dt * 3);
+    this.stage.frame(this.camX, 5.2, TUNING_CAM.width, 11.4);
   }
 
   // ───────────────────────────── loop ─────────────────────────────
@@ -376,6 +450,7 @@ export class Game {
       this.touch.show(showTouch, this.playerCount === 1);
     }
 
+    this.updateFollowCam(dt);
     this.lighting.update(dt);
     if (this.lighting.value !== this.lastNight) {
       this.lastNight = this.lighting.value;

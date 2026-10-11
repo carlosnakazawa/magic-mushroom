@@ -1,0 +1,15 @@
+{
+  "appId": "com.bistrocogumelo.app",
+  "appName": "Little Mushroom Bistro",
+  "webDir": "dist",
+  "backgroundColor": "#7fbf95",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true
+  },
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false
+  },
+  "plugins": {}
+}

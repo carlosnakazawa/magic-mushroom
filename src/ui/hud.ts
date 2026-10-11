@@ -1,5 +1,6 @@
-import { SPECIES_FAMILY_NAME, type HeroDef, type Species } from '../data/characters';
+import { speciesFamilyName, type HeroDef, type Species } from '../data/characters';
 import { INGREDIENTS } from '../data/ingredients';
+import { t } from '../i18n';
 import { RECIPES } from '../data/recipes';
 import type { Party } from '../sim/party';
 
@@ -79,7 +80,7 @@ export class Hud {
     this.clockText = el('span', 'clock-text', '3:30');
     this.clock.append(this.clockRing, this.clockText);
     const clockWrap = el('div', 'clock-wrap');
-    clockWrap.append(this.clock, el('div', 'day-label', 'Dia 1'));
+    clockWrap.append(this.clock, el('div', 'day-label', t('hud.day', { n: 1 })));
 
     this.orders = el('div', 'orders');
 
@@ -122,7 +123,7 @@ export class Hud {
   }
 
   setDay(day: number, goals: readonly [number, number, number]): void {
-    this.root.querySelector('.day-label')!.textContent = `Dia ${day}`;
+    this.root.querySelector('.day-label')!.textContent = t('hud.day', { n: day });
     this.goals = goals;
     this.shownCoins = this.targetCoins = 0;
     this.coinsText.textContent = '0';
@@ -179,7 +180,7 @@ export class Hud {
         const head = el(
           'div',
           'ticket-head',
-          p.size > 2 ? `${SPECIES_EMOJI[sp]}<span class="fam">Família ${SPECIES_FAMILY_NAME[sp]}</span>` : `${SPECIES_EMOJI[sp]}${p.size > 1 ? `<span>×${p.size}</span>` : ''}`,
+          p.size > 2 ? `${SPECIES_EMOJI[sp]}<span class="fam">${speciesFamilyName(sp)}</span>` : `${SPECIES_EMOJI[sp]}${p.size > 1 ? `<span>×${p.size}</span>` : ''}`,
         );
         const list = el('div', 'ticket-dishes');
         const dishes = p.members.map((m) => {
@@ -212,7 +213,7 @@ export class Hud {
   }
 
   /** Dicas de novidade do nível (sem checklist). */
-  setTips(lines: readonly string[] | null, keys = { pick: 'Espaço', use: 'E' }): void {
+  setTips(lines: readonly string[] | null, keys = { pick: t('key.space'), use: 'E' }): void {
     this.tips.classList.toggle('hidden', !lines);
     if (!lines) return;
     const fmt = (t: string) => t.replaceAll('{pick}', `<kbd>${keys.pick}</kbd>`).replaceAll('{use}', `<kbd>${keys.use}</kbd>`);
@@ -225,11 +226,11 @@ export class Hud {
     this.chips.innerHTML = chips.map((c) => `<span class="chip">${c}</span>`).join('');
   }
 
-  setTutorial(steps: { text: string; done: boolean }[] | null, current: number, keys = { pick: 'Espaço', use: 'E' }): void {
+  setTutorial(steps: { text: string; done: boolean }[] | null, current: number, keys = { pick: t('key.space'), use: 'E' }): void {
     this.tutorial.classList.toggle('hidden', !steps);
     if (!steps) return;
     this.tutorial.innerHTML =
-      `<h3>🍄 Aprendendo!</h3>` +
+      `<h3>${t('hud.learning')}</h3>` +
       steps
         .map((s, i) => `<div class="tstep${s.done ? ' done' : ''}${i === current ? ' current' : ''}">${s.done ? '✅' : i === current ? '👉' : '⬜'} ${s.text.replaceAll('{pick}', `<kbd>${keys.pick}</kbd>`).replaceAll('{use}', `<kbd>${keys.use}</kbd>`)}</div>`)
         .join('');

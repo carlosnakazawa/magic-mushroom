@@ -28,6 +28,8 @@ export class Machine {
   extinguish = 0;
   /** Desliga a queima (modo "sem pressa"). */
   safe = false;
+  /** Multiplicador de velocidade do trabalho atual (super-poder de quem abasteceu). */
+  boost = 1;
   /** Incrementa quando o visual precisa mudar. */
   version = 0;
 
@@ -102,7 +104,7 @@ export class Machine {
     };
     switch (this.phase) {
       case 'working':
-        this.progress += (dt * speed) / this.workTime();
+        this.progress += (dt * speed * this.boost) / this.workTime();
         if (this.progress >= 1) {
           this.phase = 'done';
           this.progress = 0;
@@ -159,6 +161,7 @@ export class Machine {
     this.phase = 'idle';
     this.progress = 0;
     this.extinguish = 0;
+    this.boost = 1;
     this.version++;
   }
 }

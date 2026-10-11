@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Species, WingStyle } from '../data/characters';
+import type { Accessory, MoveStyle, Species, WingStyle } from '../data/characters';
 import { glow, mesh, toon, wingMaterial } from '../render/materials';
 
 export interface CreatureLook {
@@ -10,7 +10,14 @@ export interface CreatureLook {
   wing?: WingStyle;
   wingColor?: number;
   eyeColor?: number;
+  accessory?: Accessory;
+  style?: MoveStyle;
 }
+
+/** Humor do rosto: olhos normais, felizes (^^) ou dormindo (—). */
+export type Mood = 'normal' | 'happy' | 'sleepy';
+
+const DEFAULT_STYLE: MoveStyle = { bounce: 1, hover: 1, wiggle: 1 };
 
 const sphere = new THREE.SphereGeometry(1, 24, 18);
 const lowSphere = new THREE.SphereGeometry(1, 12, 10);
@@ -37,6 +44,15 @@ export class Creature {
   private wings: THREE.Object3D[] = [];
   private tail: THREE.Object3D | null = null;
   private eyes: THREE.Object3D[] = [];
+  private happyEyes: THREE.Object3D[] = [];
+  private sleepyEyes: THREE.Object3D[] = [];
+  private mouthSmile: THREE.Object3D | null = null;
+  private mouthOpen: THREE.Object3D | null = null;
+  private style: MoveStyle = DEFAULT_STYLE;
+  private fidgetIn = 3 + Math.random() * 4;
+  private fidgetLeft = 0;
+  /** Humor atual (a felicidade ao comemorar é automática). */
+  mood: Mood = 'normal';
   private paws: THREE.Mesh[] = [];
   private feet: THREE.Mesh[] = [];
   private t = Math.random() * 10;
@@ -113,9 +129,12 @@ export class Creature {
     shadow.position.y = 0.01;
     this.root.add(shadow);
 
+    if (look.accessory) this.buildAccessory(look.accessory, look);
+
     this.root.scale.setScalar(scale);
+    this.style = look.style ?? DEFAULT_STYLE;
     this.flapSpeed = look.wing === 'bat' ? 14 : look.wing === 'feather' ? 7 : 11;
-    this.hoverAmp = look.wing ? 0.035 : 0;
+    this.hoverAmp = look.wing ? 0.035 * this.style.hover : 0;
   }
 
   private buildFace(look: CreatureLook): void {
@@ -151,9 +170,37 @@ export class Creature {
       this.head.add(eye);
       this.eyes.push(eye);
 
+      // Olhos felizes (^^) e dormindo (—), trocados conforme o humor
+      const lineMat = toon(look.species === 'wolf' ? 0x2b2440 : (look.eyeColor ?? 0x2b2440));
+      const happy = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.013, 6, 14, Math.PI), lineMat);
+      happy.position.copy(eye.position);
+      happy.position.z += 0.02;
+      happy.visible = false;
+      this.head.add(happy);
+      this.happyEyes.push(happy);
+      const sleepy = ball(0.045, lineMat, 1, 0.22, 0.4);
+      sleepy.position.copy(eye.position);
+      sleepy.position.y -= 0.01;
+      sleepy.visible = false;
+      this.head.add(sleepy);
+      this.sleepyEyes.push(sleepy);
+
       const blush = ball(0.05, toon(0xff9fb5), 1.3, 0.7, 0.4);
       blush.position.set(side * 0.19, -0.07, 0.23);
       this.head.add(blush);
+    }
+    // Boquinha: sorriso e boca aberta de alegria
+    if (look.species !== 'owl' && look.species !== 'frog') {
+      const smile = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.01, 6, 12, Math.PI), toon(0x5a2f2f));
+      smile.rotation.z = Math.PI;
+      smile.position.set(0, -0.1, 0.3);
+      this.head.add(smile);
+      this.mouthSmile = smile;
+      const open = ball(0.035, toon(0x8a2f3f), 1, 0.9, 0.4);
+      open.position.set(0, -0.12, 0.29);
+      open.visible = false;
+      this.head.add(open);
+      this.mouthOpen = open;
     }
     if (look.species === 'owl') {
       const beak = mesh(cone, toon(0xffc36b));
@@ -390,6 +437,131 @@ export class Creature {
     }
   }
 
+  /** Acessório característico de cada herói (reconhecível de longe). */
+  private buildAccessory(kind: Accessory, look: CreatureLook): void {
+    const g = new THREE.Group();
+    switch (kind) {
+      case 'bow': {
+        const m = toon(0xff7fb0);
+        const l = mesh(cone, m);
+        l.scale.set(0.07, 0.1, 0.05);
+        l.rotation.z = Math.PI / 2;
+        l.position.x = -0.06;
+        const r = l.clone();
+        r.rotation.z = -Math.PI / 2;
+        r.position.x = 0.06;
+        g.add(l, r, ball(0.03, m));
+        g.position.set(0.13, 0.25, 0.08);
+        g.rotation.z = -0.4;
+        break;
+      }
+      case 'leafCrown': {
+        const colors = [0xffb347, 0x8fd16a, 0xd9531e];
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          const leaf = ball(0.06, toon(colors[i % 3]!), 0.5, 0.25, 1);
+          leaf.position.set(Math.cos(a) * 0.2, 0, Math.sin(a) * 0.2);
+          leaf.rotation.y = -a;
+          leaf.rotation.z = 0.5;
+          g.add(leaf);
+        }
+        g.position.y = 0.22;
+        break;
+      }
+      case 'chefHat': {
+        const white = toon(0xffffff);
+        const band = mesh(new THREE.CylinderGeometry(1, 1, 1, 20), white);
+        band.scale.set(0.15, 0.1, 0.15);
+        g.add(band);
+        for (const [x, z] of [
+          [0, 0],
+          [-0.08, 0.03],
+          [0.08, 0.03],
+          [0, -0.07],
+        ] as const) {
+          const puff = ball(0.1, white);
+          puff.position.set(x, 0.12, z);
+          g.add(puff);
+        }
+        g.position.set(0, 0.3, -0.02);
+        g.rotation.z = 0.12;
+        break;
+      }
+      case 'starScarf': {
+        const scarf = mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 24), toon(0x2f3d73));
+        scarf.rotation.x = Math.PI / 2;
+        g.add(scarf);
+        const tail = ball(0.05, toon(0x2f3d73), 0.8, 1.6, 0.5);
+        tail.position.set(0.12, -0.08, 0.15);
+        g.add(tail);
+        const star = mesh(new THREE.OctahedronGeometry(0.05), glow(0xfff27a, 1.8));
+        star.position.set(0, -0.02, 0.21);
+        g.add(star);
+        g.position.y = 0.6;
+        this.body.add(g);
+        return;
+      }
+      case 'glasses': {
+        const gold = toon(0xd9a440);
+        for (const side of [-1, 1]) {
+          const ring = mesh(new THREE.TorusGeometry(0.07, 0.012, 6, 18), gold);
+          ring.position.set(side * 0.125, 0.03, 0.31);
+          g.add(ring);
+        }
+        const bridge = ball(0.03, gold, 1, 0.3, 0.3);
+        bridge.position.set(0, 0.05, 0.32);
+        g.add(bridge);
+        break;
+      }
+      case 'bambooLeaf': {
+        const leaf = ball(0.09, toon(0x8fd16a), 0.45, 0.18, 1.3);
+        leaf.position.set(0.05, 0.3, 0);
+        leaf.rotation.set(0.3, 0.4, 0.5);
+        const stem = mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 6), toon(0x6ab04c));
+        stem.position.set(0, 0.28, 0);
+        g.add(leaf, stem);
+        break;
+      }
+      case 'flower': {
+        for (let i = 0; i < 5; i++) {
+          const a = (i / 5) * Math.PI * 2;
+          const petal = ball(0.04, toon(0xff9fc8), 1, 0.5, 1);
+          petal.position.set(Math.cos(a) * 0.045, 0, Math.sin(a) * 0.045);
+          g.add(petal);
+        }
+        g.add(ball(0.03, toon(0xffd23f)));
+        g.position.set(-0.12, 0.27, 0.05);
+        g.rotation.z = 0.5;
+        break;
+      }
+      case 'crown': {
+        const gold = toon(0xffc83d, 0xffa000, 0.3);
+        const ring = mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.07, 16, 1, true), gold);
+        g.add(ring);
+        for (let i = 0; i < 5; i++) {
+          const a = (i / 5) * Math.PI * 2;
+          const tip = mesh(cone, gold);
+          tip.scale.set(0.025, 0.07, 0.025);
+          tip.position.set(Math.cos(a) * 0.11, 0.07, Math.sin(a) * 0.11);
+          g.add(tip);
+        }
+        const gem = ball(0.022, glow(0xff7fb0, 1.5));
+        gem.position.set(0, 0, 0.12);
+        g.add(gem);
+        g.position.set(0, look.species === 'frog' ? 0.3 : 0.28, -0.02);
+        break;
+      }
+      case 'moonClip': {
+        const moon = mesh(new THREE.TorusGeometry(0.06, 0.022, 8, 16, Math.PI * 1.3), glow(0xd9c8ff, 1.6));
+        moon.rotation.z = 0.8;
+        g.add(moon);
+        g.position.set(0.15, 0.24, 0.08);
+        break;
+      }
+    }
+    this.head.add(g);
+  }
+
   /** Pulinho de alegria + giro. */
   celebrate(): void {
     this.celebrateLeft = 0.8;
@@ -412,11 +584,32 @@ export class Creature {
     }
     this.blinkLeft = Math.max(0, this.blinkLeft - dt);
     const eyeY = this.blinkLeft > 0 ? 0.12 : 1;
-    this.eyes.forEach((e) => (e.scale.y = eyeY));
+    const mood: Mood = this.celebrateLeft > 0 ? 'happy' : this.mood;
+    this.eyes.forEach((e) => {
+      e.scale.y = eyeY;
+      e.visible = mood === 'normal';
+    });
+    this.happyEyes.forEach((e) => (e.visible = mood === 'happy'));
+    this.sleepyEyes.forEach((e) => (e.visible = mood === 'sleepy'));
+    if (this.mouthOpen && this.mouthSmile) {
+      this.mouthOpen.visible = mood === 'happy';
+      this.mouthSmile.visible = mood !== 'happy';
+    }
+
+    // Manias de cada herói quando está parado (pulinho ou inclinar a cabeça)
+    if (this.moving < 0.1 && !this.sitting && !this.working) {
+      this.fidgetIn -= dt;
+      if (this.fidgetIn <= 0) {
+        this.fidgetIn = 3 + Math.random() * 5;
+        if (this.style.bounce > 1.2) this.hopLeft = 0.18;
+        else this.fidgetLeft = 0.9;
+      }
+    }
+    this.fidgetLeft = Math.max(0, this.fidgetLeft - dt);
 
     // Andar: saltitar e inclinar
     const walkPhase = t * 13;
-    const bounce = this.moving * Math.abs(Math.sin(walkPhase)) * 0.09;
+    const bounce = this.moving * Math.abs(Math.sin(walkPhase)) * 0.09 * this.style.bounce;
     const breathe = Math.sin(t * 2.4) * 0.012;
     const hover = this.sitting ? 0 : Math.sin(t * 3) * this.hoverAmp;
     let y = bounce + hover;
@@ -455,7 +648,7 @@ export class Creature {
     });
 
     // Cabeça: balança levemente; ao comer, "nham nham"
-    this.head.rotation.z = Math.sin(t * 1.7) * 0.05;
+    this.head.rotation.z = Math.sin(t * 1.7) * 0.05 * this.style.wiggle + Math.sin((this.fidgetLeft / 0.9) * Math.PI) * 0.35;
     this.head.rotation.x = this.eating ? Math.sin(t * 12) * 0.08 : 0;
 
     // Asas e cauda

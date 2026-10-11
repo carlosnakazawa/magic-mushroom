@@ -1,7 +1,9 @@
 import { TUNING } from '../config';
+import { HEROES, heroDef, type HeroDef } from '../data/characters';
 import { FAMILIES, type FamilyId } from '../data/families';
 import { DECOR_SLOTS, FURNITURE, WALLS, furnitureDef, wallDef, type FurnitureId, type WallId } from '../data/furniture';
 import { LEVELS } from '../data/levels';
+import { isLang } from '../i18n';
 
 /** Teclas de ação de um jogador (movimento é fixo: WASD / setas). */
 export interface KeyBinds {
@@ -18,6 +20,8 @@ export interface Settings {
   /** Menos partículas, sem tremer a tela, brilho mais suave. */
   reducedFx: boolean;
   music: boolean;
+  /** Idioma escolhido ('' = automático pelo aparelho). Ver src/i18n. */
+  lang: string;
   keys: { p1: KeyBinds; p2: KeyBinds };
 }
 
@@ -42,6 +46,10 @@ export interface SaveData {
   families: FamilyId[];
   /** Os ajudantes descansaram na noite anterior (bônus no próximo dia). */
   rested: boolean;
+  /** Heróis contratados na loja noturna. */
+  heroesOwned: string[];
+  /** Presente de boas-vindas da 1ª noite já foi dado. */
+  welcomeGift: boolean;
   settings: Settings;
 }
 
@@ -65,7 +73,9 @@ export function defaultSave(): SaveData {
     wallsOwned: ['peach'],
     families: [],
     rested: false,
-    settings: { noRush: false, bigText: false, reducedFx: false, music: true, keys: structuredClone(DEFAULT_KEYS) },
+    heroesOwned: [],
+    welcomeGift: false,
+    settings: { noRush: false, bigText: false, reducedFx: false, music: true, lang: '', keys: structuredClone(DEFAULT_KEYS) },
   };
 }
 
@@ -112,11 +122,14 @@ export function parseSave(json: string | null | undefined): SaveData {
     wallsOwned: Array.isArray(r.wallsOwned) ? (r.wallsOwned.filter((w) => wallIds.has(w)) as WallId[]) : ['peach'],
     families: Array.isArray(r.families) ? (r.families.filter((f) => familyIds.has(f)) as FamilyId[]) : [],
     rested: !!r.rested,
+    heroesOwned: Array.isArray(r.heroesOwned) ? r.heroesOwned.filter((id) => typeof id === 'string' && !!heroDef(id)?.price) : [],
+    welcomeGift: !!r.welcomeGift,
     settings: {
       noRush: !!s.noRush,
       bigText: !!s.bigText,
       reducedFx: !!s.reducedFx,
       music: s.music !== false,
+      lang: isLang(s.lang) ? s.lang : '',
       keys: { p1: keys(s.keys?.p1, DEFAULT_KEYS.p1), p2: keys(s.keys?.p2, DEFAULT_KEYS.p2) },
     },
   };
@@ -161,6 +174,36 @@ export function recordDay(input: SaveData, levelId: number, coins: number, stars
   const newFamilies = FAMILIES.filter((f) => f.available && !save.families.includes(f.id) && totalStars(save) >= f.starsToUnlock).map((f) => f.id);
   save.families.push(...newFamilies);
   return { save, unlockedLevel, newFamilies, newBest };
+}
+
+/** Heróis disponíveis para jogar: o quinteto inicial + família liberada + contratados. */
+export function teamHeroes(save: SaveData): HeroDef[] {
+  return HEROES.filter((h) => (h.family ? save.families.includes(h.family) : h.price ? save.heroesOwned.includes(h.id) : true));
+}
+
+/** Heróis à venda na loja noturna (ainda não contratados). */
+export function heroesForSale(save: SaveData): HeroDef[] {
+  return HEROES.filter((h) => h.price && !save.heroesOwned.includes(h.id));
+}
+
+export function hireHero(input: SaveData, id: string): SaveData | ShopError {
+  const h = heroDef(id);
+  if (!h?.price) return 'locked';
+  if (input.heroesOwned.includes(id)) return 'owned';
+  if (input.wallet < h.price) return 'noMoney';
+  const save = structuredClone(input);
+  save.wallet -= h.price;
+  save.heroesOwned.push(id);
+  return save;
+}
+
+/** Presente de boas-vindas na primeira noite (uma vez só). Retorna o save e o valor dado. */
+export function claimWelcomeGift(input: SaveData): { save: SaveData; amount: number } {
+  if (input.welcomeGift) return { save: input, amount: 0 };
+  const save = structuredClone(input);
+  save.welcomeGift = true;
+  save.wallet += TUNING.welcomeGift;
+  return { save, amount: TUNING.welcomeGift };
 }
 
 /** Próxima família a desbloquear (para mostrar a meta). */

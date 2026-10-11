@@ -1,0 +1,400 @@
+/*
+ * Celular deitado (telas baixas). Regras do teste de usabilidade:
+ *  - textos com pelo menos ~13px efetivos (nada de encolher tudo com zoom)
+ *  - alvos de toque com pelo menos 44px
+ *  - menus cabem sem rolar em 740×340 (iPhone com as barras do Safari)
+ */
+@media (max-height: 520px) {
+  /* ── HUD ── */
+  .hud-top {
+    top: 6px;
+    left: 8px;
+    right: 8px;
+    gap: 8px;
+  }
+
+  .clock {
+    width: 60px;
+    height: 60px;
+  }
+
+  .clock-text {
+    width: 42px;
+    height: 42px;
+    font-size: 15px;
+  }
+
+  .day-label {
+    font-size: 13px;
+  }
+
+  .orders {
+    min-height: 0;
+    gap: 6px;
+  }
+
+  .ticket {
+    padding: 4px 6px 6px;
+    min-width: 0;
+  }
+
+  .ticket-head {
+    font-size: 16px;
+  }
+
+  .dish {
+    padding: 3px 5px;
+  }
+
+  .dish-ings {
+    font-size: 17px;
+  }
+
+  .dish small {
+    font-size: 11px;
+  }
+
+  .coins {
+    font-size: 21px;
+    padding: 4px 12px 4px 8px;
+    min-width: 0;
+  }
+
+  .goal {
+    width: 110px;
+  }
+
+  .tbtn.pause {
+    top: 96px;
+  }
+
+  /* Tutorial: só o passo atual, texto legível */
+  .tutorial,
+  .tutorial.tips {
+    top: 70px;
+    bottom: auto;
+    right: 8px;
+    width: 280px;
+    padding: 6px 10px 8px;
+    font-size: 14px;
+  }
+
+  .tutorial h3 {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .tutorial .tstep:not(.current) {
+    display: none;
+  }
+
+  .tutorial.tips .tstep {
+    display: block;
+    font-size: 13px;
+  }
+
+  .toasts {
+    zoom: 0.9;
+  }
+
+  .tbtn small {
+    font-size: 13px;
+  }
+
+  .wl .hint {
+    font-size: 14px;
+  }
+
+  .bubble-say {
+    font-size: 13px;
+    max-width: 170px;
+  }
+
+  /* ── Telas (menus) ── */
+  .screens.open {
+    padding: 6px;
+    place-items: center;
+  }
+
+  .panel {
+    padding: 10px 14px 12px;
+    border-radius: 20px;
+  }
+
+  .btn {
+    min-height: 44px;
+    min-width: 0;
+    font-size: 16px;
+    padding: 8px 16px;
+  }
+
+  .btn.big {
+    font-size: 18px;
+    padding: 8px 20px;
+  }
+
+  .buttons {
+    margin-top: 8px;
+    gap: 8px;
+  }
+
+  .buttons.column .btn {
+    min-width: 220px;
+  }
+
+  .logo {
+    font-size: 26px;
+  }
+
+  .logo span {
+    display: inline;
+    font-size: 0.6em;
+  }
+
+  .subtitle,
+  .save-line {
+    margin: 2px 0 6px;
+    font-size: 14px;
+  }
+
+  /* Título: cards pequenos numa linha e detalhes compactos */
+  .hero-cards.compact {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 6px 2px;
+    gap: 6px;
+  }
+
+  .hero-cards.compact .hero-card {
+    flex: 0 0 72px;
+    width: 72px;
+    padding: 6px 2px 4px;
+    border-radius: 16px;
+  }
+
+  .hero-cards.compact .hero-face {
+    width: 44px;
+    height: 44px;
+    font-size: 28px;
+    border-radius: 12px;
+  }
+
+  .hero-cards.compact .hero-card b {
+    font-size: 13px;
+  }
+
+  .hero-detail {
+    min-height: 0;
+    padding: 6px 10px;
+    margin-top: 4px;
+  }
+
+  .hd-face {
+    width: 44px;
+    height: 44px;
+    font-size: 28px;
+  }
+
+  .hd-text b {
+    font-size: 16px;
+  }
+
+  .hd-text p {
+    font-size: 13px;
+  }
+
+  /* Mapa de níveis: 3 cards lado a lado (antes empilhavam e saíam da tela) */
+  .levels h2 {
+    font-size: 22px;
+  }
+
+  .level-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 6px 0;
+  }
+
+  .level-card {
+    padding: 8px 6px;
+    border-radius: 16px;
+    min-height: 44px;
+  }
+
+  .lv-emoji {
+    font-size: 30px;
+  }
+
+  .level-card b {
+    font-size: 13px;
+  }
+
+  .level-card strong {
+    font-size: 15px;
+    line-height: 1.15;
+  }
+
+  .level-card small {
+    display: none;
+  }
+
+  .lv-stars {
+    font-size: 20px;
+  }
+
+  .family-track {
+    grid-template-columns: repeat(5, auto);
+    align-items: center;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .family-track h3 {
+    grid-column: auto;
+    font-size: 13px;
+  }
+
+  .fam {
+    flex-direction: row;
+    gap: 4px;
+    font-size: 13px;
+  }
+
+  .fam span {
+    font-size: 20px;
+  }
+
+  .fam b {
+    display: none;
+  }
+
+  /* Resultado e pausa */
+  .results h2,
+  .pause h2,
+  .settings h2 {
+    font-size: 24px;
+    margin-bottom: 2px;
+  }
+
+  .rstars {
+    font-size: 40px;
+  }
+
+  .rmsg {
+    font-size: 17px;
+    margin: 0 0 6px;
+  }
+
+  .rstats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .rstats div {
+    padding: 4px;
+  }
+
+  .rstats span,
+  .rstats b {
+    font-size: 20px;
+  }
+
+  .rgoals {
+    margin-top: 4px;
+  }
+
+  .pause .controls-help,
+  .results .rnext {
+    display: none;
+  }
+
+  .buttons.column {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .buttons.column .btn {
+    min-width: 0;
+  }
+
+  .unlock {
+    margin-top: 6px;
+    padding: 6px 10px;
+  }
+
+  .cd-word {
+    font-size: 64px;
+  }
+
+  /* Loja da noite: painel mais largo, abas grandes, cabeçalho enxuto */
+  .night-panel {
+    top: 6px;
+    bottom: 6px;
+    right: 6px;
+    width: min(46vw, 420px);
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .np-head h2 {
+    font-size: 18px;
+  }
+
+  .np-rest,
+  .np-goal {
+    display: none;
+  }
+
+  .np-coins {
+    font-size: 17px;
+  }
+
+  .np-charm {
+    font-size: 13px;
+  }
+
+  .np-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 2px;
+  }
+
+  .np-tab {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .np-card {
+    padding: 6px 8px;
+  }
+
+  .np-emoji {
+    font-size: 28px;
+    width: 40px;
+  }
+
+  .np-info small {
+    display: none;
+  }
+
+  .np-info b {
+    font-size: 14px;
+  }
+
+  .btn.big.np-morning {
+    font-size: 17px;
+  }
+}
+
+/* Celular bem pequeno */
+@media (max-height: 380px) {
+  .touch-buttons {
+    zoom: 0.85;
+  }
+
+  .hero-detail p:not(.perk):not(.how) {
+    display: none;
+  }
+}

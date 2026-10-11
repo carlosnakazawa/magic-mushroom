@@ -126,6 +126,14 @@ class AudioEngine {
     this.tone(1200, 0.5, { vol: 0.2, slide: 1.3 });
     this.tone(1500, 0.7, { vol: 0.18, delay: 0.5, slide: 0.8 });
   }
+  /** "Fala" fofinha estilo animalese: sílabas curtas no tom de voz do herói. */
+  voice(pitch: number): void {
+    const n = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) {
+      const f = pitch * (0.85 + Math.random() * 0.4);
+      this.tone(f, 0.07, { wave: 'triangle', vol: 0.11, delay: i * 0.08, slide: 1.05 + Math.random() * 0.25 });
+    }
+  }
   swap(): void {
     this.tone(600, 0.08, { wave: 'triangle', vol: 0.18, slide: 1.4 });
   }

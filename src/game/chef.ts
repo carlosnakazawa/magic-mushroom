@@ -4,6 +4,7 @@ import type { HeroDef } from '../data/characters';
 import type { PlayerInput } from '../core/input';
 import { Creature } from '../models/creature';
 import type { Item } from '../sim/items';
+import { perkMods, type PerkMods } from '../sim/perks';
 import type { WorldLabel } from '../ui/worldui';
 import { angleDiff } from './customer';
 import type { Station, World } from './world';
@@ -13,7 +14,17 @@ export class Chef {
   readonly creature: Creature;
   readonly pos = new THREE.Vector3();
   readonly vel = new THREE.Vector3();
+  /** Direção lógica (mira): muda na hora que o jogador aponta. */
   facing = 0;
+  /** Direção visual do modelo: gira suave atrás da lógica. */
+  private visualFacing = 0;
+  /** Super-poder deste herói. */
+  readonly mods: PerkMods;
+  /** Balão de fala e quanto tempo falta para sumir. */
+  speech: WorldLabel | null = null;
+  speechLeft = 0;
+  /** Evita falar demais. */
+  speechCooldown = 0;
   held: Item | null = null;
   /** Estação onde está trabalhando (tábua/pia). */
   workingAt: Station | null = null;
@@ -26,6 +37,7 @@ export class Chef {
 
   constructor(readonly hero: HeroDef) {
     this.creature = new Creature(hero, 1.25);
+    this.mods = perkMods(hero.perk);
     this.ring = new THREE.Mesh(
       new THREE.RingGeometry(0.36, 0.44, 32),
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }),
@@ -43,6 +55,11 @@ export class Chef {
     return new THREE.Vector3(Math.sin(this.facing), 0, Math.cos(this.facing));
   }
 
+  /** Vira para um ponto na hora (ao agir numa estação). */
+  faceTo(x: number, z: number): void {
+    this.facing = Math.atan2(x - this.pos.x, z - this.pos.z);
+  }
+
   setRingColor(color: number | null): void {
     this.ring.visible = color !== null;
     if (color !== null) (this.ring.material as THREE.MeshBasicMaterial).color.setHex(color);
@@ -51,22 +68,25 @@ export class Chef {
   move(input: PlayerInput | null, world: World, dt: number): void {
     const want = new THREE.Vector3(input?.moveX ?? 0, 0, input?.moveZ ?? 0);
     if (want.lengthSq() > 1) want.normalize();
-    want.multiplyScalar(TUNING.player.speed);
-    const k = Math.min(1, TUNING.player.accel * dt / TUNING.player.speed);
+    const top = TUNING.player.speed * this.mods.speed;
+    want.multiplyScalar(top);
+    const k = Math.min(1, (TUNING.player.accel * dt) / top);
     this.vel.lerp(want, k);
     if (want.lengthSq() > 0.01) {
-      this.facing += angleDiff(Math.atan2(want.x, want.z), this.facing) * Math.min(1, dt * 16);
+      // Mira instantânea: um toque rápido na direção já escolhe o alvo (teste de usabilidade)
+      this.facing = Math.atan2(want.x, want.z);
       this.workingAt = null;
     }
     this.pos.addScaledVector(this.vel, dt);
     this.collide(world);
 
-    const speed = this.vel.length() / TUNING.player.speed;
+    const speed = this.vel.length() / top;
     this.creature.moving = speed;
     this.creature.holding = !!this.held;
     this.creature.working = !!this.workingAt;
     this.root.position.copy(this.pos);
-    this.root.rotation.y = this.facing;
+    this.visualFacing += angleDiff(this.facing, this.visualFacing) * Math.min(1, dt * 18);
+    this.root.rotation.y = this.visualFacing;
   }
 
   /** Colisão círculo × células sólidas: empurra para fora pela normal (desliza nas quinas). */
