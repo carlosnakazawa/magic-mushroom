@@ -1,4 +1,6 @@
-# Bistrô do Cogumelo Mágico — Documento de Design (GDD)
+# Mushmallow — Documento de Design (GDD)
+
+> Nome do jogo: **Mushmallow** (decidido em 2026-10-11). A ideia original se chamava "Bistrô do Cogumelo Mágico" — mantida na Parte A como foi criada.
 
 > Ideia original criada pela filha do Carlos. A **Parte A** é a transcrição fiel da ideia.
 > A **Parte B** traduz essa ideia em regras jogáveis (decisões de design tomadas durante a implementação).
@@ -214,15 +216,32 @@ Nas lojas de celular: Nível 1 + noites grátis; "Bistrô Completo" (compra úni
 - **6 idiomas:** inglês (padrão), espanhol, português (BR), francês, chinês simplificado e japonês.
 - **Escolha:** `?lang=xx` na URL > idioma salvo nas Opções > idioma do aparelho > **inglês**. Troca ao vivo no título (botão com bandeira) e nas ⚙️ Opções.
 - **Nomes dos heróis não são traduzidos** (nomes próprios criados pela autora). Títulos, descrições, super-poderes e falas, sim.
-- **Nome do jogo por idioma** (provisório, sem a gíria "magic mushroom"):
+- **Nome:** **Mushmallow** (mushroom + marshmallow) em todos os idiomas — marca única, sem a gíria "magic mushroom" (cogumelo alucinógeno em inglês/espanhol/francês). O subtítulo é traduzido:
 
-  | Idioma | Nome |
+  | Idioma | Subtítulo |
   |---|---|
-  | en | Little Mushroom Bistro |
-  | es | El Bistró del Hongo Encantado |
-  | pt | Bistrô do Cogumelo Mágico |
-  | fr | Le Bistrot du Champignon Enchanté |
-  | zh | 森林里的蘑菇小餐馆 |
-  | ja | もりのきのこビストロ |
+  | en | The Forest Bistro |
+  | es | El Bistró del Bosque |
+  | pt | O Bistrô da Floresta |
+  | fr | Le Bistrot de la Forêt |
+  | zh | 森林小餐馆 |
+  | ja | もりのビストロ |
 
 - O japonês usa bastante hiragana (público infantil).
+
+### B14. Silhuetas únicas (teste da sombra)
+Pintados de preto, os heróis precisam ser reconhecidos só pelo formato. Use `?lineup` (cores) e `?lineup=sombra` na URL, ou `node scripts/lineup.mjs <prefixo>` para gerar as imagens.
+
+| Herói | Formato que identifica |
+|---|---|
+| Puff 🐰 | Pequena; **orelhas compridas em pé** (uma dobradinha); rabo de algodão |
+| Florzinha 🦊 | Esguia; focinho fino; orelhas grandes com ponta escura; **caudona felpuda para o lado** |
+| Pipoca 🐲 | **O mais largo**; focinho de dragão com narinas; chifres curvos; espinhos grandes; barriga listrada; chapéu de chef |
+| Astro 🐺 | **O mais alto**; focinho comprido; orelhas pontudas em pé; **estrela na testa**; sobrancelhas firmes |
+| Estrelinha 🦉 | **Formato de ovo**; disco facial; olhos enormes; tufos altos; tom caramelo |
+| Mochi 🐼 | Redondo e grande; orelhas e patas pretas; manchas nos olhos |
+| Bolota 🦔 | **Coberto de espinhos** (costas e cabeça); focinho pontudo |
+| Gota 🐸 | **Achatada e larga**; olhos no topo; sorriso enorme; **rosa** (não confunde com o Pipoca) |
+| Lumi 🐱 | Orelhas de gato; **bigodes**; cauda em "?" |
+
+Os perfis ficam em `src/models/creature.ts` (`PROFILES`) e valem também para os clientes da mesma espécie.

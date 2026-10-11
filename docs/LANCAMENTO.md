@@ -16,7 +16,10 @@
 | **Depois do lançamento** | **Expansões pagas** (famílias Ovelha, Axolote, Esquilo: US$ 1,99–2,99 cada ou um "Passe das Famílias") | Receita contínua sem prejudicar quem já comprou. |
 | **Nunca** | Anúncios, caixas-surpresa, moedas compradas com dinheiro real, "energia" que acaba | Proibido ou malvisto em jogos infantis, além de ruim para as crianças. |
 
-### ⚠️ Atenção ao nome em inglês
+### ✅ Nome decidido: **Mushmallow**
+O nome é igual em todos os idiomas (mushroom + marshmallow) e só o subtítulo é traduzido. Pendente: pesquisa de marca (INPI/USPTO), domínio e um nome de repositório/URL novo, se quiserem (o GitHub Pages usa o nome do repositório).
+
+### (Histórico) Atenção ao nome em inglês
 Em inglês, *"magic mushroom"* é gíria para **cogumelo alucinógeno**. Um título como "Magic Mushroom Bistro" pode causar:
 - classificação etária mais alta;
 - rejeição em lojas;
@@ -49,7 +52,7 @@ Pesquise marcas registradas (INPI e USPTO) e o domínio antes de decidir.
 
 ### Fase A — Produto pronto para o mundo (3–4 semanas)
 - [x] **Idiomas:** inglês (padrão), espanhol, português, francês, chinês simplificado e japonês, em `src/i18n/` (PR #4). Próximo passo: revisão por falantes nativos, principalmente zh e ja, antes do lançamento.
-- [ ] Nome internacional definido + pesquisa de marca (hoje há nomes provisórios por idioma no GDD B13; trocar em `src/i18n/*.ts`, `game.name`).
+- [x] Nome internacional: **Mushmallow** (GDD B13). Falta pesquisa de marca e domínio.
 - [ ] Testar em **celulares reais fracos** (Android de entrada, iPhone antigo): meta de 30 fps estáveis; ajustar `lowPower` (sombras/partículas) se preciso.
 - [ ] Trocar a música sintetizada por trilha própria ou com licença livre (CC0/CC-BY, registrada em `docs/`), e criar sons de UI mais caprichados.
 - [ ] Conteúdo para o "jogo completo" valer o preço:

@@ -1,4 +1,4 @@
-# Roadmap — 3 Etapas
+# Roadmap — Mushmallow
 
 Cada etapa = **1 branch + 1 Pull Request** revisado pelo **Gemini Code Assist** antes do merge.
 Fluxo detalhado em [`AGENTS.md`](../AGENTS.md#fluxo-de-etapas-e-pull-requests).
@@ -58,6 +58,13 @@ Branch: `melhorias/personagens-usabilidade-lancamento`
 - ✅ Plano de lançamento e monetização (`docs/LANCAMENTO.md`) e política de privacidade publicada
 - ✅ **6 idiomas** (en padrão, es, pt, fr, zh, ja) com troca ao vivo, testes de completude e smoke por idioma
 
+## Etapa 5 — "Heróis únicos e Mushmallow" — ✅ (PR #5)
+Branch: `etapa-5/herois-unicos-mushmallow`
+- ✅ Silhuetas únicas por espécie (perfis de corpo, focinhos, olhos, orelhas, caudas, espinhos, listras, bigodes)
+- ✅ Cores ajustadas (Estrelinha caramelo, Gota rosa) para não confundir
+- ✅ Ferramenta `?lineup` / `?lineup=sombra` + `scripts/lineup.mjs` (teste da sombra)
+- ✅ Novo nome: **Mushmallow**, igual em todos os idiomas, com subtítulo traduzido
+
 ## Próximo: Lançamento (ver `docs/LANCAMENTO.md`)
 - 🚧 Fase A — ✅ idiomas; ⬜ revisão nativa zh/ja, nome internacional, celulares reais, trilha sonora, conteúdo extra, créditos
 - ⬜ Fase B — Android/Google Play (teste fechado de 14 dias com 12 testadores)
@@ -78,6 +85,7 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 
 | Data | Etapa | Resumo |
 |---|---|---|
+| 2026-10-11 | 5 | Heróis redesenhados com silhuetas únicas (teste da sombra antes/depois) e nome Mushmallow em todo o jogo. PR #5. |
 | 2026-10-11 | 4 | Revisão do PR #4 tratada (gorjeta sem mutar evento). Traduções completas: inglês (padrão), espanhol, português, francês, chinês e japonês. |
 | 2026-10-11 | 4 | Teste de usabilidade no site publicado (computador + celular emulado) → `docs/USABILIDADE.md`. Corrigido tudo; personagens com personalidade, super-poderes e heróis contratáveis; movimento/mira mais intuitivos; preparação para lojas e plano `docs/LANCAMENTO.md`. PR #4. |
 | 2026-09-26 | Extra | PR #2 revisado e mergeado; site publicado no Pages. Controles de toque e layout para celular (PR #3). Próximo: testar em celulares reais e ajustar tamanhos/ritmo com o feedback da família. |
