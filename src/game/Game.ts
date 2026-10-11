@@ -12,6 +12,7 @@ import { Hud } from '../ui/hud';
 import { moveFocus } from '../ui/nav';
 import { Screens } from '../ui/screens';
 import { TouchControls, isTouchDevice } from '../ui/touch';
+import { LANGS, resolveLang, setLang, t, type Lang } from '../i18n';
 import { entitlements } from '../platform/entitlements';
 import { platform } from '../platform/platform';
 import { WorldUI } from '../ui/worldui';
@@ -64,6 +65,8 @@ export class Game {
     const stageEl = document.createElement('div');
     stageEl.className = 'stage';
     container.appendChild(stageEl);
+    this.save = loadSave();
+    this.applyLanguage();
     const touch = isTouchDevice();
     document.documentElement.classList.toggle('touch', touch);
     this.stage = new Stage(stageEl, touch);
@@ -85,7 +88,6 @@ export class Game {
     }
     this.fx = new Fx(this.stage, container);
     this.lighting = new Lighting(this.stage);
-    this.save = loadSave();
     this.applySettings();
 
     this.input.onKey((code) => {
@@ -123,15 +125,40 @@ export class Game {
   }
 
   /** Celular em pé: pede para girar (dá para dispensar). */
+  private rotateEl: HTMLDivElement | null = null;
+
   private buildRotateNotice(): void {
+    this.rotateEl?.remove();
     const el = document.createElement('div');
+    this.rotateEl = el;
     el.className = 'rotate';
-    el.innerHTML = `<div><div class="rotate-icon">📱</div><p>Gire o celular para jogar deitado!</p><button class="btn small">Jogar assim mesmo</button></div>`;
+    el.innerHTML = `<div><div class="rotate-icon">📱</div><p>${t('game.rotate')}</p><button class="btn small">${t('game.rotateAnyway')}</button></div>`;
     el.querySelector('button')!.onclick = () => el.remove();
     this.container.appendChild(el);
   }
 
   // ───────────────────────────── configurações ─────────────────────────────
+
+  /** Idioma: `?lang=xx` > escolha salva > idioma do aparelho > inglês. */
+  private applyLanguage(): void {
+    const lang = resolveLang(this.save.settings.lang, navigator.languages ?? [navigator.language], new URLSearchParams(location.search).get('lang'));
+    setLang(lang);
+    const meta = LANGS.find((l) => l.id === lang)!;
+    document.documentElement.lang = meta.html;
+    document.title = t('game.name');
+  }
+
+  /** Troca de idioma ao vivo (título ou opções): salva e redesenha tudo que tem texto. */
+  private changeLanguage(lang: Lang, reopen: () => void): void {
+    this.save = { ...this.save, settings: { ...this.save.settings, lang } };
+    writeSave(this.save);
+    this.applyLanguage();
+    this.touch?.relabel();
+    if (this.rotateEl) this.buildRotateNotice();
+    // A placa do restaurante é desenhada em 3D: recria o salão com o texto novo
+    if (this.state === 'title' || this.state === 'settings') this.buildWorld();
+    reopen();
+  }
 
   private applySettings(): void {
     const s = this.save.settings;
@@ -158,7 +185,7 @@ export class Game {
     writeSave(this.save);
     if (this.state === 'day' || this.state === 'night') audio.setMusic(on);
     else audio.musicOn = on;
-    this.hud.toast(on ? '🎵 Música ligada' : '🔇 Música desligada');
+    this.hud.toast(on ? t('game.musicOn') : t('game.musicOff'));
   }
 
   // ───────────────────────────── estados ─────────────────────────────
@@ -218,6 +245,7 @@ export class Game {
         this.showLevels();
       },
       () => this.showSettings('title'),
+      (lang) => this.changeLanguage(lang, () => this.showTitle()),
     );
   }
 
@@ -239,6 +267,7 @@ export class Game {
   private showSettings(from: 'title' | 'paused'): void {
     this.state = 'settings';
     this.screens.settings(this.save, {
+      onLang: (lang) => this.changeLanguage(lang, () => this.showSettings(from)),
       onChange: (s) => this.updateSettings(s),
       onRebind: (_player, _action, done) => this.input.captureNextKey(done),
       onReset: () => {
@@ -310,7 +339,7 @@ export class Game {
     this.lighting.set(true);
     this.stage.frame(8.6, 5.2, 20.2, 11.4);
     audio.startNightMusic();
-    this.screens.banner('🌙 Anoitece no bistrô…', 1500, () => {
+    this.screens.banner(t('night.banner'), 1500, () => {
       if (this.state !== 'night') return;
       this.night = new NightRun(
         {
@@ -340,7 +369,7 @@ export class Game {
       // Presente de boas-vindas: a 1ª loja não fica com tudo bloqueado
       window.setTimeout(() => {
         audio.buy();
-        this.hud.toast(`🎁 Presente da floresta: +${gift.amount} 🪙 para decorar!`, 'good', 4500);
+        this.hud.toast(t('game.gift', { n: gift.amount }), 'good', 4500);
         this.fx.burst(new THREE.Vector3(4.5, 1.5, 6.5), { kind: 'sparkle', count: 40, speed: 3, up: 3, colors: [0xffd700, 0xff7fb0, 0x7fd8ff] });
       }, 1800);
     }

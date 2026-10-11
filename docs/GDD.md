@@ -209,3 +209,20 @@ Cada herói tem **acessório**, **jeito de se mexer** (pulinhos, flutuar, balan�
 
 ### B12. Versão grátis × completa (lojas de celular)
 Nas lojas de celular: Nível 1 + noites grátis; "Bistrô Completo" (compra única) libera os outros níveis. Toda compra passa pelo **portão dos pais** (continha). Web e PC: tudo liberado. Detalhes em `docs/LANCAMENTO.md`.
+
+### B13. Idiomas
+- **6 idiomas:** inglês (padrão), espanhol, português (BR), francês, chinês simplificado e japonês.
+- **Escolha:** `?lang=xx` na URL > idioma salvo nas Opções > idioma do aparelho > **inglês**. Troca ao vivo no título (botão com bandeira) e nas ⚙️ Opções.
+- **Nomes dos heróis não são traduzidos** (nomes próprios criados pela autora). Títulos, descrições, super-poderes e falas, sim.
+- **Nome do jogo por idioma** (provisório, sem a gíria "magic mushroom"):
+
+  | Idioma | Nome |
+  |---|---|
+  | en | Little Mushroom Bistro |
+  | es | El Bistró del Hongo Encantado |
+  | pt | Bistrô do Cogumelo Mágico |
+  | fr | Le Bistrot du Champignon Enchanté |
+  | zh | 森林里的蘑菇小餐馆 |
+  | ja | もりのきのこビストロ |
+
+- O japonês usa bastante hiragana (público infantil).

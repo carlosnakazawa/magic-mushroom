@@ -1,5 +1,6 @@
 import type { IngredientKind } from './ingredients';
 import type { FamilyId } from './families';
+import { localize } from '../i18n';
 
 export type RecipeId =
   | 'salad_green'
@@ -41,12 +42,11 @@ export interface RecipeDef {
   family?: FamilyId;
 }
 
-export const RECIPES: Record<RecipeId, RecipeDef> = {
-  salad_green: { id: 'salad_green', name: 'Salada Verde', emoji: '🥗', vessel: 'bowl', method: 'assemble', ingredients: ['lettuce'], price: 5, level: 1 },
-  salad_ruby: { id: 'salad_ruby', name: 'Salada Rubi', emoji: '🥗', vessel: 'bowl', method: 'assemble', ingredients: ['lettuce', 'tomato'], price: 8, level: 1 },
+export const RECIPES: Record<RecipeId, RecipeDef> = ({
+  salad_green: { id: 'salad_green', emoji: '🥗', vessel: 'bowl', method: 'assemble', ingredients: ['lettuce'], price: 5, level: 1 },
+  salad_ruby: { id: 'salad_ruby', emoji: '🥗', vessel: 'bowl', method: 'assemble', ingredients: ['lettuce', 'tomato'], price: 8, level: 1 },
   salad_fairy: {
     id: 'salad_fairy',
-    name: 'Salada Feérica',
     emoji: '✨',
     vessel: 'bowl',
     method: 'assemble',
@@ -54,10 +54,9 @@ export const RECIPES: Record<RecipeId, RecipeDef> = {
     price: 12,
     level: 1,
   },
-  juice_berry: { id: 'juice_berry', name: 'Suco de Frutinhas', emoji: '🧃', vessel: 'cup', method: 'blend', ingredients: ['berry'], price: 7, level: 2, color: 0x8a5cff },
+  juice_berry: { id: 'juice_berry', emoji: '🧃', vessel: 'cup', method: 'blend', ingredients: ['berry'], price: 7, level: 2, color: 0x8a5cff },
   potion_bubbly: {
     id: 'potion_bubbly',
-    name: 'Poção Borbulhante',
     emoji: '🧪',
     vessel: 'cup',
     method: 'blend',
@@ -66,10 +65,9 @@ export const RECIPES: Record<RecipeId, RecipeDef> = {
     level: 2,
     color: 0xff6bd6,
   },
-  soup_carrot: { id: 'soup_carrot', name: 'Sopa de Cenoura', emoji: '🥕', vessel: 'bowl', method: 'cook', ingredients: ['carrot'], price: 10, level: 3, color: 0xffa24a },
+  soup_carrot: { id: 'soup_carrot', emoji: '🥕', vessel: 'bowl', method: 'cook', ingredients: ['carrot'], price: 10, level: 3, color: 0xffa24a },
   soup_cauldron: {
     id: 'soup_cauldron',
-    name: 'Sopa de Caldeirão',
     emoji: '🍲',
     vessel: 'bowl',
     method: 'cook',
@@ -78,10 +76,9 @@ export const RECIPES: Record<RecipeId, RecipeDef> = {
     level: 3,
     color: 0xc77dff,
   },
-  pancake: { id: 'pancake', name: 'Panqueca Mágica', emoji: '🥞', vessel: 'plate', method: 'grill', ingredients: ['batter'], price: 11, level: 3, color: 0xf2b45c },
+  pancake: { id: 'pancake', emoji: '🥞', vessel: 'plate', method: 'grill', ingredients: ['batter'], price: 11, level: 3, color: 0xf2b45c },
   soup_bamboo: {
     id: 'soup_bamboo',
-    name: 'Sopa de Bambu',
     emoji: '🎍',
     vessel: 'bowl',
     method: 'cook',
@@ -91,7 +88,8 @@ export const RECIPES: Record<RecipeId, RecipeDef> = {
     color: 0x9ad86b,
     family: 'panda',
   },
-};
+}) as unknown as Record<RecipeId, RecipeDef>;
+for (const r of Object.values(RECIPES)) localize(r, { name: `recipe.${r.id}` });
 
 export const RECIPE_LIST: readonly RecipeDef[] = Object.values(RECIPES);
 

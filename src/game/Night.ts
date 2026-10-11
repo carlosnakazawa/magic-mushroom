@@ -13,6 +13,7 @@ import { NightPanel } from '../ui/night';
 import type { WorldLabel, WorldUI } from '../ui/worldui';
 import type { Fx } from './fx';
 import type { World } from './world';
+import { t } from '../i18n';
 
 export interface NightContext {
   stage: Stage;
@@ -126,7 +127,7 @@ export class NightRun {
     const h = heroDef(id)!;
     audio.fanfare();
     audio.voice(h.voice);
-    this.ctx.hud.toast(`🎉 ${h.name} entrou para a equipe!`, 'good', 3000);
+    this.ctx.hud.toast(t('night.joined', { name: h.name }), 'good', 3000);
     this.commit(r);
     this.buildResting();
     const newbie = this.resting.find((x) => x.hero === h);
@@ -141,11 +142,11 @@ export class NightRun {
     const r = buyFurniture(this.save, id);
     if (typeof r === 'string') {
       audio.deny();
-      this.ctx.hud.toast(r === 'noMoney' ? '🪙 Moedas insuficientes — sirva mais clientes amanhã!' : '🔒 Ainda bloqueado', 'bad');
+      this.ctx.hud.toast(r === 'noMoney' ? t('night.noMoney') : t('night.locked'), 'bad');
       return;
     }
     audio.buy();
-    this.ctx.hud.toast(`🛍️ ${furnitureDef(id).name} comprado! Agora escolha um lugar.`, 'good');
+    this.ctx.hud.toast(t('night.bought', { name: furnitureDef(id).name }), 'good');
     this.commit(r);
     this.startPlacing(id);
   }

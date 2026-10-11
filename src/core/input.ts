@@ -1,4 +1,5 @@
 import { DEFAULT_KEYS, type KeyBinds, type Settings } from '../sim/progress';
+import { t } from '../i18n';
 
 /** Estado de controle de um jogador em um frame. */
 export interface PlayerInput {
@@ -35,7 +36,6 @@ const MOVE = {
 };
 
 const KEY_NAMES: Record<string, string> = {
-  Space: 'Espaço',
   Enter: 'Enter',
   NumpadEnter: 'Enter',
   ShiftRight: 'Shift',
@@ -46,7 +46,7 @@ const KEY_NAMES: Record<string, string> = {
   Slash: '/',
   Period: '.',
   Comma: ',',
-  Semicolon: 'Ç',
+  Semicolon: ';',
   Backslash: '\\',
   Quote: '~',
   Numpad0: 'Num 0',
@@ -55,6 +55,7 @@ const KEY_NAMES: Record<string, string> = {
 /** Nome amigável de uma tecla ("KeyE" → "E", "Space" → "Espaço"). */
 export function keyLabel(code: string): string {
   if (!code) return '—';
+  if (code === 'Space') return t('key.space');
   if (KEY_NAMES[code]) return KEY_NAMES[code]!;
   if (code.startsWith('Key')) return code.slice(3);
   if (code.startsWith('Digit')) return code.slice(5);

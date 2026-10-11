@@ -1,5 +1,7 @@
 /** Famílias desbloqueáveis (GDD seção 6). A Panda é a primeira implementada; as outras aparecem como "em breve". */
 
+import { localize } from '../i18n';
+
 export type FamilyId = 'panda' | 'sheep' | 'axolotl' | 'squirrel';
 
 export interface FamilyDef {
@@ -15,20 +17,18 @@ export interface FamilyDef {
   perks: string[];
 }
 
-export const FAMILIES: readonly FamilyDef[] = [
+export const FAMILIES: readonly FamilyDef[] = ([
   {
     id: 'panda',
-    name: 'Família Panda',
     emoji: '🐼',
     starsToUnlock: 4,
     available: true,
     helperHero: 'mochi',
-    perks: ['Pandas visitam o bistrô em família', 'Mochi, o Pandinha, entra para a equipe', 'Nova receita: Sopa de Bambu 🎍', 'Novo móvel: Lanterna de Bambu'],
   },
-  { id: 'sheep', name: 'Família Ovelha', emoji: '🐑', starsToUnlock: 7, available: false, perks: ['Em breve!'] },
-  { id: 'axolotl', name: 'Família Axolote', emoji: '🦎', starsToUnlock: 8, available: false, perks: ['Em breve!'] },
-  { id: 'squirrel', name: 'Família Esquilo', emoji: '🐿️', starsToUnlock: 9, available: false, perks: ['Em breve!'] },
-];
+  { id: 'sheep', emoji: '🐑', starsToUnlock: 7, available: false, perks: ['Em breve!'] },
+  { id: 'axolotl', emoji: '🦎', starsToUnlock: 8, available: false, perks: ['Em breve!'] },
+  { id: 'squirrel', emoji: '🐿️', starsToUnlock: 9, available: false, perks: ['Em breve!'] },
+] as FamilyDef[]).map((f) => localize(f, { name: `family.${f.id}.name` }, { perks: `family.${f.id}.perks` }));
 
 export function familyDef(id: FamilyId): FamilyDef {
   return FAMILIES.find((f) => f.id === id)!;

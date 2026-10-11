@@ -35,6 +35,7 @@ import type { Party } from '../sim/party';
 import { findPath, simplify } from '../sim/pathfind';
 import type { SaveData } from '../sim/progress';
 import type { Customer } from './customer';
+import { t } from '../i18n';
 
 export type StationKind = 'counter' | 'crate' | 'board' | 'stack' | 'sink' | 'trash' | 'machine';
 
@@ -419,7 +420,7 @@ export class World {
     arch.position.set(east + 0.15, 0, this.door.z);
     this.root.add(arch);
 
-    const sign = signBoard('Bistrô do Cogumelo Mágico', '✦ aberto ✦');
+    const sign = signBoard(t('game.name'), t('sign.open'));
     sign.position.set(5.5, 2.05, 0.53);
     sign.scale.setScalar(0.85);
     this.root.add(sign);

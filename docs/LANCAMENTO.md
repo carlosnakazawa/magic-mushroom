@@ -48,8 +48,8 @@ Pesquise marcas registradas (INPI e USPTO) e o domínio antes de decidir.
 ## 3. Fases e checklist
 
 ### Fase A — Produto pronto para o mundo (3–4 semanas)
-- [ ] **Idiomas:** pt-BR, **inglês** e espanhol. Criar `src/i18n/` com chaves (`t('hint.pick')`) e mover os textos de `data/`, `ui/` e `game/` para dicionários. É o maior item técnico, mas é obrigatório para vender fora do Brasil.
-- [ ] Nome internacional definido + pesquisa de marca.
+- [x] **Idiomas:** inglês (padrão), espanhol, português, francês, chinês simplificado e japonês, em `src/i18n/` (PR #4). Próximo passo: revisão por falantes nativos, principalmente zh e ja, antes do lançamento.
+- [ ] Nome internacional definido + pesquisa de marca (hoje há nomes provisórios por idioma no GDD B13; trocar em `src/i18n/*.ts`, `game.name`).
 - [ ] Testar em **celulares reais fracos** (Android de entrada, iPhone antigo): meta de 30 fps estáveis; ajustar `lowPower` (sombras/partículas) se preciso.
 - [ ] Trocar a música sintetizada por trilha própria ou com licença livre (CC0/CC-BY, registrada em `docs/`), e criar sons de UI mais caprichados.
 - [ ] Conteúdo para o "jogo completo" valer o preço:

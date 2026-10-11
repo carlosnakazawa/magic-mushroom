@@ -72,9 +72,17 @@ config.ts  — todos os números de balanceamento (TUNING)
 | `style-phone.css` | Layout de celular deitado com mínimos de 13 px (texto) e 44 px (toque) |
 | `capacitor.config.json` | Configuração do app Android/iOS (Capacitor) — ver docs/LANCAMENTO.md |
 | `public/privacidade.html` | Política de privacidade publicada no site (URL para as lojas) |
+| `i18n/index.ts` | Traduções: `t()`, `tk()`, `tl()`, `localize()` (getters nos dados), `resolveLang()` |
+| `i18n/en.ts` | **Fonte** de todas as frases (inglês, idioma padrão); os outros (`es`, `pt`, `fr`, `zh`, `ja`) são tipados a partir dele |
 | `ui/touch.ts` | Controles de toque (joystick + botões), `isTouchDevice`, ícones usados nas dicas |
 | `style-mobile.css` | Layout de celular (telas baixas), botões de toque, aviso de girar |
 | `public/` | `manifest.webmanifest` e ícones (instalar como app). `scripts/icons.mjs` regenera os PNGs a partir do SVG |
+
+## Idiomas (i18n)
+- Todo texto visível passa por `t('chave')`. Dados (`data/`) têm os textos como *getters* (`localize`), então `RECIPES.x.name` já vem no idioma atual.
+- **Frase nova:** adicione a chave em `i18n/en.ts` e nos outros 5 dicionários. O TypeScript **não compila** se faltar alguma; os testes conferem variáveis `{n}` e listas `a|b|c`.
+- Listas (falas, dicas) usam `|` e são lidas com `tl()`.
+- Trocar o idioma ao vivo: `Game.changeLanguage()` (salva em `settings.lang`, recria telas, a placa 3D e os controles de toque).
 
 ## Coordenadas
 - Célula `(x, z)` do mapa → ponto `(x, 0, z)`. Linha 0 = parede do fundo. Mapas têm 18×11; o salão (colunas 10–17) é igual em todos os níveis.

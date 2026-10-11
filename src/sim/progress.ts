@@ -3,6 +3,7 @@ import { HEROES, heroDef, type HeroDef } from '../data/characters';
 import { FAMILIES, type FamilyId } from '../data/families';
 import { DECOR_SLOTS, FURNITURE, WALLS, furnitureDef, wallDef, type FurnitureId, type WallId } from '../data/furniture';
 import { LEVELS } from '../data/levels';
+import { isLang } from '../i18n';
 
 /** Teclas de ação de um jogador (movimento é fixo: WASD / setas). */
 export interface KeyBinds {
@@ -19,6 +20,8 @@ export interface Settings {
   /** Menos partículas, sem tremer a tela, brilho mais suave. */
   reducedFx: boolean;
   music: boolean;
+  /** Idioma escolhido ('' = automático pelo aparelho). Ver src/i18n. */
+  lang: string;
   keys: { p1: KeyBinds; p2: KeyBinds };
 }
 
@@ -72,7 +75,7 @@ export function defaultSave(): SaveData {
     rested: false,
     heroesOwned: [],
     welcomeGift: false,
-    settings: { noRush: false, bigText: false, reducedFx: false, music: true, keys: structuredClone(DEFAULT_KEYS) },
+    settings: { noRush: false, bigText: false, reducedFx: false, music: true, lang: '', keys: structuredClone(DEFAULT_KEYS) },
   };
 }
 
@@ -126,6 +129,7 @@ export function parseSave(json: string | null | undefined): SaveData {
       bigText: !!s.bigText,
       reducedFx: !!s.reducedFx,
       music: s.music !== false,
+      lang: isLang(s.lang) ? s.lang : '',
       keys: { p1: keys(s.keys?.p1, DEFAULT_KEYS.p1), p2: keys(s.keys?.p2, DEFAULT_KEYS.p2) },
     },
   };

@@ -56,9 +56,10 @@ Branch: `melhorias/personagens-usabilidade-lancamento`
 - ✅ Presente de boas-vindas na 1ª noite; "faltam N 🪙" nos botões
 - ✅ Camada de plataforma, pausa em segundo plano, grátis × completo com portão dos pais, Capacitor configurado
 - ✅ Plano de lançamento e monetização (`docs/LANCAMENTO.md`) e política de privacidade publicada
+- ✅ **6 idiomas** (en padrão, es, pt, fr, zh, ja) com troca ao vivo, testes de completude e smoke por idioma
 
 ## Próximo: Lançamento (ver `docs/LANCAMENTO.md`)
-- ⬜ Fase A — idiomas (pt/en/es), nome internacional, celulares reais, trilha sonora, conteúdo extra, créditos
+- 🚧 Fase A — ✅ idiomas; ⬜ revisão nativa zh/ja, nome internacional, celulares reais, trilha sonora, conteúdo extra, créditos
 - ⬜ Fase B — Android/Google Play (teste fechado de 14 dias com 12 testadores)
 - ⬜ Fase C — iOS/App Store
 - ⬜ Fase D — PC/Steam (página "em breve" cedo, demo, Next Fest)
@@ -77,6 +78,7 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 
 | Data | Etapa | Resumo |
 |---|---|---|
+| 2026-10-11 | 4 | Revisão do PR #4 tratada (gorjeta sem mutar evento). Traduções completas: inglês (padrão), espanhol, português, francês, chinês e japonês. |
 | 2026-10-11 | 4 | Teste de usabilidade no site publicado (computador + celular emulado) → `docs/USABILIDADE.md`. Corrigido tudo; personagens com personalidade, super-poderes e heróis contratáveis; movimento/mira mais intuitivos; preparação para lojas e plano `docs/LANCAMENTO.md`. PR #4. |
 | 2026-09-26 | Extra | PR #2 revisado e mergeado; site publicado no Pages. Controles de toque e layout para celular (PR #3). Próximo: testar em celulares reais e ajustar tamanhos/ritmo com o feedback da família. |
 | 2026-09-26 | 2 + 3 | Corrigidos os pontos da revisão do PR #1 e merge na main (pedido do Carlos). Implementadas as Etapas 2 e 3 completas (noite, loja, decoração, famílias, liquidificador, caldeirão/chapa/fogo, Panda, opções, gamepad, Pages). Smoke test cobre o ciclo inteiro. PR #2 aberto. Próximo passo: tratar revisão do Gemini no PR #2. |

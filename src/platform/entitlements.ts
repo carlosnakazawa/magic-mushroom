@@ -9,6 +9,7 @@
  * `?demo` na URL simula a versão gratuita para testar a experiência.
  */
 import { platform } from './platform';
+import { t } from '../i18n';
 
 /** Último nível jogável na versão gratuita. */
 export const DEMO_MAX_LEVEL = 1;
@@ -57,5 +58,5 @@ export const entitlements = {
 export function parentalChallenge(): { question: string; answer: number } {
   const a = 6 + Math.floor(Math.random() * 4);
   const b = 3 + Math.floor(Math.random() * 6);
-  return { question: `Quanto é ${a} × ${b}?`, answer: a * b };
+  return { question: t('gate.question', { a, b }), answer: a * b };
 }

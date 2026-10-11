@@ -1,4 +1,5 @@
 import { platform } from '../platform/platform';
+import { t } from '../i18n';
 
 /**
  * Controles de toque para celular/tablet: joystick que aparece onde o polegar
@@ -34,14 +35,14 @@ export class TouchControls {
     this.root = document.createElement('div');
     this.root.className = 'touch-controls hidden';
     this.root.innerHTML = `
-      <div class="stick-zone"><div class="stick-hint">👆 arraste para andar</div></div>
+      <div class="stick-zone"><div class="stick-hint">${t('touch.hint')}</div></div>
       <div class="stick-base"><div class="stick-knob"></div></div>
       <div class="touch-buttons">
-        <button class="tbtn swap" data-act="swap">${TOUCH_ICONS.swap}<small>Trocar</small></button>
-        <button class="tbtn use" data-act="use">${TOUCH_ICONS.use}<small>Usar</small></button>
-        <button class="tbtn pick" data-act="pick">${TOUCH_ICONS.pick}<small>Pegar</small></button>
+        <button class="tbtn swap" data-act="swap">${TOUCH_ICONS.swap}<small>${t('touch.swap')}</small></button>
+        <button class="tbtn use" data-act="use">${TOUCH_ICONS.use}<small>${t('touch.use')}</small></button>
+        <button class="tbtn pick" data-act="pick">${TOUCH_ICONS.pick}<small>${t('touch.pick')}</small></button>
       </div>
-      <button class="tbtn pause" aria-label="Pausa">⏸</button>`;
+      <button class="tbtn pause" aria-label="${t('pause.title')}">⏸</button>`;
     parent.appendChild(this.root);
     this.base = this.root.querySelector('.stick-base')!;
     this.knob = this.root.querySelector('.stick-knob')!;
@@ -71,6 +72,19 @@ export class TouchControls {
     });
     // Nada de menu de contexto / seleção ao segurar o dedo
     this.root.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  /** Atualiza os textos dos botões depois de trocar o idioma. */
+  relabel(): void {
+    this.root.querySelector('.stick-hint')!.textContent = t('touch.hint');
+    for (const [cls, key] of [
+      ['swap', 'touch.swap'],
+      ['use', 'touch.use'],
+      ['pick', 'touch.pick'],
+    ] as const) {
+      const small = this.root.querySelector(`.tbtn.${cls} small`);
+      if (small) small.textContent = t(key);
+    }
   }
 
   show(visible: boolean, solo = true): void {

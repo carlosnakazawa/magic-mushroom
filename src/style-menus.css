@@ -766,3 +766,41 @@
   color: #d4507f;
   font-weight: 600;
 }
+
+/* Idiomas */
+.lang-picker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn.small.lang.on {
+  background: #c9f5d6;
+  box-shadow: 0 4px 0 #7fcf98;
+}
+
+.lang .flag {
+  font-size: 1.1em;
+}
+
+.lang-row {
+  flex-wrap: wrap;
+}
+
+.lang-row .lang-picker {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+/* Chinês e japonês: a Fredoka não tem esses caracteres; usa fontes do sistema */
+:lang(zh),
+:lang(zh) * {
+  font-family: 'Fredoka', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif !important;
+}
+
+:lang(ja),
+:lang(ja) * {
+  font-family: 'Fredoka', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', 'Noto Sans JP', system-ui, sans-serif !important;
+}

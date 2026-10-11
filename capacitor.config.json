@@ -1,6 +1,6 @@
 {
   "appId": "com.bistrocogumelo.app",
-  "appName": "Bistrô do Cogumelo Mágico",
+  "appName": "Little Mushroom Bistro",
   "webDir": "dist",
   "backgroundColor": "#7fbf95",
   "android": {
