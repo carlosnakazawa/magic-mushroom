@@ -804,3 +804,13 @@
 :lang(ja) * {
   font-family: 'Fredoka', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', 'Noto Sans JP', system-ui, sans-serif !important;
 }
+
+/* Ferramenta ?lineup */
+.lineup-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: #4a2f23;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  padding: 1px 10px;
+}
