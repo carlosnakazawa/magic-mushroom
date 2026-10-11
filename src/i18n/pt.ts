@@ -2,9 +2,9 @@ import type { Dict } from './index';
 
 /** Português do Brasil — o idioma original do jogo. */
 export const pt: Dict = {
-  'game.name': 'Bistrô do Cogumelo Mágico',
-  'logo.top': 'Bistrô do',
-  'logo.main': 'Cogumelo Mágico',
+  'game.name': 'Mushmallow — O Bistrô da Floresta',
+  'game.brand': 'Mushmallow',
+  'logo.sub': 'O Bistrô da Floresta',
   'sign.open': '✦ aberto ✦',
 
   'title.choose': 'Escolha <b>2 heróis</b> para abrir o bistrô hoje!',
@@ -93,7 +93,7 @@ export const pt: Dict = {
   'set.resetConfirm': '⚠️ Apagar tudo? Clique de novo',
   'key.space': 'Espaço',
 
-  'gate.title': '⭐ Bistrô Completo',
+  'gate.title': '⭐ Mushmallow Completo',
   'gate.desc': 'Todos os níveis, máquinas, a loja da noite inteira e as famílias da floresta — uma compra só, sem anúncios.',
   'gate.ask': '👨‍👩‍👧 <b>Pergunta para um adulto:</b> {q}',
   'gate.question': 'Quanto é {a} × {b}?',

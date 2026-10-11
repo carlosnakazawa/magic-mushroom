@@ -1,6 +1,6 @@
 {
-  "appId": "com.bistrocogumelo.app",
-  "appName": "Little Mushroom Bistro",
+  "appId": "com.mushmallow.game",
+  "appName": "Mushmallow",
   "webDir": "dist",
   "backgroundColor": "#7fbf95",
   "android": {

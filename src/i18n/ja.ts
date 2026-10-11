@@ -2,9 +2,9 @@ import type { Dict } from './index';
 
 /** 日本語（子ども向けにひらがな多め） */
 export const ja: Dict = {
-  'game.name': 'もりのきのこビストロ',
-  'logo.top': 'もりの',
-  'logo.main': 'きのこビストロ',
+  'game.name': 'Mushmallow もりのビストロ',
+  'game.brand': 'Mushmallow',
+  'logo.sub': 'もりのビストロ',
   'sign.open': '✦ えいぎょうちゅう ✦',
 
   'title.choose': '<b>ヒーローを2人</b>えらんで、きょうもお店をひらこう！',
@@ -93,7 +93,7 @@ export const ja: Dict = {
   'set.resetConfirm': '⚠️ ぜんぶ けす？ もういちど おしてね',
   'key.space': 'スペース',
 
-  'gate.title': '⭐ ビストロ フルバージョン',
+  'gate.title': '⭐ Mushmallow フルバージョン',
   'gate.desc': 'すべての レベル、マシン、よるのショップ、もりの かぞく——いちどの おかいもので、こうこくなし。',
   'gate.ask': '👨‍👩‍👧 <b>おとなの かたへ：</b>{q}',
   'gate.question': '{a} × {b} は？',

@@ -1,13 +1,13 @@
 /**
  * English (default language and source of truth for every other dictionary).
  * Lists use "|" between items. {name} placeholders are filled by t().
- * Game name: provisional — "magic mushroom" is drug slang in English, see docs/LANCAMENTO.md.
+ * Game name: "Mushmallow" (mushroom + marshmallow) — the same brand in every language; the subtitle is translated.
  */
 export const en = {
   // ── Game ──
-  'game.name': 'Little Mushroom Bistro',
-  'logo.top': 'Little',
-  'logo.main': 'Mushroom Bistro',
+  'game.name': 'Mushmallow — The Forest Bistro',
+  'game.brand': 'Mushmallow',
+  'logo.sub': 'The Forest Bistro',
   'sign.open': '✦ open ✦',
 
   // ── Title ──
@@ -103,7 +103,7 @@ export const en = {
   'key.space': 'Space',
 
   // ── Full version / parental gate ──
-  'gate.title': '⭐ The Full Bistro',
+  'gate.title': '⭐ Mushmallow: Full Version',
   'gate.desc': 'Every level, machine, the whole night shop and the forest families — one purchase, no ads.',
   'gate.ask': '👨‍👩‍👧 <b>Question for a grown-up:</b> {q}',
   'gate.question': 'What is {a} × {b}?',

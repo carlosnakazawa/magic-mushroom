@@ -1,8 +1,8 @@
 {
-  "name": "bistro-do-cogumelo-magico",
+  "name": "mushmallow",
   "private": true,
-  "version": "0.4.0",
-  "description": "Bistrô do Cogumelo Mágico — jogo cooperativo casual de cozinha e decoração (Three.js + TypeScript)",
+  "version": "0.5.0",
+  "description": "Mushmallow — jogo cooperativo e fofo de cozinha (dia) e decoração (noite) na floresta. Three.js + TypeScript.",
   "type": "module",
   "scripts": {
     "dev": "vite",

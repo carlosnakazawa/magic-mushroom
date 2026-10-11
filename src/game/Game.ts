@@ -20,12 +20,13 @@ import { DayRun, type DayStats } from './Day';
 import { Fx } from './fx';
 import { ItemViews } from './itemviews';
 import { NightRun } from './Night';
+import { Lineup } from './lineup';
 import { World } from './world';
 
 /** Câmera que segue no celular: largura (em células) da faixa visível. */
 const TUNING_CAM = { width: 14.5 };
 
-type GameState = 'title' | 'levels' | 'settings' | 'countdown' | 'day' | 'paused' | 'results' | 'night';
+type GameState = 'lineup' | 'title' | 'levels' | 'settings' | 'countdown' | 'day' | 'paused' | 'results' | 'night';
 
 /**
  * Orquestra os estados do jogo:
@@ -54,6 +55,7 @@ export class Game {
   private lastNight = -1;
   private debugEl: HTMLDivElement | null = null;
   private touch: TouchControls | null = null;
+  private lineup: Lineup | null = null;
   private touchShown = false;
   /** Celular: a câmera segue os heróis de perto (no salão inteiro eles ficavam pequenos). */
   private followCam = false;
@@ -120,7 +122,13 @@ export class Game {
 
     this.level = levelDef(this.save.played[this.save.played.length - 1] ?? 1);
     this.buildWorld();
-    this.showTitle();
+    const lineup = new URLSearchParams(location.search).get('lineup');
+    if (lineup !== null) {
+      // Ferramenta de design: heróis lado a lado (?lineup) ou em silhueta (?lineup=sombra)
+      this.world.root.visible = false;
+      this.state = 'lineup';
+      this.lineup = new Lineup(this.stage, this.worldUI, lineup === 'sombra');
+    } else this.showTitle();
     this.loop();
   }
 
@@ -438,6 +446,7 @@ export class Game {
       }
       this.day?.idle(dt);
       this.night?.update(dt);
+      this.lineup?.update(dt);
       this.titleCreatures.forEach((c, i) => {
         c.creature.update(dt);
         c.creature.root.rotation.y = Math.sin(this.t * 0.8 + i) * 0.25;

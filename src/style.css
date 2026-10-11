@@ -699,9 +699,10 @@ kbd {
 
 .logo {
   margin: 0;
-  font-size: clamp(30px, 4.5vw, 54px);
+  font-size: clamp(36px, 5.6vw, 66px);
   font-weight: 700;
   color: #e8546b;
+  letter-spacing: 0.01em;
   text-shadow:
     0 3px 0 #fff,
     0 6px 0 rgba(74, 47, 35, 0.25);
@@ -710,8 +711,9 @@ kbd {
 
 .logo span {
   display: block;
-  font-size: 0.5em;
+  font-size: 0.4em;
   color: var(--ink-soft);
+  margin-top: 2px;
 }
 
 .logo i {

@@ -2,9 +2,9 @@ import type { Dict } from './index';
 
 /** 简体中文 */
 export const zh: Dict = {
-  'game.name': '森林里的蘑菇小餐馆',
-  'logo.top': '森林里的',
-  'logo.main': '蘑菇小餐馆',
+  'game.name': 'Mushmallow 森林小餐馆',
+  'game.brand': 'Mushmallow',
+  'logo.sub': '森林小餐馆',
   'sign.open': '✦ 营业中 ✦',
 
   'title.choose': '选择 <b>2 位英雄</b>，今天一起开店吧！',
@@ -93,7 +93,7 @@ export const zh: Dict = {
   'set.resetConfirm': '⚠️ 清除全部进度？请再点一次',
   'key.space': '空格',
 
-  'gate.title': '⭐ 完整版小餐馆',
+  'gate.title': '⭐ Mushmallow 完整版',
   'gate.desc': '所有关卡、机器、整个夜间商店和森林家族——一次购买，没有广告。',
   'gate.ask': '👨‍👩‍👧 <b>请大人回答：</b>{q}',
   'gate.question': '{a} × {b} 等于多少？',

@@ -121,7 +121,7 @@ export class Screens {
     if (!this.selected.length) this.selected = [HEROES[0]!, HEROES[2]!];
     const progress = save.day > 1 ? `<p class="save-line">${t('title.progress', { day: save.day, coins: save.wallet, stars: totalStars(save) })}</p>` : '';
     panel.innerHTML = `
-      <h1 class="logo"><span>${t('logo.top')}</span> ${t('logo.main')} <i>🍄</i></h1>
+      <h1 class="logo">${t('game.brand')} <i>🍄</i><span class="logo-sub">${t('logo.sub')}</span></h1>
       ${progress}
       <p class="subtitle">${t('title.choose')}</p>`;
     // Cards compactos (rosto + nome) e um painel de detalhes do herói em foco:
