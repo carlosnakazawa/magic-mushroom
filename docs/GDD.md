@@ -179,3 +179,33 @@ Na primeira vez em cada nível novo, um painel "Novidades" explica as máquinas 
 - ⌨️ **Remapear teclas** (pegar/usar/trocar dos dois jogadores) e voltar ao padrão.
 - 🗑️ **Começar do zero** (confirmação em dois cliques).
 
+
+### B10. Heróis: personalidade, super-poderes e contratação
+Cada herói tem **acessório**, **jeito de se mexer** (pulinhos, flutuar, balançar a cabeça), **voz** ("piu-piu" sintetizado no tom dele), **falas** em balão (início do dia, ao servir, no fogo, ao trocar), **olhos felizes ^^** ao comemorar e **olhos fechados** dormindo à noite. O **super-poder** é leve, para dar motivo de escolha sem deixar ninguém fraco (números em `TUNING.perks`):
+
+| Herói | Acessório | Super-poder | Como libera |
+|---|---|---|---|
+| Puff 🐰 | laço | **Feito com carinho:** +2 🪙 por prato que serve | inicial |
+| Florzinha 🦊 | coroa de folhas | **Pés ligeiros:** anda 15% mais rápido | inicial |
+| Pipoca 🐲 | chapéu de chef | **Força de dragão:** corta 35% mais rápido | inicial |
+| Astro 🐺 | cachecol com estrela | **Herói estelar:** extintor 2× e lava 20% mais rápido | inicial |
+| Estrelinha 🦉 | óculos | **Memória de coruja:** anotar pedido dá +25% de paciência | inicial |
+| Mochi 🐼 | folha de bambu | **Mestre das sopas:** caldeirão/chapa que ele abastece cozinha 30% mais rápido | Família Panda (⭐ 4) |
+| Bolota 🦔 | florzinha | **Brilho de espinhos:** lava 60% mais rápido | loja da noite, 🪙 120 |
+| Gota 🐸 | coroa | **Língua comprida:** alcança estações mais longe | loja da noite, 🪙 150 |
+| Lumi 🐱 | presilha de lua | **Ronronar lunar:** todos os clientes 15% mais pacientes | loja da noite, 🪙 200 |
+
+- Heróis são contratados com **moedas do jogo** (aba 🦸 Heróis da loja noturna) — nunca com dinheiro real.
+- No título, cards compactos + painel de detalhes (descrição, super-poder, como liberar).
+
+### B11. Movimento e mira (revisão de usabilidade)
+- Velocidade 5,3 (era 4,6) e aceleração mais rápida.
+- **Mira instantânea:** a direção lógica muda no mesmo quadro em que o jogador aponta; só o modelo gira suave.
+- **Mira inteligente:** entre os vizinhos, prefere a estação/mesa onde há algo útil a fazer agora; aceita alvos ao lado quando úteis.
+- Dicas novas: "Mãos cheias — solte num balcão" (caixote) e "Solte a alface num balcão primeiro" (pilha de tigelas).
+- Depois da 1ª entrega do tutorial, o próximo cliente chega em ~4 s.
+- **Presente de boas-vindas:** +40 🪙 na primeira noite.
+- Celular: a câmera acompanha os heróis de perto (faixa de 14,5 células).
+
+### B12. Versão grátis × completa (lojas de celular)
+Nas lojas de celular: Nível 1 + noites grátis; "Bistrô Completo" (compra única) libera os outros níveis. Toda compra passa pelo **portão dos pais** (continha). Web e PC: tudo liberado. Detalhes em `docs/LANCAMENTO.md`.

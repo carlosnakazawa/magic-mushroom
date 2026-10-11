@@ -66,6 +66,12 @@ config.ts  — todos os números de balanceamento (TUNING)
 | `ui/screens.ts` | Título (heróis bloqueados), mapa de níveis, pausa, resultado (desbloqueios), opções, contagem |
 | `ui/night.ts` | Painel da loja noturna |
 | `ui/nav.ts` | Foco espacial para menus com controle/setas |
+| `sim/perks.ts` | Super-poderes dos heróis → multiplicadores (`perkMods`) e aura de equipe (`teamDrainScale`) |
+| `platform/platform.ts` | Onde o jogo roda (web/android/ios/desktop), vibração, aviso de segundo plano |
+| `platform/entitlements.ts` | Versão grátis × completa, compra (stub) e portão dos pais |
+| `style-phone.css` | Layout de celular deitado com mínimos de 13 px (texto) e 44 px (toque) |
+| `capacitor.config.json` | Configuração do app Android/iOS (Capacitor) — ver docs/LANCAMENTO.md |
+| `public/privacidade.html` | Política de privacidade publicada no site (URL para as lojas) |
 | `ui/touch.ts` | Controles de toque (joystick + botões), `isTouchDevice`, ícones usados nas dicas |
 | `style-mobile.css` | Layout de celular (telas baixas), botões de toque, aviso de girar |
 | `public/` | `manifest.webmanifest` e ícones (instalar como app). `scripts/icons.mjs` regenera os PNGs a partir do SVG |
@@ -84,6 +90,7 @@ config.ts  — todos os números de balanceamento (TUNING)
 - **Ingrediente:** `data/ingredients.ts` → modelo em `models/food.ts` → letra em `world.ts` (`CRATE_KINDS`).
 - **Máquina nova:** `MachineKind` + tempos em `TUNING.machines` + visual em `models/machines.ts` + letra em `world.ts` (`MACHINE_KINDS`) + testes.
 - **Móvel:** `FURNITURE` + modelo em `models/decor.ts` (`decorMesh`). Novo tipo de espaço → `SlotKind` + `DECOR_SLOTS`.
+- **Herói:** `data/characters.ts` (acessório, `perk`, `style`, `voice`, `phrases`, `price` se for contratável). Super-poder novo → `PerkId` + `sim/perks.ts` + teste. Acessório novo → `Creature.buildAccessory`.
 - **Família:** `data/families.ts` (`available: true`) + `FAMILY_LOOKS` + espécie em `creature.ts`/`SPECIES_EMOJI`/`SPECIES_FAMILY_NAME` + herói com `family` + receita/móvel com `family`.
 - **Nível:** novo item em `LEVELS` (copie o salão das colunas 10–17), `intro` com dicas.
 

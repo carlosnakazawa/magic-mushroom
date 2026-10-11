@@ -5,7 +5,7 @@ Fluxo detalhado em [`AGENTS.md`](../AGENTS.md#fluxo-de-etapas-e-pull-requests).
 
 Legenda: ✅ feito · 🚧 em andamento · ⬜ pendente
 
-**Status atual:** Etapas 1, 2 e 3 mergeadas e publicadas em https://carlosnakazawa.github.io/magic-mushroom/. Extra "Jogar no Celular" no PR #3.
+**Status atual:** Etapas 1–3 e "Jogar no Celular" publicadas em https://carlosnakazawa.github.io/magic-mushroom/. Etapa 4 (personagens, usabilidade, preparação para lojas) no PR #4. Próximo grande passo: **Fase A do `docs/LANCAMENTO.md`** (idiomas, nome internacional, testes em celulares reais).
 
 ---
 
@@ -47,6 +47,22 @@ Branch: `mobile/controles-touch`
 - ✅ Renderização mais leve em celulares (resolução e sombras)
 - ✅ Smoke test com celular emulado (toque, joystick, botão, retrato)
 
+## Etapa 4 — "Personagens, Usabilidade e Lançamento" — ✅ (PR #4)
+Branch: `melhorias/personagens-usabilidade-lancamento`
+- ✅ Todas as 10 correções do teste de usabilidade (`docs/USABILIDADE.md`)
+- ✅ Movimento mais rápido, mira instantânea e mira inteligente
+- ✅ Personalidade: acessórios, jeito de se mexer, vozes, falas em balão, olhos felizes/dormindo
+- ✅ Super-poderes leves por herói + 3 heróis novos contratáveis na loja da noite (Bolota, Gota, Lumi)
+- ✅ Presente de boas-vindas na 1ª noite; "faltam N 🪙" nos botões
+- ✅ Camada de plataforma, pausa em segundo plano, grátis × completo com portão dos pais, Capacitor configurado
+- ✅ Plano de lançamento e monetização (`docs/LANCAMENTO.md`) e política de privacidade publicada
+
+## Próximo: Lançamento (ver `docs/LANCAMENTO.md`)
+- ⬜ Fase A — idiomas (pt/en/es), nome internacional, celulares reais, trilha sonora, conteúdo extra, créditos
+- ⬜ Fase B — Android/Google Play (teste fechado de 14 dias com 12 testadores)
+- ⬜ Fase C — iOS/App Store
+- ⬜ Fase D — PC/Steam (página "em breve" cedo, demo, Next Fest)
+
 ## Ideias para depois (pós-Etapa 3)
 - Famílias Ovelha, Axolote e Esquilo (mesmo padrão da Panda: `data/families.ts`, `FAMILY_LOOKS`, herói, receita, móvel)
 - Mais níveis/mapas (ex.: cozinha dividida por um rio, esteira mágica)
@@ -61,6 +77,7 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 
 | Data | Etapa | Resumo |
 |---|---|---|
+| 2026-10-11 | 4 | Teste de usabilidade no site publicado (computador + celular emulado) → `docs/USABILIDADE.md`. Corrigido tudo; personagens com personalidade, super-poderes e heróis contratáveis; movimento/mira mais intuitivos; preparação para lojas e plano `docs/LANCAMENTO.md`. PR #4. |
 | 2026-09-26 | Extra | PR #2 revisado e mergeado; site publicado no Pages. Controles de toque e layout para celular (PR #3). Próximo: testar em celulares reais e ajustar tamanhos/ritmo com o feedback da família. |
 | 2026-09-26 | 2 + 3 | Corrigidos os pontos da revisão do PR #1 e merge na main (pedido do Carlos). Implementadas as Etapas 2 e 3 completas (noite, loja, decoração, famílias, liquidificador, caldeirão/chapa/fogo, Panda, opções, gamepad, Pages). Smoke test cobre o ciclo inteiro. PR #2 aberto. Próximo passo: tratar revisão do Gemini no PR #2. |
 | 2026-09-25 | 1 | Criado projeto, documentação (GDD, arquitetura, AGENTS/CLAUDE), implementação completa da Etapa 1. PR #1 aberto para revisão do Gemini. |

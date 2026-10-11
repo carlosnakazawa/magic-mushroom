@@ -141,6 +141,12 @@ try {
   const placed = await page.evaluate(() => window.game.save.placed);
   console.log('Decoração:', JSON.stringify(placed));
   if (placed.family1 !== 'enchanted_log' || placed.light1 !== 'lamp_crystal') throw new Error('Móveis não foram posicionados');
+  // Contratar um herói novo na loja da noite
+  await click('🦸 Heróis');
+  await page.locator('.np-card', { hasText: 'Bolota' }).locator('button.buy').click();
+  await page.waitForTimeout(2000);
+  await shot('09b-heroi-contratado');
+  if (!(await page.evaluate(() => window.game.save.heroesOwned.includes('bolota')))) throw new Error('Herói não foi contratado');
   await click('Abrir o bistrô');
   await page.waitForSelector('.level-card');
 
@@ -211,10 +217,22 @@ try {
   if (!(await mob.evaluate(() => document.documentElement.classList.contains('touch')))) throw new Error('Modo toque não foi detectado no celular');
   await mshot('13-celular-titulo');
   await mob.getByText('Jogar sozinho').first().tap();
+  await mob.waitForSelector('.level-card');
+  await mob.waitForTimeout(600);
+  await mshot('13b-celular-niveis');
+  // Teste de usabilidade: os 3 níveis e o botão Menu cabem na tela sem rolar
+  const outside = await mob.evaluate(() =>
+    [...document.querySelectorAll('.level-card, .screens.open .buttons .btn')]
+      .filter((e) => { const r = e.getBoundingClientRect(); return r.bottom > innerHeight || r.right > innerWidth; })
+      .map((e) => e.textContent.trim().slice(0, 20)),
+  );
+  if (outside.length) throw new Error(`Mapa de níveis não cabe no celular: ${outside.join(' | ')}`);
   await mob.getByText('Salada Feérica').first().tap();
   await muntil(() => window.game.state === 'day', 'dia começar (celular)');
   await mob.waitForTimeout(800);
   await mshot('14-celular-dia');
+  const tutPx = await mob.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.tutorial .tstep.current')).fontSize));
+  if (tutPx < 13) throw new Error(`Texto do tutorial pequeno demais no celular: ${tutPx}px`);
   if (await mob.locator('.touch-controls.hidden').count()) throw new Error('Controles de toque não apareceram');
   // Arrasta o joystick para a direita com o "dedo" (Pointer Events)
   const x0 = await mob.evaluate(() => window.game.day.chefs[0].pos.x);

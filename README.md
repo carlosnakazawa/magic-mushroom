@@ -31,11 +31,14 @@ As teclas podem ser trocadas em ⚙️ Opções. Lá também tem o modo **🐢 S
 4. **Famílias** chegam quando você compra a mesa grande; servindo todos, ganha bônus de banquete.
 5. **Noite:** a equipe dorme 💤 e você gasta as moedas na loja: mesas, luminárias, plantas, tapetes, cores. O charme ✨ deixa os clientes mais pacientes.
 6. Estrelas liberam novos níveis e a **Família Panda** 🐼 (com o herói Mochi e a Sopa de Bambu).
+7. Cada herói tem um **super-poder** (ex.: Pipoca corta mais rápido, Florzinha anda mais rápido). Contrate **Bolota, Gota e Lumi** com moedas na loja da noite.
 
 ## Documentação
 - [docs/GDD.md](docs/GDD.md) — ideia original + regras
 - [docs/ROADMAP.md](docs/ROADMAP.md) — etapas e progresso
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — stack e código
+- [docs/LANCAMENTO.md](docs/LANCAMENTO.md) — plano de lançamento (Play Store, App Store, Steam) e monetização
+- [docs/USABILIDADE.md](docs/USABILIDADE.md) — teste de usabilidade e correções
 - [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md) — instruções para agentes de IA
 
 ## Scripts
