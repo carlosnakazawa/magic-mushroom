@@ -420,7 +420,7 @@ export class World {
     arch.position.set(east + 0.15, 0, this.door.z);
     this.root.add(arch);
 
-    const sign = signBoard(t('game.name'), t('sign.open'));
+    const sign = signBoard(t('game.brand'), t('sign.open'));
     sign.position.set(5.5, 2.05, 0.53);
     sign.scale.setScalar(0.85);
     this.root.add(sign);

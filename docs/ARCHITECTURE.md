@@ -55,7 +55,8 @@ config.ts  — todos os números de balanceamento (TUNING)
 | `game/fx.ts` | Partículas (respeitam "menos efeitos"), comemoração de cada herói, moedas voando |
 | `models/machines.ts` | Liquidificador, caldeirão e chapa animados conforme a fase (chamas, bolhas, líquido) |
 | `models/decor.ts` | Mesas de família, luminárias (com `PointLight`), enfeites, tapetes, parede |
-| `models/creature.ts` | Criatura chibi procedural (inclui panda) |
+| `models/creature.ts` | Criatura chibi procedural: `PROFILES` por espécie (corpo, cabeça, focinho, olhos) + orelhas, caudas e detalhes que definem a silhueta |
+| `game/lineup.ts` | Ferramenta `?lineup` / `?lineup=sombra` (heróis lado a lado; teste da sombra) |
 | `models/food.ts` | Ingredientes crus/picados, tigela/copo/prato, extintor, moedas |
 | `render/stage.ts` | Renderer, câmera (56°), sombras, bloom, `zoomPulse`, `setInsetRight` (painel da noite) |
 | `render/lighting.ts` | Presets dia/noite interpolados |

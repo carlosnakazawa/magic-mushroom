@@ -1,6 +1,6 @@
 # AGENTS.md — Guia para agentes de IA (Claude, Gemini, Codex…)
 
-Projeto: **Bistrô do Cogumelo Mágico** — jogo cooperativo casual de cozinha (dia) e decoração (noite), ideia criada pela filha do Carlos. Público: **crianças e famílias**.
+Projeto: **Mushmallow — O Bistrô da Floresta** (ideia original "Bistrô do Cogumelo Mágico", criada pela filha do Carlos) — jogo cooperativo casual de cozinha (dia) e decoração (noite). Público: **crianças e famílias**.
 
 ## Leia primeiro (nesta ordem)
 1. [`docs/ROADMAP.md`](docs/ROADMAP.md) — em qual etapa estamos, o que falta e o registro de sessões.
@@ -19,6 +19,7 @@ npm run build      # build de produção (dist/)
 npm run smoke      # joga o ciclo inteiro (tutorial, noite/loja, nível 3 com fogo, família) e salva .screenshots/*.png
                    # (1ª vez: npx playwright install chromium)
 ```
+Personagens: `?lineup` mostra todos os heróis lado a lado e `?lineup=sombra` faz o **teste da sombra** (cada herói precisa ser reconhecível só pela silhueta); `node scripts/lineup.mjs <prefixo>` salva as imagens.
 Debug: `window.game` no console; `?speed=4` acelera a simulação; `?debug` mostra FPS/draw calls; `?touch` força os controles de celular.
 **Celular:** toda interface nova precisa funcionar no toque e em tela baixa (celular deitado, ~844×390). O smoke tem uma seção de celular emulado — estenda-a se criar fluxos novos.
 Publicação: cada merge na `main` publica em https://carlosnakazawa.github.io/magic-mushroom/ (workflow `deploy.yml`).

@@ -1,10 +1,10 @@
 import type { Dict } from './index';
 
-/** Español (neutro). Nombre provisional: "hongo mágico" también es jerga de drogas. */
+/** Español (neutro). */
 export const es: Dict = {
-  'game.name': 'El Bistró del Hongo Encantado',
-  'logo.top': 'El Bistró del',
-  'logo.main': 'Hongo Encantado',
+  'game.name': 'Mushmallow — El Bistró del Bosque',
+  'game.brand': 'Mushmallow',
+  'logo.sub': 'El Bistró del Bosque',
   'sign.open': '✦ abierto ✦',
 
   'title.choose': '¡Elige <b>2 héroes</b> para abrir el bistró hoy!',
@@ -93,7 +93,7 @@ export const es: Dict = {
   'set.resetConfirm': '⚠️ ¿Borrar todo? Pulsa otra vez',
   'key.space': 'Espacio',
 
-  'gate.title': '⭐ Bistró Completo',
+  'gate.title': '⭐ Mushmallow Completo',
   'gate.desc': 'Todos los niveles, máquinas, la tienda nocturna entera y las familias del bosque: una sola compra, sin anuncios.',
   'gate.ask': '👨‍👩‍👧 <b>Pregunta para un adulto:</b> {q}',
   'gate.question': '¿Cuánto es {a} × {b}?',

@@ -1,10 +1,10 @@
 import type { Dict } from './index';
 
-/** Français. Nom provisoire : « champignon magique » évoque aussi une drogue. */
+/** Français. */
 export const fr: Dict = {
-  'game.name': 'Le Bistrot du Champignon Enchanté',
-  'logo.top': 'Le Bistrot du',
-  'logo.main': 'Champignon Enchanté',
+  'game.name': 'Mushmallow — Le Bistrot de la Forêt',
+  'game.brand': 'Mushmallow',
+  'logo.sub': 'Le Bistrot de la Forêt',
   'sign.open': '✦ ouvert ✦',
 
   'title.choose': 'Choisis <b>2 héros</b> pour ouvrir le bistrot aujourd’hui !',
@@ -93,7 +93,7 @@ export const fr: Dict = {
   'set.resetConfirm': '⚠️ Tout effacer ? Clique encore',
   'key.space': 'Espace',
 
-  'gate.title': '⭐ Le Bistrot Complet',
+  'gate.title': '⭐ Mushmallow Complet',
   'gate.desc': 'Tous les niveaux, les machines, toute la boutique de nuit et les familles de la forêt : un seul achat, sans publicité.',
   'gate.ask': '👨‍👩‍👧 <b>Question pour un adulte :</b> {q}',
   'gate.question': 'Combien font {a} × {b} ?',

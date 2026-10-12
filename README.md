@@ -1,7 +1,7 @@
-# 🍄 Bistrô do Cogumelo Mágico
+# 🍄 Mushmallow — O Bistrô da Floresta
 
 Jogo cooperativo e fofo de cozinha mágica: de **dia** atenda clientes da floresta contra o relógio; à **noite** descanse com a equipe e decore o bistrô com móveis e luzes mágicas.
-Ideia original criada pela filha do Carlos — veja o [documento de design](docs/GDD.md).
+Ideia original ("Bistrô do Cogumelo Mágico") criada pela filha do Carlos — veja o [documento de design](docs/GDD.md). O nome **Mushmallow** (mushroom + marshmallow) é igual no mundo todo; o subtítulo é traduzido.
 
 **Jogar online:** https://carlosnakazawa.github.io/magic-mushroom/ (atualiza a cada merge na `main`)
 
