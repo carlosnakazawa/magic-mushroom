@@ -65,6 +65,13 @@ Branch: `etapa-5/herois-unicos-mushmallow`
 - ✅ Ferramenta `?lineup` / `?lineup=sombra` + `scripts/lineup.mjs` (teste da sombra)
 - ✅ Novo nome: **Mushmallow**, igual em todos os idiomas, com subtítulo traduzido
 
+## Etapa 6 — "Tutorial compacto" — ✅ (PR #6)
+Branch: `etapa-6/tutorial-compacto`
+- ✅ Tutorial e dicas de nível viram uma faixa no rodapé (só o passo atual + bolinhas de progresso), em vez do painel grande que tampava o salão
+- ✅ A faixa fica transparente quando um herói passa por baixo (`Hud.seeThrough`)
+- ✅ No celular: entre o joystick e os botões; selos saem do caminho enquanto ela aparece
+- ✅ Smoke confere que a faixa não encosta nos botões de toque
+
 ## Próximo: Lançamento (ver `docs/LANCAMENTO.md`)
 - 🚧 Fase A — ✅ idiomas; ⬜ revisão nativa zh/ja, nome internacional, celulares reais, trilha sonora, conteúdo extra, créditos
 - ⬜ Fase B — Android/Google Play (teste fechado de 14 dias com 12 testadores)
@@ -85,6 +92,7 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 
 | Data | Etapa | Resumo |
 |---|---|---|
+| 2026-10-12 | 6 | Tutorial compacto no rodapé (antes tampava o salão e o herói no celular). PR #6. |
 | 2026-10-11 | 5 | Heróis redesenhados com silhuetas únicas (teste da sombra antes/depois) e nome Mushmallow em todo o jogo. PR #5. |
 | 2026-10-11 | 4 | Revisão do PR #4 tratada (gorjeta sem mutar evento). Traduções completas: inglês (padrão), espanhol, português, francês, chinês e japonês. |
 | 2026-10-11 | 4 | Teste de usabilidade no site publicado (computador + celular emulado) → `docs/USABILIDADE.md`. Corrigido tudo; personagens com personalidade, super-poderes e heróis contratáveis; movimento/mira mais intuitivos; preparação para lojas e plano `docs/LANCAMENTO.md`. PR #4. |
