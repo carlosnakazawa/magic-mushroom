@@ -79,6 +79,7 @@ export class DayRun implements ActionHost {
   private lastSecond = -1;
   private t = 0;
   private trailTimer = 0;
+  private screenPts = [{ x: 0, y: 0, visible: false }, { x: 0, y: 0, visible: false }];
   private fxTimer = 0;
   private restLeft: number;
   private drainScale: number;
@@ -231,6 +232,7 @@ export class DayRun implements ActionHost {
     this.updateStationBars();
     this.updateTrails(dt);
     this.updateArrow(dt);
+    this.updateSeeThrough();
     this.updateSpeech(dt);
 
     const frozen = !!this.tutorial?.clockFrozen;
@@ -925,6 +927,16 @@ export class DayRun implements ActionHost {
   private refreshTutorial(): void {
     const tut = this.tutorial;
     this.ctx.hud.setTutorial(tut ? tut.view : null, tut?.current ?? 0, this.keyNames());
+  }
+
+  /** Faixa do tutorial fica transparente quando um herói passa por baixo dela. */
+  private updateSeeThrough(): void {
+    const pts = this.chefs.slice(0, this.screenPts.length).map((c, i) => {
+      const p = this.screenPts[i]!;
+      this.ctx.stage.toScreen(c.pos, p);
+      return p;
+    });
+    this.ctx.hud.seeThrough(pts);
   }
 
   private updateArrow(dt: number): void {
