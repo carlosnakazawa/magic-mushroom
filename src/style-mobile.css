@@ -158,6 +158,22 @@ html.touch .players {
   display: none;
 }
 
+/* Tutorial no rodapé, entre o joystick e os botões */
+html.touch .tutorial {
+  left: calc(165px + env(safe-area-inset-left));
+  right: calc(230px + env(safe-area-inset-right));
+  bottom: calc(8px + env(safe-area-inset-bottom));
+}
+
+/* Enquanto a faixa aparece, os selos saem do caminho e os avisos sobem */
+html.touch .hud:has(.tutorial:not(.hidden)) .chips {
+  display: none;
+}
+
+html.touch .hud:has(.tutorial:not(.hidden)) .toasts {
+  bottom: 96px;
+}
+
 /* Selos no rodapé, entre o joystick e os botões */
 html.touch .chips {
   top: auto;

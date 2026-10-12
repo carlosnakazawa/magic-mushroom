@@ -23,11 +23,6 @@
   box-shadow: 0 3px 0 rgba(74, 47, 35, 0.18);
 }
 
-.tutorial.tips {
-  top: auto;
-  bottom: 70px;
-  border: 3px solid #b58cff;
-}
 
 .ticket-head .fam {
   font-size: 12px;
@@ -556,7 +551,7 @@
 /* ───────── Texto grande (acessibilidade) ───────── */
 .big-text .hud-top,
 .big-text .players,
-.big-text .tutorial,
+.big-text .tut-bar,
 .big-text .toasts,
 .big-text .chips,
 .big-text .panel,
@@ -569,6 +564,13 @@
 }
 
 @media (max-width: 1100px) {
+  /* Sem espaço ao lado dos cartões de jogador: a faixa sobe acima deles */
+  html:not(.touch) .tutorial {
+    left: 12px;
+    right: 12px;
+    bottom: 96px;
+  }
+
   .hero-cards.n6 {
     grid-template-columns: repeat(3, 1fr);
   }

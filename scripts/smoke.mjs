@@ -233,8 +233,16 @@ try {
   await muntil(() => window.game.state === 'day', 'dia começar (celular)');
   await mob.waitForTimeout(800);
   await mshot('14-celular-dia');
-  const tutPx = await mob.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.tutorial .tstep.current')).fontSize));
+  const tutPx = await mob.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.tutorial .tut-text')).fontSize));
   if (tutPx < 13) throw new Error(`Texto do tutorial pequeno demais no celular: ${tutPx}px`);
+  // A faixa do tutorial fica no rodapé, dentro da tela e sem encostar nos botões de toque
+  const tutBad = await mob.evaluate(() => {
+    const r = document.querySelector('.tutorial .tut-bar').getBoundingClientRect();
+    const b = document.querySelector('.touch-buttons').getBoundingClientRect();
+    const hit = r.right > b.left && r.left < b.right && r.bottom > b.top && r.top < b.bottom;
+    return hit || r.left < 0 || r.right > innerWidth || r.bottom > innerHeight || r.top < innerHeight / 2;
+  });
+  if (tutBad) throw new Error('Faixa do tutorial fora do lugar no celular');
   if (await mob.locator('.touch-controls.hidden').count()) throw new Error('Controles de toque não apareceram');
   // Arrasta o joystick para a direita com o "dedo" (Pointer Events)
   const x0 = await mob.evaluate(() => window.game.day.chefs[0].pos.x);
