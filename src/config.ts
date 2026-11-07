@@ -8,6 +8,13 @@ export const TUNING = {
     reach: 0.95,
     /** Quanto a mira "puxa" para estações onde há algo útil para fazer. */
     usefulTargetBonus: 0.6,
+    /**
+     * Corrida automática: segurando o direcional por `runAfter` segundos o herói
+     * acelera até `runBoost`× em `runRamp` segundos (pedido das crianças: "andar mais rápido").
+     */
+    runAfter: 0.45,
+    runRamp: 0.35,
+    runBoost: 1.4,
   },
   work: {
     /** Segundos para picar um ingrediente na tábua. */
