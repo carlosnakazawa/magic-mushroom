@@ -157,6 +157,15 @@ export class Creature {
       const footR = look.species === 'frog' ? 0.13 : 0.1;
       const foot = ball(footR, look.species === 'frog' ? accentMat : look.species === 'owl' ? toon(0xffc36b) : limbMat, 1.1, 0.6, 1.4);
       foot.position.set(side * B.r * B.sx * 0.45, 0.06, 0.08);
+      if (look.species === 'frog') {
+        // Pé de sapo: três dedinhos redondos na frente
+        for (let t = -1; t <= 1; t++) {
+          const toe = ball(0.045, accentMat);
+          toe.position.set(t * 0.75 * footR / 1.1, 0.1, 0.9 * footR / 1.4 + 0.02);
+          toe.scale.set(1 / 1.1, 1 / 0.6, 1 / 1.4);
+          foot.add(toe);
+        }
+      }
       this.rig.add(foot);
       this.feet.push(foot);
     }
@@ -273,11 +282,11 @@ export class Creature {
       const x = side * E.spread * (H.sx > 1.2 ? 1.1 : 1);
       if (E.shape === 'frog') {
         // Olhos saltados no topo da cabeça
-        const bump = ball(0.1, toon(look.body), 1, 1, 1);
-        bump.position.set(x, H.r * H.sy * 0.75, 0.05);
+        const bump = ball(0.12, toon(look.body), 1, 1, 1);
+        bump.position.set(x, H.r * H.sy * 0.85, 0.04);
         this.head.add(bump);
-        eye.position.set(x, H.r * H.sy * 0.8, 0.13);
-        const sclera = ball(0.075, toon(0xffffff), 1, 1, 0.6);
+        eye.position.set(x, H.r * H.sy * 0.92, 0.14);
+        const sclera = ball(0.088, toon(0xffffff), 1, 1, 0.6);
         eye.add(sclera);
       } else {
         eye.position.set(x, E.y, this.front(x, E.y) - 0.02);
@@ -337,7 +346,13 @@ export class Creature {
       this.head.add(sleepy);
       this.sleepyEyes.push(sleepy);
 
-      if (E.shape !== 'frog') {
+      if (E.shape === 'frog') {
+        // Bochechas rosadas embaixo dos olhos saltados (fofura de sapo)
+        const bx = side * 0.22;
+        const blush = ball(0.05, toon(0xff9fb5), 1.4, 0.7, 0.4);
+        blush.position.set(bx, -0.04, this.front(bx, -0.04) - 0.02);
+        this.head.add(blush);
+      } else {
         const bx = side * (E.spread + 0.08);
         const blush = ball(0.05, toon(0xff9fb5), 1.3, 0.7, 0.4);
         blush.position.set(bx, -0.07, this.front(bx, -0.07) - 0.03);
@@ -620,6 +635,25 @@ export class Creature {
           const disc = ball(0.15, bellyMat, 1, 1.1, 0.3);
           disc.position.set(side * 0.1, 0.0, this.front(side * 0.1, 0) - 0.04);
           this.head.add(disc);
+        }
+        break;
+      }
+      case 'frog': {
+        // Pintas escuras nas costas e no alto da cabeça
+        const spots: [number, number, number][] = [
+          [0, 0.75, 0.07], [-0.55, 0.45, 0.05], [0.6, 0.35, 0.055], [-0.25, 0.15, 0.045], [0.3, 0.9, 0.04],
+        ];
+        for (const [th, ph, r] of spots) {
+          const dir = new THREE.Vector3(Math.sin(th) * Math.cos(ph), Math.sin(ph), -Math.cos(th) * Math.cos(ph));
+          const s = ball(r, accentMat, 1, 1, 0.35);
+          s.position.set(dir.x * B.r * B.sx, B.y + dir.y * B.r * B.sy, dir.z * B.r * B.sz);
+          s.lookAt(s.position.clone().add(dir)); // deita a pinta na pele
+          this.body.add(s);
+        }
+        for (const side of [-1, 1]) {
+          const s = ball(0.035, accentMat, 1, 1, 0.35);
+          s.position.set(side * 0.13, H.r * H.sy * 0.7, -H.r * 0.5);
+          this.head.add(s);
         }
         break;
       }

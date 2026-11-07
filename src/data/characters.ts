@@ -185,9 +185,10 @@ export const HEROES: readonly HeroDef[] = ([
     name: 'Gota',
     species: 'frog',
     wing: 'dragonfly',
-    body: 0xff9fc4,
-    belly: 0xffe6f0,
-    accent: 0xd9668f,
+    // Verde-limão (o Pipoca é verde-menta) com barriga amarelinha e pintas escuras
+    body: 0x86d94a,
+    belly: 0xfaf3a8,
+    accent: 0x3f8f2c,
     wingColor: 0xc8f4ff,
     eyeColor: 0x1d2b18,
     celebrate: 'sparks',
