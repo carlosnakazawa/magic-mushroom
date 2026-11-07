@@ -61,10 +61,14 @@ config.ts  — todos os números de balanceamento (TUNING)
 | `render/stage.ts` | Renderer, câmera (56°), sombras, bloom, `zoomPulse`, `setInsetRight` (painel da noite) |
 | `render/lighting.ts` | Presets dia/noite interpolados |
 | `render/merge.ts` | Junta malhas estáticas por material (menos draw calls) |
-| `core/input.ts` | Teclado (teclas remapeáveis), gamepad (jogo e menus), `keyLabel` |
+| `core/input.ts` | Teclado (teclas remapeáveis), gamepad (jogo e menus, qualquer posição da lista do navegador), aviso de controle conectado, `keyLabel` |
+| `core/pad.ts` | Normaliza controles para o mapa padrão (DualSense sem mapa: ✕/□ trocados, direcional "chapéu") — puro, testado |
+| `render/portraits.ts` | Retratos 3D dos heróis (data URL, desenhados uma vez) para cartões; `heroFaceHtml` volta ao emoji sem WebGL |
+| `data/howto.ts` | Passo a passo em figuras de cada receita (gerado pelo método) para o cartão "Como fazer" — testado |
+| `sim/run.ts` | Corrida automática (`runMultiplier`) — testado |
 | `core/storage.ts` | Lê/grava o save no `localStorage` sem nunca quebrar |
 | `ui/hud.ts` | Relógio, comandas (banner de família, selo dourado), moedas, metas, cartões, tutorial e dicas (faixa compacta no rodapé, transparente quando o herói passa por baixo — `seeThrough`), selos |
-| `ui/screens.ts` | Título (heróis bloqueados), mapa de níveis, pausa, resultado (desbloqueios), opções, contagem |
+| `ui/screens.ts` | Título (heróis bloqueados), mapa de níveis, pausa, "Como fazer" (`recipes`), resultado (desbloqueios), opções, contagem |
 | `ui/night.ts` | Painel da loja noturna |
 | `ui/nav.ts` | Foco espacial para menus com controle/setas |
 | `sim/perks.ts` | Super-poderes dos heróis → multiplicadores (`perkMods`) e aura de equipe (`teamDrainScale`) |
@@ -95,7 +99,7 @@ config.ts  — todos os números de balanceamento (TUNING)
 - `Lighting` interpola céu/luzes/exposição/bloom; `World.setNight(v)` realça emissivos (janelas, lanternas, cogumelos) e luminárias compradas.
 
 ## Como adicionar…
-- **Receita:** `data/recipes.ts` (vessel + method + ingredientes) → pesos no nível → teste.
+- **Receita:** `data/recipes.ts` (vessel + method + ingredientes) → pesos no nível → teste. O guia "Como fazer" sai sozinho de `data/howto.ts` (método novo → novo caso lá + chaves `how.*`).
 - **Ingrediente:** `data/ingredients.ts` → modelo em `models/food.ts` → letra em `world.ts` (`CRATE_KINDS`).
 - **Máquina nova:** `MachineKind` + tempos em `TUNING.machines` + visual em `models/machines.ts` + letra em `world.ts` (`MACHINE_KINDS`) + testes.
 - **Móvel:** `FURNITURE` + modelo em `models/decor.ts` (`decorMesh`). Novo tipo de espaço → `SlotKind` + `DECOR_SLOTS`.
