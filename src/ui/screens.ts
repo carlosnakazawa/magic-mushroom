@@ -7,6 +7,9 @@ import { LANGS, getLang, t, type Lang } from '../i18n';
 import { DEFAULT_KEYS, isLevelUnlocked, teamHeroes, totalStars, type SaveData, type Settings } from '../sim/progress';
 import { entitlements, parentalChallenge } from '../platform/entitlements';
 import { SPECIES_EMOJI, hex } from './hud';
+import { heroFaceHtml } from '../render/portraits';
+import { recipeSteps } from '../data/howto';
+import type { RecipeDef, RecipeId } from '../data/recipes';
 
 export const PLAYER_COLORS = [0x4fc3ff, 0xff7fb0] as const;
 
@@ -138,7 +141,7 @@ export class Screens {
           : '';
       detail.style.setProperty('--hc', hex(h.body));
       detail.innerHTML = `
-        <div class="hd-face">${secret ? '❔' : SPECIES_EMOJI[h.species]}</div>
+        <div class="hd-face">${secret ? '❔' : heroFaceHtml(h, SPECIES_EMOJI[h.species])}</div>
         <div class="hd-text">
           <b>${secret ? t('hero.lockedName') : h.name}</b> <small>${secret ? '' : h.title}</small>
           <p>${secret ? t('hero.lockedBlurb') : h.blurb}</p>
@@ -157,7 +160,7 @@ export class Screens {
         card.dataset.key = `hero-${h.id}`;
         card.innerHTML = `
           ${idx >= 0 ? `<span class="badge" style="background:${hex(PLAYER_COLORS[idx]!)}">${idx + 1}</span>` : ''}
-          <div class="hero-face">${locked ? (h.family ? '🔒' : `<span class="dim">${SPECIES_EMOJI[h.species]}</span><i class="lock">🔒</i>`) : SPECIES_EMOJI[h.species]}</div>
+          <div class="hero-face">${locked ? (h.family ? '🔒' : `<span class="dim">${heroFaceHtml(h, SPECIES_EMOJI[h.species])}</span><i class="lock">🔒</i>`) : heroFaceHtml(h, SPECIES_EMOJI[h.species])}</div>
           <b>${locked && h.family ? t('hero.lockedName') : h.name}</b>`;
         card.onmouseenter = () => showDetail(h);
         card.onfocus = () => showDetail(h);
@@ -255,7 +258,7 @@ export class Screens {
     first?.focus();
   }
 
-  pause(opts: { onResume: () => void; onRestart: () => void; onMenu: () => void; onOptions: () => void; musicOn: boolean; onMusic: () => boolean; keys: Settings['keys'] }): void {
+  pause(opts: { onResume: () => void; onRestart: () => void; onMenu: () => void; onOptions: () => void; onRecipes: () => void; musicOn: boolean; onMusic: () => boolean; keys: Settings['keys'] }): void {
     const panel = this.open('pause');
     panel.innerHTML = `<h2>${t('pause.title')}</h2>`;
     const buttons = el('div', 'buttons column');
@@ -263,10 +266,50 @@ export class Screens {
     const music = button(opts.musicOn ? t('pause.musicOn') : t('pause.musicOff'), 'btn', () => {
       music.textContent = opts.onMusic() ? t('pause.musicOn') : t('pause.musicOff');
     });
-    buttons.append(resume, music, button(t('title.options'), 'btn', opts.onOptions), button(t('pause.restart'), 'btn', opts.onRestart), button(t('pause.menu'), 'btn', opts.onMenu));
+    buttons.append(resume, button(t('pause.recipes'), 'btn', opts.onRecipes), music, button(t('title.options'), 'btn', opts.onOptions), button(t('pause.restart'), 'btn', opts.onRestart), button(t('pause.menu'), 'btn', opts.onMenu));
     panel.append(buttons);
     panel.insertAdjacentHTML('beforeend', this.touch ? touchHelp() : controlsHtml(opts.keys));
     resume.focus();
+  }
+
+  /**
+   * Cartão "Como fazer": escolha uma receita (abas) e veja o passo a passo em figuras.
+   * Aberto ao tocar numa comanda ou pelo botão 📖 da pausa.
+   */
+  recipes(list: readonly RecipeDef[], focus: RecipeId | null, onBack: () => void): void {
+    const panel = this.open('recipes');
+    panel.innerHTML = `<h2>${t('how.title')}</h2>`;
+    const tabs = el('div', 'how-tabs');
+    const steps = el('div', 'how-steps');
+    const show = (r: RecipeDef) => {
+      tabs.querySelectorAll('.how-tab').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.key === `how-${r.id}`));
+      steps.innerHTML =
+        `<div class="how-name">${r.emoji} ${r.name}</div>` +
+        recipeSteps(r)
+          .map(
+            (s, i) => `
+          <div class="how-step" style="animation-delay:${i * 0.08}s">
+            <span class="how-n">${i + 1}</span>
+            <span class="how-icons">${s.icons.map((ic) => (ic === '➜' ? '<i>➜</i>' : `<b>${ic}</b>`)).join('')}</span>
+            <span class="how-text">${t(`how.${s.key}`, { ing: s.ing ?? '' })}</span>
+          </div>`,
+          )
+          .join('');
+    };
+    for (const r of list) {
+      const b = button(`<span>${r.emoji}</span> ${r.name}`, 'how-tab', () => show(r));
+      b.dataset.key = `how-${r.id}`;
+      b.onfocus = () => show(r);
+      tabs.appendChild(b);
+    }
+    const back = button(t('how.back'), 'btn big', onBack);
+    const buttons = el('div', 'buttons');
+    buttons.append(back);
+    panel.append(tabs, steps, buttons);
+    const start = list.find((r) => r.id === focus) ?? list[0];
+    if (start) show(start);
+    // Foco na receita aberta: o controle já pode trocar de receita com o direcional
+    (tabs.querySelector<HTMLElement>(`[data-key="how-${start?.id}"]`) ?? back).focus();
   }
 
   results(r: DayReport, onNight: () => void, onAgain: () => void): void {

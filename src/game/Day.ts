@@ -190,7 +190,13 @@ export class DayRun implements ActionHost {
       this.updatePlayerCards();
     }
 
-    for (const chef of this.chefs) chef.move(chef.controller >= 0 ? (inputs[chef.controller] ?? null) : null, world, dt);
+    for (const chef of this.chefs) {
+      chef.move(chef.controller >= 0 ? (inputs[chef.controller] ?? null) : null, world, dt);
+      // Poeirinha atrás dos pés quando está correndo
+      if (chef.running && Math.random() < dt * 14) {
+        this.ctx.fx.burst(chef.pos.clone().setY(0.08).addScaledVector(chef.forward, -0.3), { kind: 'dot', count: 1, colors: [0xf3e6d0, 0xffffff], additive: false, speed: 0.4, up: 0.6, gravity: -0.2, size: 0.18, life: 0.5 });
+      }
+    }
     if (this.chefs.length > 1) this.chefs[0]!.separate(this.chefs[1]!);
 
     world.stations.forEach((s) => (s.highlight.visible = false));
@@ -392,6 +398,8 @@ export class DayRun implements ActionHost {
     }
   }
 
+  private howTipShown = false;
+
   takeOrder(table: Table, chef: Chef): void {
     const ap = this.parties.find((p) => p.table === table);
     if (!ap || !ap.party.takeOrder()) return;
@@ -405,6 +413,11 @@ export class DayRun implements ActionHost {
     this.ctx.fx.burst(new THREE.Vector3(table.x, 1.6, table.z), { kind: 'sparkle', count: ap.party.size > 2 ? 24 : 10, colors: [0xfff27a, 0xffffff] });
     const names = ap.party.members.map((m) => `${RECIPES[m.recipe].emoji} ${RECIPES[m.recipe].name}`);
     this.ctx.hud.toast(ap.party.size > 2 ? t('day.orderFamily', { n: ap.party.size }) : `📝 ${names.join(' + ')}`, 'info', 2000);
+    // Primeiro pedido do dia: lembra que dá para ver como fazer cada receita
+    if (!this.howTipShown) {
+      this.howTipShown = true;
+      this.ctx.hud.toast(t('how.tip'), 'info', 4000);
+    }
     this.tutorialEvent('orderTaken');
   }
 

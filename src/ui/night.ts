@@ -3,6 +3,7 @@ import { familyDef } from '../data/families';
 import { DECOR_SLOTS, WALLS, furnitureDef, type FurnitureDef, type FurnitureId, type SlotKind, type WallId } from '../data/furniture';
 import { charm, heroesForSale, nextFamily, placedCount, shopCatalog, teamHeroes, totalStars, unplaced, type SaveData } from '../sim/progress';
 import { SPECIES_EMOJI } from './hud';
+import { heroFaceHtml } from '../render/portraits';
 import { TUNING } from '../config';
 import { t, tk } from '../i18n';
 
@@ -149,7 +150,7 @@ export class NightPanel {
       const card = el(
         'div',
         'np-card hero',
-        `<div class="np-emoji face" style="background:#${h.body.toString(16).padStart(6, '0')}">${SPECIES_EMOJI[h.species]}</div>
+        `<div class="np-emoji face" style="background:#${h.body.toString(16).padStart(6, '0')}">${heroFaceHtml(h, SPECIES_EMOJI[h.species])}</div>
          <div class="np-info"><b>${h.name}</b><small>${h.title} — ${h.blurb}</small><span class="np-tags">⚡ ${h.perkText}</span></div>`,
       );
       const price = h.price ?? 0;

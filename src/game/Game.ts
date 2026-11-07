@@ -4,6 +4,7 @@ import { Input } from '../core/input';
 import { clearSave, loadSave, writeSave } from '../core/storage';
 import { HEROES, type HeroDef } from '../data/characters';
 import { levelDef, type LevelDef } from '../data/levels';
+import { RECIPES, RECIPE_LIST, type RecipeId } from '../data/recipes';
 import { Creature } from '../models/creature';
 import { Lighting } from '../render/lighting';
 import { Stage } from '../render/stage';
@@ -104,6 +105,12 @@ export class Game {
       if (code === 'KeyM' && this.state !== 'settings') this.setMusic(!this.save.settings.music);
     });
     window.addEventListener('pointerdown', () => audio.unlock());
+    this.hud.onRecipe = (id) => {
+      audio.unlock();
+      audio.click();
+      this.showRecipes(id);
+    };
+    this.input.onPadConnected((_kind, slot) => this.padNotice(t('pad.connected', { n: slot + 1 })));
     // App em segundo plano (trocou de app, bloqueou a tela): pausa o dia e a música.
     platform.onVisibility((visible) => {
       if (!visible) {
@@ -392,6 +399,7 @@ export class Game {
         onRestart: () => this.startDay(this.level.id),
         onMenu: () => this.showTitle(),
         onOptions: () => this.showSettings('paused'),
+        onRecipes: () => this.showRecipes(null, true),
         musicOn: this.save.settings.music,
         onMusic: () => {
           this.setMusic(!this.save.settings.music);
@@ -405,6 +413,30 @@ export class Game {
       this.state = 'day';
       if (this.save.settings.music) audio.startDayMusic();
     }
+  }
+
+  /**
+   * Cartão "Como fazer" (pausa o dia enquanto está aberto).
+   * `fromPause`: ao voltar, reabre o menu de pausa em vez de voltar ao jogo.
+   */
+  showRecipes(focus: RecipeId | null, fromPause = false): void {
+    if (this.state !== 'day' && this.state !== 'paused') return;
+    if (this.state === 'day') {
+      this.state = 'paused';
+      audio.stopMusic();
+    }
+    const fams = this.save.families;
+    const list = [
+      ...this.level.recipes.map((r) => RECIPES[r.id]),
+      ...RECIPE_LIST.filter((r) => r.family && fams.includes(r.family) && r.level <= this.level.id),
+    ];
+    if (focus && !list.some((r) => r.id === focus)) list.push(RECIPES[focus]);
+    this.screens.recipes(list, focus, () => {
+      if (fromPause) {
+        this.state = 'day';
+        this.togglePause();
+      } else this.togglePause();
+    });
   }
 
   /** Celular: enquadra uma faixa do restaurante centrada nos heróis (eles ficam ~35% maiores). */
@@ -476,4 +508,15 @@ export class Game {
       this.debugEl.textContent = `${Math.round(1 / Math.max(dt, 0.001))} fps · ${info.calls} draw calls · ${info.triangles} tris`;
     }
   };
+
+  /** Aviso rápido no topo (funciona também nos menus, onde o HUD fica escondido). */
+  private padNotice(text: string): void {
+    const n = document.createElement('div');
+    n.className = 'pad-notice';
+    n.textContent = text;
+    this.container.appendChild(n);
+    audio.click();
+    window.setTimeout(() => n.classList.add('out'), 2600);
+    window.setTimeout(() => n.remove(), 3200);
+  }
 }
