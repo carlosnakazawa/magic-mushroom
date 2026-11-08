@@ -61,7 +61,7 @@ export function normalizePad(p: RawPad): NormPad {
   } else {
     p.buttons.forEach((b, i) => (buttons[i] = b));
   }
-  // Direcional como chapéu: geralmente o eixo 9 (procura um eixo que pareça chapéu)
+  // Direcional como chapéu: no DirectInput do Windows (DualSense/DualShock) ele fica no eixo 9
   const hatAxis = p.axes.length > 9 ? 9 : -1;
   if (hatAxis >= 0) {
     const [u, d, l, r] = hatToDpad(p.axes[hatAxis]!);

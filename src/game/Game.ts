@@ -399,7 +399,7 @@ export class Game {
         onRestart: () => this.startDay(this.level.id),
         onMenu: () => this.showTitle(),
         onOptions: () => this.showSettings('paused'),
-        onRecipes: () => this.showRecipes(null, true),
+        onRecipes: () => this.showRecipes(null),
         musicOn: this.save.settings.music,
         onMusic: () => {
           this.setMusic(!this.save.settings.music);
@@ -417,9 +417,9 @@ export class Game {
 
   /**
    * Cartão "Como fazer" (pausa o dia enquanto está aberto).
-   * `fromPause`: ao voltar, reabre o menu de pausa em vez de voltar ao jogo.
+   * "Voltar ao jogo", Esc, B/○ e Start fazem a mesma coisa: retomam a partida.
    */
-  showRecipes(focus: RecipeId | null, fromPause = false): void {
+  showRecipes(focus: RecipeId | null): void {
     if (this.state !== 'day' && this.state !== 'paused') return;
     if (this.state === 'day') {
       this.state = 'paused';
@@ -431,12 +431,7 @@ export class Game {
       ...RECIPE_LIST.filter((r) => r.family && fams.includes(r.family) && r.level <= this.level.id),
     ];
     if (focus && !list.some((r) => r.id === focus)) list.push(RECIPES[focus]);
-    this.screens.recipes(list, focus, () => {
-      if (fromPause) {
-        this.state = 'day';
-        this.togglePause();
-      } else this.togglePause();
-    });
+    this.screens.recipes(list, focus, () => this.togglePause());
   }
 
   /** Celular: enquadra uma faixa do restaurante centrada nos heróis (eles ficam ~35% maiores). */

@@ -161,14 +161,10 @@ export class Input {
     };
   }
 
-  /** Família do último controle usado (para mostrar ✕ □ △ ou A X Y). */
-  padKind: PadFamily | null = null;
-
   /** Avisa quando um controle é conectado (o navegador só mostra depois de apertar um botão). */
   onPadConnected(fn: (kind: PadFamily, slot: number) => void): void {
     window.addEventListener('gamepadconnected', (e) => {
       const kind = padFamily(e.gamepad.id);
-      this.padKind = kind;
       const slot = this.connectedPads().findIndex((p) => p.index === e.gamepad.index);
       // Ajuda a investigar controles que não respondem (console do navegador)
       console.info('[controle]', e.gamepad.id, `mapping="${e.gamepad.mapping}"`, `index=${e.gamepad.index}`);
@@ -194,7 +190,6 @@ export class Input {
       const edge = (i: number) => !!now[i] && !prev[i];
       const dead = (v: number) => (Math.abs(v) < 0.25 ? 0 : v);
       const btn = (i: number) => (now[i] ? 1 : 0);
-      if (now.some(Boolean)) this.padKind = padFamily(pad.id);
       return {
         moveX: dead(norm.axes[0]) || btn(15) - btn(14),
         moveZ: dead(norm.axes[1]) || btn(13) - btn(12),

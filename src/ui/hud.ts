@@ -207,8 +207,11 @@ export class Hud {
       t.root.classList.toggle('hurry', p.patience < 0.3);
       p.members.forEach((m, i) => t!.dishes[i]!.classList.toggle('served', m.served));
     }
-    // Muitas comandas: versão compacta (só figuras) para caber numa linha no tablet
-    this.orders.classList.toggle('many', alive.size >= 4);
+    // Muitas comandas (ou uma família com muitos pratos): versão compacta (só figuras)
+    // para caber numa linha no tablet
+    let dishes = 0;
+    for (const id of alive) dishes += this.tickets.get(id)?.dishes.length ?? 0;
+    this.orders.classList.toggle('many', alive.size >= 4 || dishes >= 6);
     for (const [id, t] of this.tickets) {
       if (!alive.has(id)) {
         t.root.classList.add('leaving');
