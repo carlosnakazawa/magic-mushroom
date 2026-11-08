@@ -5,7 +5,7 @@ Fluxo detalhado em [`AGENTS.md`](../AGENTS.md#fluxo-de-etapas-e-pull-requests).
 
 Legenda: ✅ feito · 🚧 em andamento · ⬜ pendente
 
-**Status atual:** Etapa 8 (feedback das crianças, parte 2) em PR (2026-11-08). Etapas 6 e 7 mergeadas e publicadas (2026-11-07). Etapas 1–3 e "Jogar no Celular" publicadas em https://carlosnakazawa.github.io/magic-mushroom/. Etapa 4 (personagens, usabilidade, preparação para lojas) no PR #4. Próximo grande passo: **Fase A do `docs/LANCAMENTO.md`** (idiomas, nome internacional, testes em celulares reais).
+**Status atual:** Etapa 8 (feedback das crianças, parte 2) mergeada e publicada (2026-11-08). Etapas 6 e 7 mergeadas e publicadas (2026-11-07). Etapas 1–3 e "Jogar no Celular" publicadas em https://carlosnakazawa.github.io/magic-mushroom/. Etapa 4 (personagens, usabilidade, preparação para lojas) no PR #4. Próximo grande passo: **Fase A do `docs/LANCAMENTO.md`** (idiomas, nome internacional, testes em celulares reais).
 
 ---
 
@@ -82,7 +82,7 @@ Branch: `etapa-7/feedback-criancas`
 - ✅ "Como fazer": tocar numa comanda ou 📖 Receitas na pausa mostra o passo a passo em figuras
 - ✅ Retratos 3D dos heróis nos cartões (seleção, loja da noite, cartões de jogador)
 
-## Etapa 8 — "Feedback das crianças, parte 2" — 🚧 (PR aberto)
+## Etapa 8 — "Feedback das crianças, parte 2" — ✅ (PR #8 mergeado)
 Branch: `etapa-8/feedback-criancas-2`
 - ✅ Heróis esbarram nos clientes que estão entrando (antes atravessavam)
 - ✅ Selinho sobre o herói com o que ele carrega (emoji + nome, dourado se o prato está pronto) e item maior na mão
@@ -114,6 +114,7 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 |---|---|---|
 | 2026-11-08 | 8 | Feedback 2 das crianças: colisão com clientes, selinho do item carregado, alface direto na tigela, fim do dia com "hora de fechar", animação de andar e manias por herói (`docs/PERSONAGENS.md`, `?lineup=andar`), dicas com botões do controle. |
 | 2026-11-08 | 8 | Revisão do PR #8: fala não cobre mais o selinho, pausa congela passos e manias, seta do tutorial aponta a alface esquecida na tábua, juntar duas meias-saladas, atalho da tigela só para ingredientes de salada, anel do relógio na hora de fechar, dicas não alternam com teclado + controle juntos, manias com partículas no título e no `?lineup`. |
+| 2026-11-08 | 8 | Ajustes pós-publicação: tela de título cabe todos os heróis (Puff ficava atrás do balcão), retratos dos cartões com cores vivas (tone mapping igual ao jogo), andar bem mais exagerado + "rebolado" (`yaw`) porque de longe ainda parecia deslizar. |
 | 2026-11-07 | 7 | Feedback dos filhos do Carlos: Gota verde/sapo, destaque forte nos menus, corrida automática, DualSense no Windows, comandas no tablet, guia "Como fazer" das receitas, retratos 3D dos heróis. Revisão do Gemini tratada; PRs #6 e #7 mergeados (pedido do Carlos). |
 | 2026-10-12 | 6 | Tutorial compacto no rodapé (antes tampava o salão e o herói no celular). PR #6. |
 | 2026-10-11 | 5 | Heróis redesenhados com silhuetas únicas (teste da sombra antes/depois) e nome Mushmallow em todo o jogo. PR #5. |

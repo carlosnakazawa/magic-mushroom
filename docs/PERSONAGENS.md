@@ -18,6 +18,8 @@ Ver no jogo: `?lineup=andar` (fileira de trás andando sem sair do lugar) e, no 
 | **Gota** 🐸 | Brincalhona | `hop` — saltos de sapo, aterrissa achatadinha | `tongue` — estica a língua para pegar um mosquitinho | Olhos saltados, sorrisão, pintas, coroa, pés de 3 dedos |
 | **Lumi** 🐱 | Sonhadora e tranquila | `tiptoe` — na pontinha das patas, rebolando | `stretch` — espreguiça como gato, olhinhos fechados | Presilha de lua, asas de constelação, bigodes |
 
+**Exagere o movimento.** A câmera do jogo é alta e longe: sobe-e-desce, balanço e "rebolado" (`yaw`) pequenos somem e o herói parece deslizar. Os valores de `GAITS` são exagerados de propósito — confira sempre no jogo, não só no `?lineup`.
+
 ## Regras para novos heróis
 1. Escolha uma **espécie** com silhueta diferente das outras (passe no `?lineup=sombra`).
 2. Escolha um **jeito de andar** que combine com a personalidade (ver `GAITS` em `models/creature.ts`; dá para criar um novo).

@@ -21,9 +21,12 @@ function renderAll(): void {
     renderer.setPixelRatio(1);
     renderer.setSize(SIZE, SIZE, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // Mesma "revelação" de cor do jogo (sem ela, e com luz forte, os retratos saíam desbotados)
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1;
     const scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xfff6e8, 0xb7a6c9, 2.2));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+    scene.add(new THREE.HemisphereLight(0xfff6e8, 0x9a8fb0, 1.1));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.9);
     sun.position.set(1.5, 3, 3);
     scene.add(sun);
     // Enquadra cabeça e corpo, de frente e um pouco de lado (3/4)
