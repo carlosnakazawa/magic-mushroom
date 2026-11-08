@@ -113,6 +113,7 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 | Data | Etapa | Resumo |
 |---|---|---|
 | 2026-11-08 | 8 | Feedback 2 das crianças: colisão com clientes, selinho do item carregado, alface direto na tigela, fim do dia com "hora de fechar", animação de andar e manias por herói (`docs/PERSONAGENS.md`, `?lineup=andar`), dicas com botões do controle. |
+| 2026-11-08 | 8 | Revisão do PR #8: fala não cobre mais o selinho, pausa congela passos e manias, seta do tutorial aponta a alface esquecida na tábua, juntar duas meias-saladas, atalho da tigela só para ingredientes de salada, anel do relógio na hora de fechar, dicas não alternam com teclado + controle juntos, manias com partículas no título e no `?lineup`. |
 | 2026-11-07 | 7 | Feedback dos filhos do Carlos: Gota verde/sapo, destaque forte nos menus, corrida automática, DualSense no Windows, comandas no tablet, guia "Como fazer" das receitas, retratos 3D dos heróis. Revisão do Gemini tratada; PRs #6 e #7 mergeados (pedido do Carlos). |
 | 2026-10-12 | 6 | Tutorial compacto no rodapé (antes tampava o salão e o herói no celular). PR #6. |
 | 2026-10-11 | 5 | Heróis redesenhados com silhuetas únicas (teste da sombra antes/depois) e nome Mushmallow em todo o jogo. PR #5. |

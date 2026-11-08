@@ -1,5 +1,5 @@
 import { INGREDIENTS, type IngredientKind } from '../data/ingredients';
-import { canAddIngredient, matchRecipe, type Method, type RecipeDef, type Vessel } from '../data/recipes';
+import { canAddIngredient, canCombine, matchRecipe, type Method, type RecipeDef, type Vessel } from '../data/recipes';
 import { t, tk } from '../i18n';
 
 let nextItemId = 1;
@@ -132,7 +132,23 @@ export function tryMerge(held: Item, counter: Item): MergeResult | null {
     held.version++;
     return { held, counter: null };
   }
+  // Duas meias-saladas (ex.: tigela com alface + tigela com tomate): tudo vai para a da mão
+  if (held.type === 'vessel' && counter.type === 'vessel' && canJoin(held, counter)) {
+    held.contents.push(...counter.contents);
+    held.method = 'assemble';
+    held.version++;
+    emptyVessel(counter);
+    return { held, counter };
+  }
   return null;
+}
+
+function isSaladBowl(v: VesselItem): boolean {
+  return v.vessel === 'bowl' && !v.dirty && (v.method === null || v.method === 'assemble');
+}
+
+function canJoin(a: VesselItem, b: VesselItem): boolean {
+  return isSaladBowl(a) && isSaladBowl(b) && a.contents.length > 0 && b.contents.length > 0 && canCombine('assemble', a.contents, b.contents);
 }
 
 const VESSEL_EMOJI: Record<Vessel, string> = { bowl: '🥣', cup: '🥤', plate: '🍽️' };

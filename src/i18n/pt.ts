@@ -216,6 +216,7 @@ export const pt: Dict = {
   'act.putBoard': 'Colocar na tábua',
   'act.put': 'Colocar',
   'act.add': 'Colocar {item}',
+  'act.joinBowls': 'Juntar as tigelas',
   'act.intoBowl': '{item} numa tigela',
   'act.dumpBurnt': 'Jogar fora o queimado',
   'act.serve': 'Servir {dish}',

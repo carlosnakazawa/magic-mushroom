@@ -233,6 +233,7 @@ export const en = {
   'act.putBoard': 'Put on the board',
   'act.put': 'Put down',
   'act.add': 'Add {item}',
+  'act.joinBowls': 'Combine the bowls',
   'act.intoBowl': '{item} into a bowl',
   'act.dumpBurnt': 'Throw out the burnt food',
   'act.serve': 'Serve {dish}',

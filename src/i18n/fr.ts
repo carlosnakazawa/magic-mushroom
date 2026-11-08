@@ -216,6 +216,7 @@ export const fr: Dict = {
   'act.putBoard': 'Poser sur la planche',
   'act.put': 'Poser',
   'act.add': 'Ajouter : {item}',
+  'act.joinBowls': 'Réunir les bols',
   'act.intoBowl': '{item} dans un bol',
   'act.dumpBurnt': 'Jeter le brûlé',
   'act.serve': 'Servir : {dish}',

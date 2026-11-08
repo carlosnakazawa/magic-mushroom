@@ -189,6 +189,8 @@ export class Input {
       const slot = this.connectedPads().findIndex((p) => p.index === e.gamepad.index);
       // Ajuda a investigar controles que não respondem (console do navegador)
       console.info('[controle]', e.gamepad.id, `mapping="${e.gamepad.mapping}"`, `index=${e.gamepad.index}`);
+      // Já mostra os botões do controle, mesmo que ele tenha sido "acordado" com outro botão
+      this.setDevice(Math.min(Math.max(0, slot), 1), kind);
       fn(kind, Math.max(0, slot));
     });
   }
@@ -231,11 +233,14 @@ export class Input {
     this.lastPads = pads;
     return keys.map((k, slot) => {
       const padsForSlot = playerCount === 1 ? pads : [pads[slot] ?? null];
-      if (active(k)) this.setDevice(slot, 'keys');
+      // Aparelhos mexidos neste frame; se o atual está entre eles, não troca
+      // (teclado + controle juntos não ficam alternando as dicas a cada frame)
+      const used: Device[] = [];
+      if (active(k)) used.push('keys');
       let out = { ...k };
       const t = slot === 0 ? this.touch : null;
       if (t) {
-        if (t.moveX || t.moveZ) this.setDevice(slot, 'touch');
+        if (t.moveX || t.moveZ) used.push('touch');
         out = {
           moveX: out.moveX || t.moveX,
           moveZ: out.moveZ || t.moveZ,
@@ -243,11 +248,11 @@ export class Input {
           use: out.use || t.hit('use'),
           swap: out.swap || t.hit('swap'),
         };
-        if ((out.pick || out.use || out.swap) && !k.pick && !k.use && !k.swap) this.setDevice(slot, 'touch');
+        if ((out.pick || out.use || out.swap) && !k.pick && !k.use && !k.swap) used.push('touch');
       }
       for (const p of padsForSlot) {
         if (!p) continue;
-        if (active(p)) this.setDevice(slot, p.family);
+        if (active(p)) used.push(p.family);
         out = {
           moveX: out.moveX || p.moveX,
           moveZ: out.moveZ || p.moveZ,
@@ -256,6 +261,7 @@ export class Input {
           swap: out.swap || p.swap,
         };
       }
+      if (used.length && !used.includes(this.devices[slot]!)) this.setDevice(slot, used[used.length - 1]!);
       return out;
     });
   }

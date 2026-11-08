@@ -122,8 +122,9 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 | Espaço da mesa família | `F F` | 2 células; recebe a mesa comprada na loja (senão é chão livre) |
 | Heróis / Porta | `P` / `D` | Início dos heróis / entrada e saída dos clientes |
 
-- **Montagem (saladas):** ingrediente **picado** + tigela limpa, em qualquer ordem. Atalho (pedido das crianças): segurando o ingrediente picado, aperte **pegar** na **pilha de tigelas** — o herói pega uma tigela já com ele dentro. Ingrediente inteiro na pilha → "Corte primeiro na tábua".
-- **O que estou carregando?** O item na mão aparece um pouco maior e, sobre o herói, um **selinho** com emoji + nome ("🥬 Alface picada", "🥣🍅 Montando…"); prato pronto fica **dourado**.
+- **Montagem (saladas):** ingrediente **picado** + tigela limpa, em qualquer ordem. Atalho (pedido das crianças): segurando o ingrediente picado, aperte **pegar** na **pilha de tigelas** — o herói pega uma tigela já com ele dentro. Ingrediente inteiro na pilha → "Corte primeiro na tábua". O atalho vale só para o que vai **apenas** em salada (alface, tomate): cenoura/bambu → "Isso vai na máquina"; o cogumelo (salada, suco e sopa) precisa ser solto num balcão antes, para não virar salada sem querer.
+- **Juntar meias-saladas:** tigela na mão + tigela no balcão (ex.: uma com alface, outra com tomate) → **pegar** junta tudo na tigela da mão; a tigela vazia fica limpa no balcão.
+- **O que estou carregando?** O item na mão aparece um pouco maior e, sobre o herói, um **selinho** com emoji + nome ("🥬 Alface em pedaços", "🥣🍅 Montando…"); prato pronto fica **dourado**.
 - **Máquinas:** coloque os ingredientes; quando pronto, leve o **recipiente vazio certo** (copo/tigela/prato) e aperte pegar para servir.
 - **Queimar (caldeirão/chapa):** pronto → 7 s seguro → ⚠️ aviso (5 s, bipes e fumaça) → 💨 queimado (dá para limpar com as mãos livres) → 4 s → 🔥 **fogo**. Fogo: pegue o extintor e segure **usar** na frente da máquina. O fogo não se espalha (caos gentil).
 - **Louça:** depois de comer, o cliente deixa o recipiente sujo e moedas. Pegar a louça coleta as moedas. A mesa só libera quando toda a louça sai **e** o último cliente atravessa a porta.

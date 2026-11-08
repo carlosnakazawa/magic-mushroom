@@ -216,6 +216,7 @@ export const zh: Dict = {
   'act.putBoard': '放到砧板上',
   'act.put': '放下',
   'act.add': '加入{item}',
+  'act.joinBowls': '把碗合在一起',
   'act.intoBowl': '把{item}放进碗里',
   'act.dumpBurnt': '倒掉烧焦的食物',
   'act.serve': '上菜：{dish}',

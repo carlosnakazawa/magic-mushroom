@@ -216,6 +216,7 @@ export const ja: Dict = {
   'act.putBoard': 'まないたに おく',
   'act.put': 'おく',
   'act.add': '{item}を いれる',
+  'act.joinBowls': 'おわんを ひとつに',
   'act.intoBowl': '{item}を おわんへ',
   'act.dumpBurnt': 'こげたものを すてる',
   'act.serve': '{dish}を だす',

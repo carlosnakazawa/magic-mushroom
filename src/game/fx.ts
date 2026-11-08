@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { audio } from '../core/audio';
 import type { HeroDef, Quirk } from '../data/characters';
 import { Particles, type BurstOpts } from '../fx/particles';
+import type { Creature } from '../models/creature';
 import type { Stage } from '../render/stage';
 
 /** Efeitos visuais compartilhados por dia e noite (respeitam o modo "menos efeitos"). */
@@ -47,6 +48,14 @@ export class Fx {
         this.burst(at, { kind: 'dot', count: 16, colors: [0xf6e7ff, 0xc7a5e8, 0xffffff], speed: 1.5, gravity: 1 });
         break;
     }
+  }
+
+  /** Liga as partículas da mania numa criatura fora do dia (tela de título, `?lineup`). */
+  attachQuirks(c: Creature): void {
+    c.onQuirk = (q) => {
+      const ry = c.root.rotation.y;
+      this.quirkBurst(q, c.head.getWorldPosition(new THREE.Vector3()), new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry)));
+    };
   }
 
   /** Partículas da mania de cada herói (só as manias que "soltam" algo). */

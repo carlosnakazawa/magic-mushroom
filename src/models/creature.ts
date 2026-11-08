@@ -178,6 +178,8 @@ export class Creature {
   private mouthAt = new THREE.Vector3();
   /** Chamado no "momento" da mania (o dia solta partículas/sons). */
   onQuirk: ((q: Quirk) => void) | null = null;
+  /** false = não começa manias (jogo pausado). */
+  quirks = true;
   /** 0..1 — quão rápido está andando (controlado de fora). */
   moving = 0;
   /** Segurando algo: braços para frente. */
@@ -1002,7 +1004,7 @@ export class Creature {
 
     // Manias quando está parado: heróis têm a sua (docs/PERSONAGENS.md); clientes, pulinho ou inclinar a cabeça
     const idle = this.moving < 0.1 && !this.sitting && !this.working && !this.holding && !this.eating && this.mood !== 'sleepy';
-    if (idle && this.celebrateLeft <= 0 && this.quirkLeft <= 0) {
+    if (idle && this.quirks && this.celebrateLeft <= 0 && this.quirkLeft <= 0) {
       this.fidgetIn -= dt;
       if (this.fidgetIn <= 0) {
         if (this.style.quirk) {

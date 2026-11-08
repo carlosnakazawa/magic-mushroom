@@ -1,7 +1,7 @@
 import type * as THREE from 'three';
 import { TUNING } from '../config';
 import { INGREDIENTS } from '../data/ingredients';
-import { needsChopped } from '../data/recipes';
+import { methodsFor, needsChopped } from '../data/recipes';
 import {
   dishRecipe,
   emptyVessel,
@@ -212,6 +212,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         };
       }
       if (held && onTop) {
+        if (held.type === 'vessel' && onTop.type === 'vessel') return joinBowls(host, chef, s, held, onTop);
         const bowl = held.type === 'vessel' ? held : onTop.type === 'vessel' ? onTop : null;
         const ing = held.type === 'ingredient' ? held : onTop.type === 'ingredient' ? onTop : null;
         if (!bowl || !ing) return null;
@@ -245,6 +246,11 @@ function ingredientAtStack(host: ActionHost, chef: Chef, s: Station, held: Ingre
   const v = s.vessel!;
   const def = INGREDIENTS[held.kind];
   if (v !== 'bowl') return deny(host, chef, t('deny.dropFirst', { item: itemName(held).toLowerCase() }));
+  // Só para o que vai apenas em salada: cenoura/bambu vão para a panela, e o cogumelo
+  // (salada, suco e sopa) não pode virar salada sem querer
+  const methods = methodsFor(held.kind);
+  if (!methods.includes('assemble')) return deny(host, chef, t('deny.machine'));
+  if (methods.length > 1) return deny(host, chef, t('deny.dropFirst', { item: itemName(held).toLowerCase() }));
   if (!held.chopped) return deny(host, chef, def.choppable ? t('deny.chopFirst') : t('deny.machine'));
   if (s.count <= 0) return deny(host, chef, tk(`deny.noVessels.${v}`));
   if (!tryMerge(clone(held), makeVessel(v))) return deny(host, chef, t('deny.noMatch'));
@@ -257,6 +263,21 @@ function ingredientAtStack(host: ActionHost, chef: Chef, s: Station, held: Ingre
       s.refreshStack();
       host.hold(chef, bowl);
       host.emit({ type: 'merge', chef, bowl, at: s.worldTop });
+    },
+  };
+}
+
+/** Tigela na mão + tigela no balcão: junta as duas meias-saladas (sobra uma tigela limpa no balcão). */
+function joinBowls(host: ActionHost, chef: Chef, s: Station, held: VesselItem, onTop: VesselItem): Action | null {
+  if (!held.contents.length || !onTop.contents.length) return null;
+  if (!tryMerge(clone(held), clone(onTop))) return deny(host, chef, t('deny.noMatch'));
+  return {
+    label: t('act.joinBowls'),
+    run: () => {
+      if (!tryMerge(held, onTop)) return;
+      host.hold(chef, held);
+      host.place(s, onTop);
+      host.emit({ type: 'merge', chef, bowl: held, at: s.worldTop });
     },
   };
 }

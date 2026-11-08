@@ -294,9 +294,17 @@ export class DayRun implements ActionHost {
     this.updateSpeech(dt);
     this.chefs.forEach((c) => {
       c.creature.moving = 0;
+      c.creature.quirks = false;
       c.creature.update(dt);
+      c.creature.quirks = true;
     });
-    this.parties.forEach((p) => p.customers.forEach((c) => c.creature.update(dt)));
+    // Pausado: ninguém anda no lugar nem faz mania (partículas no meio do menu)
+    this.parties.forEach((p) =>
+      p.customers.forEach((c) => {
+        c.creature.moving = 0;
+        c.creature.update(dt);
+      }),
+    );
     this.arrow.visible = false;
     for (const s of this.ctx.world.stations) if (s.machine && s.machineView) s.machineView.update(s.machine, this.t);
   }
@@ -942,7 +950,8 @@ export class DayRun implements ActionHost {
     const list = chef.hero.phrases[kind];
     const text = list[Math.floor(Math.random() * list.length)];
     if (!text) return;
-    if (!chef.speech) chef.speech = this.ctx.worldUI.add('speech', chef.creature.head, 1.45);
+    // Mesma âncora das dicas; updateSpeech empurra o balão para cima delas (nunca cobre o selinho)
+    if (!chef.speech) chef.speech = this.ctx.worldUI.add('speech', chef.creature.head, 0.55);
     chef.speech.html = `<div class="bubble-say" style="--hc:#${chef.hero.accent.toString(16).padStart(6, '0')}">${text}</div>`;
     chef.speech.visible = true;
     chef.speechLeft = 2.1;
@@ -956,6 +965,10 @@ export class DayRun implements ActionHost {
       if (c.speechLeft > 0) {
         c.speechLeft -= dt;
         if (c.speechLeft <= 0 && c.speech) c.speech.visible = false;
+      }
+      if (c.speech?.visible) {
+        const below = c.hint?.visible ? c.hint.el.offsetHeight : 0;
+        c.speech.el.style.paddingBottom = `${Math.max(below, 40) + 6}px`;
       }
     }
   }
@@ -1020,9 +1033,13 @@ export class DayRun implements ActionHost {
       case 'board':
         pos = find((s) => s.kind === 'board' && !!s.item) ?? find((s) => s.kind === 'board');
         break;
-      case 'bowls':
-        pos = find((s) => s.kind === 'stack' && s.vessel === 'bowl');
+      case 'bowls': {
+        // Se a alface picada ainda está na tábua (ou num balcão), a seta aponta para ela primeiro
+        const carrying = this.chefs.some((c) => c.held?.type === 'ingredient' && c.held.chopped);
+        const left = carrying ? null : find((s) => s.item?.type === 'ingredient' && s.item.chopped);
+        pos = left ?? find((s) => s.kind === 'stack' && s.vessel === 'bowl');
         break;
+      }
       case 'sink':
         pos = find((s) => s.kind === 'sink');
         break;
