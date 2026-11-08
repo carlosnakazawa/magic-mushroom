@@ -19,6 +19,12 @@ export type Accessory = 'bow' | 'leafCrown' | 'chefHat' | 'starScarf' | 'glasses
  */
 export type PerkId = 'tips' | 'speed' | 'chop' | 'firefighter' | 'memory' | 'soup' | 'wash' | 'reach' | 'calm';
 
+/** Jeito de andar (passos de verdade, não deslizar — ver `GAITS` em models/creature.ts). */
+export type Gait = 'walk' | 'hop' | 'trot' | 'stomp' | 'march' | 'glide' | 'waddle' | 'scurry' | 'tiptoe';
+
+/** Mania que o herói faz quando está parado: a "marca registrada" de cada um (docs/PERSONAGENS.md). */
+export type Quirk = 'twirl' | 'pose' | 'sneeze' | 'howl' | 'headSpin' | 'munch' | 'curl' | 'tongue' | 'stretch';
+
 /** Jeito de se mexer: dá personalidade à animação. */
 export interface MoveStyle {
   /** Altura dos pulinhos ao andar (1 = normal). */
@@ -27,6 +33,10 @@ export interface MoveStyle {
   hover: number;
   /** Balanço da cabeça parado. */
   wiggle: number;
+  /** Jeito de andar (sem isso, o padrão da espécie). */
+  gait?: Gait;
+  /** Mania quando está parado. */
+  quirk?: Quirk;
 }
 
 /** Falas curtinhas (balão sobre o herói). */
@@ -79,7 +89,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'hearts',
     accessory: 'bow',
     perk: 'tips',
-    style: { bounce: 1.6, hover: 1, wiggle: 1.2 },
+    style: { bounce: 1.6, hover: 1, wiggle: 1.2, gait: 'hop', quirk: 'twirl' },
     voice: 880,
   },
   {
@@ -95,7 +105,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'leaves',
     accessory: 'leafCrown',
     perk: 'speed',
-    style: { bounce: 0.8, hover: 0.6, wiggle: 0.7 },
+    style: { bounce: 0.8, hover: 0.6, wiggle: 0.7, gait: 'trot', quirk: 'pose' },
     voice: 700,
   },
   {
@@ -111,7 +121,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'sparks',
     accessory: 'chefHat',
     perk: 'chop',
-    style: { bounce: 1.3, hover: 0.5, wiggle: 1.6 },
+    style: { bounce: 1.3, hover: 0.5, wiggle: 1.6, gait: 'stomp', quirk: 'sneeze' },
     voice: 420,
   },
   {
@@ -127,7 +137,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'stars',
     accessory: 'starScarf',
     perk: 'firefighter',
-    style: { bounce: 0.6, hover: 0.8, wiggle: 0.4 },
+    style: { bounce: 0.6, hover: 0.8, wiggle: 0.4, gait: 'march', quirk: 'howl' },
     voice: 520,
   },
   {
@@ -143,7 +153,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'dust',
     accessory: 'glasses',
     perk: 'memory',
-    style: { bounce: 0.4, hover: 1.8, wiggle: 0.8 },
+    style: { bounce: 0.4, hover: 1.8, wiggle: 0.8, gait: 'glide', quirk: 'headSpin' },
     voice: 1040,
   },
   {
@@ -159,7 +169,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'leaves',
     accessory: 'bambooLeaf',
     perk: 'soup',
-    style: { bounce: 0.5, hover: 0.4, wiggle: 0.5 },
+    style: { bounce: 0.5, hover: 0.4, wiggle: 0.5, gait: 'waddle', quirk: 'munch' },
     voice: 360,
     family: 'panda',
   },
@@ -176,7 +186,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'hearts',
     accessory: 'flower',
     perk: 'wash',
-    style: { bounce: 1.1, hover: 0.5, wiggle: 1 },
+    style: { bounce: 1.1, hover: 0.5, wiggle: 1, gait: 'scurry', quirk: 'curl' },
     voice: 760,
     price: 120,
   },
@@ -194,7 +204,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'sparks',
     accessory: 'crown',
     perk: 'reach',
-    style: { bounce: 1.9, hover: 0.3, wiggle: 1.4 },
+    style: { bounce: 1.9, hover: 0.3, wiggle: 1.4, gait: 'hop', quirk: 'tongue' },
     voice: 600,
     price: 150,
   },
@@ -211,7 +221,7 @@ export const HEROES: readonly HeroDef[] = ([
     celebrate: 'stars',
     accessory: 'moonClip',
     perk: 'calm',
-    style: { bounce: 0.5, hover: 1.4, wiggle: 0.6 },
+    style: { bounce: 0.5, hover: 1.4, wiggle: 0.6, gait: 'tiptoe', quirk: 'stretch' },
     voice: 940,
     price: 200,
   },

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { audio } from '../core/audio';
-import type { HeroDef } from '../data/characters';
+import type { HeroDef, Quirk } from '../data/characters';
 import { Particles, type BurstOpts } from '../fx/particles';
 import type { Stage } from '../render/stage';
 
@@ -45,6 +45,33 @@ export class Fx {
         break;
       case 'dust':
         this.burst(at, { kind: 'dot', count: 16, colors: [0xf6e7ff, 0xc7a5e8, 0xffffff], speed: 1.5, gravity: 1 });
+        break;
+    }
+  }
+
+  /** Partículas da mania de cada herói (só as manias que "soltam" algo). */
+  quirkBurst(quirk: Quirk, head: THREE.Vector3, forward: THREE.Vector3): void {
+    const front = head.clone().addScaledVector(forward, 0.35);
+    switch (quirk) {
+      case 'twirl':
+        this.burst(head, { kind: 'heart', count: 4, colors: [0xff7fb0, 0xffb3d1], additive: false, speed: 1 });
+        break;
+      case 'sneeze':
+        this.burst(front, { kind: 'sparkle', count: 10, colors: [0xff5a5a, 0xffd23f, 0x3fd2ff, 0x9dff6b], speed: 2.2, up: 1 });
+        break;
+      case 'howl':
+        this.burst(head.clone().setY(head.y + 0.4), { kind: 'sparkle', count: 7, colors: [0x9fd0ff, 0xffffff, 0xfff27a], speed: 1.2, up: 2 });
+        break;
+      case 'tongue':
+        this.burst(front.addScaledVector(forward, 0.25), { kind: 'dot', count: 3, colors: [0xffffff, 0xc8f4ff], speed: 0.8, size: 0.12, life: 0.5 });
+        break;
+      case 'pose':
+        this.burst(head, { kind: 'leaf', count: 4, colors: [0xffa25e, 0xffc94d], additive: false, gravity: 2, speed: 1 });
+        break;
+      case 'stretch':
+        this.burst(head, { kind: 'sparkle', count: 5, colors: [0xd9c8ff, 0xffffff], speed: 0.8 });
+        break;
+      default:
         break;
     }
   }

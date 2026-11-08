@@ -131,10 +131,10 @@ export class Game {
     this.buildWorld();
     const lineup = new URLSearchParams(location.search).get('lineup');
     if (lineup !== null) {
-      // Ferramenta de design: heróis lado a lado (?lineup) ou em silhueta (?lineup=sombra)
+      // Ferramenta de design: heróis lado a lado (?lineup), em silhueta (?lineup=sombra) ou andando (?lineup=andar)
       this.world.root.visible = false;
       this.state = 'lineup';
-      this.lineup = new Lineup(this.stage, this.worldUI, lineup === 'sombra');
+      this.lineup = new Lineup(this.stage, this.worldUI, lineup === 'sombra' || lineup === 'andar' ? lineup : 'cores');
     } else this.showTitle();
     this.loop();
   }

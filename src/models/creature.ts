@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Accessory, MoveStyle, Species, WingStyle } from '../data/characters';
+import type { Accessory, Gait, MoveStyle, Quirk, Species, WingStyle } from '../data/characters';
 import { glow, mesh, toon, wingMaterial } from '../render/materials';
 
 export interface CreatureLook {
@@ -18,6 +18,59 @@ export interface CreatureLook {
 export type Mood = 'normal' | 'happy' | 'sleepy';
 
 const DEFAULT_STYLE: MoveStyle = { bounce: 1, hover: 1, wiggle: 1 };
+
+/**
+ * Parâmetros de cada jeito de andar. O passo avança com a velocidade (não com o relógio),
+ * então os pés acompanham o chão em vez de "deslizar" (feedback das crianças).
+ */
+interface GaitDef {
+  /** Velocidade do ciclo de passos (rad/s andando a 100%). */
+  rate: number;
+  /** Quanto cada pé vai para frente/trás. */
+  stride: number;
+  /** Quanto o pé sobe ao dar o passo. */
+  lift: number;
+  /** Altura do sobe-e-desce do corpo. */
+  bounce: number;
+  /** Balanço de um lado para o outro. */
+  roll: number;
+  /** Inclinação para frente. */
+  lean: number;
+  /** Achatar ao pisar (0 = nada). */
+  squash: number;
+  /** Pés juntos, pulando (coelho, sapo). */
+  hop?: boolean;
+  /** Flutua acima do chão ao andar (coruja). */
+  float?: number;
+}
+
+const GAITS: Record<Gait, GaitDef> = {
+  walk: { rate: 17, stride: 0.14, lift: 0.07, bounce: 0.06, roll: 0.07, lean: 0.1, squash: 0.3 },
+  hop: { rate: 11, stride: 0.1, lift: 0.05, bounce: 0.2, roll: 0, lean: 0.1, squash: 1, hop: true },
+  trot: { rate: 22, stride: 0.17, lift: 0.08, bounce: 0.05, roll: 0.04, lean: 0.18, squash: 0.2 },
+  stomp: { rate: 15, stride: 0.12, lift: 0.11, bounce: 0.05, roll: 0.17, lean: 0.06, squash: 0.7 },
+  march: { rate: 15, stride: 0.16, lift: 0.11, bounce: 0.04, roll: 0.03, lean: -0.03, squash: 0.15 },
+  glide: { rate: 7, stride: 0.03, lift: 0, bounce: 0.02, roll: 0.06, lean: 0.1, squash: 0, float: 0.2 },
+  waddle: { rate: 12, stride: 0.1, lift: 0.06, bounce: 0.04, roll: 0.24, lean: 0.04, squash: 0.4 },
+  scurry: { rate: 27, stride: 0.08, lift: 0.05, bounce: 0.03, roll: 0.05, lean: 0.14, squash: 0.2 },
+  tiptoe: { rate: 14, stride: 0.15, lift: 0.1, bounce: 0.07, roll: 0.1, lean: 0.05, squash: 0.15 },
+};
+
+/** Jeito de andar padrão de cada espécie (clientes; heróis podem ter o próprio). */
+const SPECIES_GAIT: Partial<Record<Species, Gait>> = {
+  bunny: 'hop',
+  frog: 'hop',
+  bear: 'waddle',
+  panda: 'waddle',
+  hedgehog: 'scurry',
+  mouse: 'scurry',
+  cat: 'tiptoe',
+  owl: 'glide',
+};
+
+/** Duração da mania de cada herói (s) e o momento em que ela "acontece" (efeito/som). */
+const QUIRK_TIME = 1.4;
+const QUIRK_BEAT: Partial<Record<Quirk, number>> = { sneeze: 0.55, howl: 0.35, twirl: 0.5, tongue: 0.4 };
 
 /**
  * Silhueta de cada espécie. Regra do "teste da sombra" (`?lineup=sombra`):
@@ -58,6 +111,11 @@ const lowSphere = new THREE.SphereGeometry(1, 12, 10);
 const cone = new THREE.ConeGeometry(1, 1, 16);
 const capsule = new THREE.CapsuleGeometry(1, 1, 6, 12);
 const UP = new THREE.Vector3(0, 1, 0);
+
+/** Suaviza 0..1 (começa e termina devagar). */
+function smooth(x: number): number {
+  return x * x * (3 - 2 * x);
+}
 
 function ball(r: number, mat: THREE.Material, sx = 1, sy = 1, sz = 1, detail = true): THREE.Mesh {
   const m = mesh(detail ? sphere : lowSphere, mat);
@@ -109,6 +167,17 @@ export class Creature {
   private blinkLeft = 0;
   private celebrateLeft = 0;
   private hopLeft = 0;
+  private gait: GaitDef = GAITS.walk;
+  /** Fase do ciclo de passos (avança com a velocidade). */
+  private stepPhase = 0;
+  /** Altura atual de quem flutua ao andar (suavizada). */
+  private glide = 0;
+  private quirkLeft = 0;
+  private quirkFired = false;
+  private tongue: THREE.Object3D | null = null;
+  private mouthAt = new THREE.Vector3();
+  /** Chamado no "momento" da mania (o dia solta partículas/sons). */
+  onQuirk: ((q: Quirk) => void) | null = null;
   /** 0..1 — quão rápido está andando (controlado de fora). */
   moving = 0;
   /** Segurando algo: braços para frente. */
@@ -199,6 +268,8 @@ export class Creature {
 
     this.root.scale.setScalar(scale * p.size);
     this.style = look.style ?? DEFAULT_STYLE;
+    this.gait = GAITS[this.style.gait ?? SPECIES_GAIT[look.species] ?? 'walk'];
+    if (this.style.quirk === 'tongue') this.buildTongue();
     this.flapSpeed = look.wing === 'bat' ? 14 : look.wing === 'feather' ? 7 : 11;
     this.hoverAmp = look.wing ? 0.035 * this.style.hover : 0;
   }
@@ -369,6 +440,7 @@ export class Creature {
       smile.position.set(0, mouthY, mz);
       this.head.add(smile);
       this.mouthSmile = smile;
+      this.mouthAt.set(0, mouthY, mz);
       const open = ball(0.035, toon(0x8a2f3f), wide * 0.8, 0.9, 0.4);
       open.position.set(0, mouthY - 0.02, mz - 0.01);
       open.visible = false;
@@ -868,9 +940,35 @@ export class Creature {
     this.head.add(g);
   }
 
+  /** Língua comprida da Gota (escondida até a mania). */
+  private buildTongue(): void {
+    const g = new THREE.Group();
+    g.position.copy(this.mouthAt).add(new THREE.Vector3(0, -0.01, -0.02));
+    const pink = toon(0xff7f9e);
+    const band = mesh(capsule, pink);
+    band.scale.set(0.03, 0.12, 0.016);
+    band.rotation.x = Math.PI / 2;
+    band.position.z = 0.18;
+    g.add(band);
+    const tip = ball(0.05, pink, 1, 0.7, 0.8);
+    tip.position.z = 0.36;
+    g.add(tip);
+    g.scale.set(1, 1, 0.001);
+    g.visible = false;
+    this.head.add(g);
+    this.tongue = g;
+  }
+
   /** Pulinho de alegria + giro. */
   celebrate(): void {
     this.celebrateLeft = 0.8;
+  }
+
+  /** Faz a mania agora (ferramenta `?lineup=andar`). */
+  playQuirk(): void {
+    if (!this.style.quirk) return;
+    this.quirkLeft = QUIRK_TIME;
+    this.quirkFired = false;
   }
 
   /** Pulinho curto (pegar/soltar). */
@@ -902,23 +1000,67 @@ export class Creature {
       this.mouthSmile.visible = mood !== 'happy';
     }
 
-    // Manias de cada herói quando está parado (pulinho ou inclinar a cabeça)
-    if (this.moving < 0.1 && !this.sitting && !this.working) {
+    // Manias quando está parado: heróis têm a sua (docs/PERSONAGENS.md); clientes, pulinho ou inclinar a cabeça
+    const idle = this.moving < 0.1 && !this.sitting && !this.working && !this.holding && !this.eating && this.mood !== 'sleepy';
+    if (idle && this.celebrateLeft <= 0 && this.quirkLeft <= 0) {
       this.fidgetIn -= dt;
       if (this.fidgetIn <= 0) {
-        this.fidgetIn = 3 + Math.random() * 5;
-        if (this.style.bounce > 1.2) this.hopLeft = 0.18;
-        else this.fidgetLeft = 0.9;
+        if (this.style.quirk) {
+          this.fidgetIn = 5 + Math.random() * 6;
+          this.quirkLeft = QUIRK_TIME;
+          this.quirkFired = false;
+        } else {
+          this.fidgetIn = 3 + Math.random() * 5;
+          if (this.style.bounce > 1.2) this.hopLeft = 0.18;
+          else this.fidgetLeft = 0.9;
+        }
       }
+    }
+    if (!idle) this.quirkLeft = 0;
+    this.quirkLeft = Math.max(0, this.quirkLeft - dt);
+    const quirk = this.quirkLeft > 0 ? (this.style.quirk ?? null) : null;
+    const qp = quirk ? 1 - this.quirkLeft / QUIRK_TIME : 0;
+    const qk = quirk ? Math.sin(qp * Math.PI) : 0;
+    if (quirk && !this.quirkFired && qp >= (QUIRK_BEAT[quirk] ?? 0.3)) {
+      this.quirkFired = true;
+      this.onQuirk?.(quirk);
     }
     this.fidgetLeft = Math.max(0, this.fidgetLeft - dt);
 
-    // Andar: saltitar e inclinar
-    const walkPhase = t * 13;
-    const bounce = this.moving * Math.abs(Math.sin(walkPhase)) * 0.09 * this.style.bounce;
+    // Rosto durante a mania
+    const quirkMood: Mood | null = quirk === 'curl' ? 'sleepy' : quirk === 'pose' || quirk === 'munch' || quirk === 'stretch' || quirk === 'twirl' ? 'happy' : null;
+    if (quirkMood && qk > 0.3 && this.celebrateLeft <= 0) {
+      this.eyes.forEach((e) => (e.visible = false));
+      this.happyEyes.forEach((e) => (e.visible = quirkMood === 'happy'));
+      this.sleepyEyes.forEach((e) => (e.visible = quirkMood === 'sleepy'));
+    }
+    if (this.mouthOpen && this.mouthSmile && (quirk === 'howl' || quirk === 'sneeze') && qk > 0.4) {
+      this.mouthOpen.visible = true;
+      this.mouthSmile.visible = false;
+    }
+
+    // Andar de verdade: o ciclo de passos avança com a velocidade (pés não deslizam)
+    const G = this.gait;
+    const amp = Math.min(1, this.moving);
+    this.stepPhase += dt * G.rate * Math.min(this.moving, 1.6);
+    const ph = this.stepPhase;
+    const lively = 0.5 + 0.5 * this.style.bounce;
+    let bounce: number;
+    let land: number;
+    if (G.hop) {
+      const air = Math.abs(Math.sin(ph));
+      bounce = air * G.bounce * amp * lively;
+      land = (1 - air) * amp;
+    } else {
+      bounce = Math.abs(Math.cos(ph)) * G.bounce * amp * lively;
+      land = Math.abs(Math.sin(ph)) * amp;
+    }
+    // Quem flutua (coruja) sobe um pouco ao andar e desce ao parar
+    const glideTo = G.float && this.moving > 0.1 && !this.sitting ? G.float : 0;
+    this.glide += (glideTo - this.glide) * Math.min(1, dt * 6);
     const breathe = Math.sin(t * 2.4) * 0.012;
     const hover = this.sitting ? 0 : Math.sin(t * 3) * this.hoverAmp;
-    let y = bounce + hover;
+    let y = bounce + hover + this.glide;
     let spin = 0;
     if (this.celebrateLeft > 0) {
       this.celebrateLeft -= dt;
@@ -930,13 +1072,43 @@ export class Creature {
       this.hopLeft -= dt;
       y += Math.sin((1 - this.hopLeft / 0.18) * Math.PI) * 0.08;
     }
+    if (quirk === 'twirl') {
+      y += qk * 0.2;
+      spin += smooth(qp) * Math.PI * 2;
+    }
     this.rig.position.y = y + (this.sitting ? 0.32 : 0);
     this.rig.rotation.y = spin;
-    this.body.rotation.x = this.moving * 0.14;
-    this.body.scale.set(1 - breathe, 1 + breathe - bounce * 0.4, 1 - breathe);
+
+    // Corpo: inclina para frente, balança de lado e achata ao pisar
+    const roll = Math.sin(ph) * G.roll * amp;
+    let leanX = G.lean * amp;
+    let tilt = roll;
+    let sq = land * G.squash * 0.1;
+    if (quirk === 'pose') tilt += 0.28 * qk;
+    if (quirk === 'stretch') leanX += 0.5 * qk;
+    if (quirk === 'curl') sq += 0.28 * qk;
+    this.body.rotation.x = leanX;
+    this.body.rotation.z = tilt;
+    this.body.scale.set(1 - breathe + sq * 0.5, 1 + breathe - sq, 1 - breathe + sq * 0.5);
+
     this.feet.forEach((f, i) => {
-      f.position.z = 0.08 + (this.sitting ? 0.18 : Math.sin(walkPhase + i * Math.PI) * 0.1 * this.moving);
-      f.position.y = this.sitting ? 0.3 : 0.06;
+      if (this.sitting) {
+        f.position.y = 0.3;
+        f.position.z = 0.26;
+        return;
+      }
+      const off = i * Math.PI;
+      if (G.hop) {
+        // Pés juntos: recolhem no ar e esticam ao pousar
+        const air = Math.abs(Math.sin(ph)) * amp;
+        f.position.z = 0.08 - air * G.stride * 0.6;
+        f.position.y = 0.06 + air * G.lift;
+      } else {
+        f.position.z = 0.08 + Math.sin(ph + off) * G.stride * amp;
+        f.position.y = 0.06 + Math.max(0, Math.cos(ph + off)) * G.lift * amp;
+      }
+      // Coruja voando: pezinhos encolhidos
+      if (this.glide > 0.02) f.position.z -= this.glide * 0.3;
     });
 
     // Patas
@@ -946,17 +1118,41 @@ export class Creature {
       if (this.working) {
         p.position.set(side * 0.2, this.pawY + 0.1 + Math.abs(Math.sin(t * 16 + i)) * 0.12, front);
       } else if (this.holding) {
-        p.position.set(side * 0.2, this.pawY + 0.1, front);
-      } else if (this.eating) {
+        p.position.set(side * 0.2, this.pawY + 0.1 + bounce * 0.3, front);
+      } else if (this.eating || quirk === 'munch') {
         p.position.set(side * 0.16, this.pawY + 0.14 + Math.max(0, Math.sin(t * 6 + i * Math.PI)) * 0.14, front - 0.04);
+      } else if (quirk === 'stretch') {
+        p.position.set(side * this.pawX * 0.8, this.pawY - 0.12 * qk, this.pawZ + 0.2 * qk);
+      } else if (quirk === 'howl' || quirk === 'pose') {
+        // Peito estufado / pose de "olha eu aqui"
+        p.position.set(side * this.pawX * (1 + 0.15 * qk), this.pawY + (side > 0 && quirk === 'pose' ? 0.18 : 0.05) * qk, this.pawZ);
+      } else if (this.glide > 0.02) {
+        p.position.set(side * this.pawX * (1 + this.glide), this.pawY + this.glide * 0.4, this.pawZ - 0.05);
       } else {
-        p.position.set(side * this.pawX, this.pawY + Math.sin(walkPhase + i * Math.PI) * 0.04 * this.moving, this.pawZ);
+        // Braços balançam ao contrário das pernas
+        const swing = G.hop ? -Math.abs(Math.sin(ph)) * 0.08 : Math.sin(ph + i * Math.PI + Math.PI) * 0.07;
+        p.position.set(side * this.pawX, this.pawY + Math.abs(swing) * 0.4 * amp, this.pawZ + swing * amp);
       }
     });
 
-    // Cabeça: balança levemente; ao comer, "nham nham"
-    this.head.rotation.z = Math.sin(t * 1.7) * 0.05 * this.style.wiggle + Math.sin((this.fidgetLeft / 0.9) * Math.PI) * 0.35;
-    this.head.rotation.x = this.eating ? Math.sin(t * 12) * 0.08 : 0;
+    // Cabeça: balança levemente; ao comer, "nham nham"; manias mexem nela
+    let headX = this.eating || quirk === 'munch' ? Math.sin(t * 12) * 0.08 : 0;
+    let headY = 0;
+    if (quirk === 'howl') headX -= 0.65 * qk;
+    if (quirk === 'sneeze') headX += qp < 0.55 ? -0.4 * (qp / 0.55) : 0.35 * Math.sin(((qp - 0.55) / 0.45) * Math.PI) - 0.4 * (1 - (qp - 0.55) / 0.45);
+    if (quirk === 'curl') headX += 0.5 * qk;
+    if (quirk === 'headSpin') headY = smooth(qp) * Math.PI * 2;
+    if (quirk === 'stretch') headX -= 0.3 * qk;
+    this.head.rotation.z = Math.sin(t * 1.7) * 0.05 * this.style.wiggle + Math.sin((this.fidgetLeft / 0.9) * Math.PI) * 0.35 + roll * 0.5;
+    this.head.rotation.x = headX;
+    this.head.rotation.y = headY;
+    if (this.tongue) {
+      // Língua sai rapidinho e volta (pega um mosquitinho)
+      const out = quirk === 'tongue' ? Math.max(0, Math.sin(Math.min(1, qp * 1.6) * Math.PI)) : 0;
+      this.tongue.visible = out > 0.02;
+      this.tongue.scale.z = Math.max(0.001, out * 1.4);
+      this.tongue.rotation.x = -0.35;
+    }
 
     // Asas e cauda
     const flap = this.moving > 0.1 || this.celebrateLeft > 0 ? this.flapSpeed * 1.6 : this.flapSpeed * 0.5;
@@ -965,8 +1161,9 @@ export class Creature {
       w.rotation.y = side * (0.35 + Math.sin(t * flap) * 0.45);
     });
     if (this.tail) {
-      const wag = this.celebrateLeft > 0 ? 0.9 : 0.25;
-      this.tail.rotation.y = Math.sin(t * (this.celebrateLeft > 0 ? 22 : 4)) * wag;
+      const happy = this.celebrateLeft > 0 || quirk === 'pose' || quirk === 'stretch';
+      const wag = happy ? 0.9 : 0.25 + amp * 0.2;
+      this.tail.rotation.y = Math.sin(t * (happy ? 22 : 4 + amp * 8)) * wag;
     }
   }
 }
