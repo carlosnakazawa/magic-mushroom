@@ -98,6 +98,26 @@ export class Chef {
     this.root.rotation.y = this.visualFacing;
   }
 
+  /**
+   * Empurra o herói para fora de um cliente que está andando (antes atravessava).
+   * Só o herói se mexe: o cliente segue a rota dele sem travar.
+   */
+  pushFrom(x: number, z: number, radius: number, world: World): void {
+    const dx = this.pos.x - x;
+    const dz = this.pos.z - z;
+    const min = TUNING.player.radius + radius;
+    const d2 = dx * dx + dz * dz;
+    if (d2 >= min * min) return;
+    const d = Math.sqrt(d2);
+    // Em cima um do outro: sai para o lado em que o herói está olhando para trás
+    const nx = d > 1e-4 ? dx / d : -Math.sin(this.facing);
+    const nz = d > 1e-4 ? dz / d : -Math.cos(this.facing);
+    this.pos.x += nx * (min - d);
+    this.pos.z += nz * (min - d);
+    this.collide(world);
+    this.root.position.copy(this.pos);
+  }
+
   /** Colisão círculo × células sólidas: empurra para fora pela normal (desliza nas quinas). */
   private collide(world: World): void {
     const r = TUNING.player.radius;

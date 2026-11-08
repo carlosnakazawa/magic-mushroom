@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { canAddToBowl, matchRecipe } from '../data/recipes';
-import { dishRecipe, fillVessel, makeBowl, makeIngredient, makeVessel, soil, tryMerge } from './items';
+import { canAddToBowl, matchRecipe, methodsFor } from '../data/recipes';
+import { dishRecipe, fillVessel, itemIcons, makeBowl, makeIngredient, makeVessel, soil, tryMerge } from './items';
 
 describe('receitas', () => {
   it('reconhece receitas em qualquer ordem', () => {
@@ -18,6 +18,30 @@ describe('receitas', () => {
 });
 
 describe('tryMerge', () => {
+  it('junta duas meias-saladas na tigela da mão', () => {
+    const a = makeBowl();
+    const b = makeBowl();
+    tryMerge(makeIngredient('lettuce', true), a);
+    tryMerge(makeIngredient('tomato', true), b);
+    const res = tryMerge(a, b);
+    expect(res?.held).toBe(a);
+    expect(dishRecipe(a)?.id).toBe('salad_ruby');
+    expect(b.contents).toEqual([]);
+    expect(b.method).toBeNull();
+  });
+
+  it('não junta tigelas vazias, repetidas ou sopa', () => {
+    expect(tryMerge(makeBowl(), makeBowl())).toBeNull();
+    const a = makeBowl();
+    const b = makeBowl();
+    tryMerge(makeIngredient('lettuce', true), a);
+    tryMerge(makeIngredient('lettuce', true), b);
+    expect(tryMerge(a, b)).toBeNull();
+    const soup = makeBowl();
+    fillVessel(soup, 'cook', ['carrot']);
+    expect(tryMerge(a, soup)).toBeNull();
+  });
+
   it('coloca ingrediente picado na tigela do balcão', () => {
     const bowl = makeBowl();
     const res = tryMerge(makeIngredient('lettuce', true), bowl);
@@ -58,5 +82,27 @@ describe('recipientes', () => {
     soil(plate);
     expect(plate.dirty).toBe(true);
     expect(dishRecipe(plate)).toBeNull();
+  });
+});
+
+describe('selinho do que o herói carrega', () => {
+  it('mostra ingrediente, tigela montando e prato pronto', () => {
+    expect(itemIcons(makeIngredient('lettuce')).icons).toBe('🥬');
+    const bowl = makeVessel('bowl');
+    expect(itemIcons(bowl)).toEqual({ icons: '🥣', ready: false });
+    tryMerge(makeIngredient('lettuce', true), bowl);
+    expect(itemIcons(bowl).ready).toBe(true);
+    const ruby = makeVessel('bowl');
+    tryMerge(makeIngredient('tomato', true), ruby);
+    expect(itemIcons(ruby)).toEqual({ icons: '🥣🍅', ready: false });
+    expect(itemIcons(makeVessel('bowl', true)).icons).toBe('🥣🫧');
+  });
+});
+
+describe('methodsFor', () => {
+  it('diz em que tipo de receita cada ingrediente entra', () => {
+    expect(methodsFor('lettuce')).toEqual(['assemble']);
+    expect(methodsFor('carrot')).toEqual(['cook']);
+    expect(methodsFor('glowshroom').sort()).toEqual(['assemble', 'blend', 'cook']);
   });
 });

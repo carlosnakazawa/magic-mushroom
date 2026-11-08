@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TUNING } from '../config';
 import { audio } from '../core/audio';
 import { keyLabel, type Input, type PlayerInput } from '../core/input';
+import { isPadDevice, PAD_LABELS } from '../core/pad';
 import { CUSTOMER_LOOKS, FAMILY_LOOKS, type CustomerLook, type HeroDef } from '../data/characters';
 import { INGREDIENTS } from '../data/ingredients';
 import type { LevelDef } from '../data/levels';
@@ -10,11 +11,12 @@ import { coinPile } from '../models/food';
 import { glow } from '../render/materials';
 import type { Stage } from '../render/stage';
 import { starsFor } from '../sim/economy';
-import { dishRecipe, makeExtinguisher, soil, type Item } from '../sim/items';
+import { dishRecipe, itemIcons, itemName, makeExtinguisher, soil, type Item } from '../sim/items';
 import type { MachineEvent } from '../sim/machine';
 import { Party, type PartyEvent } from '../sim/party';
 import { charm, patienceScale, type SaveData } from '../sim/progress';
 import { teamDrainScale } from '../sim/perks';
+import { clockPhase } from '../sim/dayclock';
 import { nextSpawnDelay, rollPartySize, rollRecipes } from '../sim/spawner';
 import { patienceColor, type Hud } from '../ui/hud';
 import { TOUCH_ICONS } from '../ui/touch';
@@ -87,6 +89,9 @@ export class DayRun implements ActionHost {
   private coinPiles = new Map<Table, THREE.Group>();
   private arrow: THREE.Group;
   private tipsLeft = 0;
+  private tipLines: readonly string[] | null = null;
+  /** Versão dos aparelhos já desenhada nas dicas (ver `refreshKeys`). */
+  private deviceVersion = -1;
 
   constructor(
     private ctx: DayContext,
@@ -114,6 +119,11 @@ export class DayRun implements ActionHost {
       chef.facing = Math.PI / 2;
       chef.controller = opts.playerCount === 2 ? i : i === 0 ? 0 : -1;
       chef.hint = worldUI.add('chef-hint', chef.creature.head, 0.55);
+      // A mania de cada herói solta partículas (personalidade — docs/PERSONAGENS.md)
+      chef.creature.onQuirk = (q) => {
+        const head = chef.creature.head.getWorldPosition(new THREE.Vector3());
+        this.ctx.fx.quirkBurst(q, head, chef.forward);
+      };
       stage.scene.add(chef.root);
       chef.creature.celebrate();
       this.chefs.push(chef);
@@ -140,24 +150,37 @@ export class DayRun implements ActionHost {
       return;
     }
     if (level.intro.length && !save.played.includes(level.id)) {
+      this.tipLines = level.intro;
       this.ctx.hud.setTips(level.intro, this.keyNames());
       this.tipsLeft = 22;
     }
   }
 
+  /** Botões para os textos do tutorial/dicas (com dois jogadores, os dois). */
   private keyNames(): { pick: string; use: string } {
-    if (this.ctx.input.touchMode && this.opts.playerCount === 1) return { pick: TOUCH_ICONS.pick, use: TOUCH_ICONS.use };
-    const p1 = this.ctx.input.binds(0);
-    const p2 = this.ctx.input.binds(1);
-    return this.opts.playerCount === 2
-      ? { pick: `${keyLabel(p1.pick)} / ${keyLabel(p2.pick)}`, use: `${keyLabel(p1.use)} / ${keyLabel(p2.use)}` }
-      : { pick: keyLabel(p1.pick), use: keyLabel(p1.use) };
+    const a = this.slotKeys(0);
+    if (this.opts.playerCount === 1) return { pick: a.pick, use: a.use };
+    const b = this.slotKeys(1);
+    const both = (x: string, y: string) => (x === y ? x : `${x} / ${y}`);
+    return { pick: both(a.pick, b.pick), use: both(a.use, b.use) };
   }
 
+  /** Nomes dos botões do aparelho que o jogador usou por último (teclado, toque ou controle). */
   private slotKeys(slot: number): { pick: string; use: string; swap: string } {
-    if (this.ctx.input.touchMode && slot === 0) return { ...TOUCH_ICONS };
+    const dev = this.ctx.input.device(slot);
+    if (dev === 'touch') return { ...TOUCH_ICONS };
+    if (isPadDevice(dev)) return { ...PAD_LABELS[dev] };
     const b = this.ctx.input.binds(slot === 1 ? 1 : 0);
     return { pick: keyLabel(b.pick), use: keyLabel(b.use), swap: keyLabel(b.swap) };
+  }
+
+  /** Redesenha tudo que mostra botões quando o jogador troca de aparelho. */
+  private refreshKeys(): void {
+    if (this.deviceVersion === this.ctx.input.deviceVersion) return;
+    this.deviceVersion = this.ctx.input.deviceVersion;
+    this.updatePlayerCards();
+    if (this.tipsLeft > 0 && this.tipLines) this.ctx.hud.setTips(this.tipLines, this.keyNames());
+    if (this.tutorial && !this.tutorial.finished) this.refreshTutorial();
   }
 
   private chipList(): string[] {
@@ -198,6 +221,12 @@ export class DayRun implements ActionHost {
       }
     }
     if (this.chefs.length > 1) this.chefs[0]!.separate(this.chefs[1]!);
+    // Heróis esbarram nos clientes que estão andando
+    for (const ap of this.parties)
+      for (const c of ap.customers) {
+        if (c.state !== 'walking') continue;
+        for (const chef of this.chefs) chef.pushFrom(c.pos.x, c.pos.z, TUNING.customer.radius * c.root.scale.x, world);
+      }
 
     world.stations.forEach((s) => (s.highlight.visible = false));
     world.tables.forEach((t) => (t.highlight.visible = false));
@@ -240,21 +269,24 @@ export class DayRun implements ActionHost {
     this.updateArrow(dt);
     this.updateSeeThrough();
     this.updateSpeech(dt);
+    this.refreshKeys();
 
     const frozen = !!this.tutorial?.clockFrozen;
     if (!frozen) this.timeLeft -= dt;
-    hud.setClock(this.timeLeft, this.opts.level.dayLength, frozen);
+    const phase = clockPhase(this.timeLeft, this.parties.filter((p) => !p.party.isLeaving).length);
+    hud.setClock(this.timeLeft, this.opts.level.dayLength, frozen, phase === 'overtime');
     const sec = Math.ceil(this.timeLeft);
     if (sec !== this.lastSecond) {
-      if (sec === 30) hud.toast(t('day.last30'), 'bad');
+      if (sec === TUNING.day.lastCall) hud.toast(t('day.lastCall', { n: sec }), 'bad');
       if (sec <= 10 && sec > 0) audio.tick();
+      if (sec === 0 && phase === 'overtime') hud.toast(t('day.overtime'), 'good', 3200);
       this.lastSecond = sec;
     }
     hud.syncOrders(
       this.parties.map((p) => p.party),
       (party) => this.parties.find((p) => p.party === party)!.look.species,
     );
-    if (this.timeLeft <= 0) this.finish();
+    if (phase === 'closed') this.finish();
   }
 
   /** Animação enquanto o jogo não roda (pausa, contagem, resultado). */
@@ -262,9 +294,17 @@ export class DayRun implements ActionHost {
     this.updateSpeech(dt);
     this.chefs.forEach((c) => {
       c.creature.moving = 0;
+      c.creature.quirks = false;
       c.creature.update(dt);
+      c.creature.quirks = true;
     });
-    this.parties.forEach((p) => p.customers.forEach((c) => c.creature.update(dt)));
+    // Pausado: ninguém anda no lugar nem faz mania (partículas no meio do menu)
+    this.parties.forEach((p) =>
+      p.customers.forEach((c) => {
+        c.creature.moving = 0;
+        c.creature.update(dt);
+      }),
+    );
     this.arrow.visible = false;
     for (const s of this.ctx.world.stations) if (s.machine && s.machineView) s.machineView.update(s.machine, this.t);
   }
@@ -321,7 +361,8 @@ export class DayRun implements ActionHost {
     if (chef.held && chef.held !== item) this.ctx.views.get(chef.held)?.removeFromParent();
     chef.held = item;
     if (item) {
-      this.ctx.views.attach(item, chef.creature.holdAnchor, -0.05);
+      // Um pouco maior na mão: as crianças não viam o que o herói carregava
+      this.ctx.views.attach(item, chef.creature.holdAnchor, -0.05, 1.3);
       this.ctx.views.pop(item);
     }
   }
@@ -629,7 +670,7 @@ export class DayRun implements ActionHost {
   }
 
   private updateSpawns(dt: number): void {
-    if (this.timeLeft < 12) return;
+    if (this.timeLeft <= TUNING.day.lastCall) return;
     const tut = this.tutorial;
     const firstParty = this.stats.served === 0 && this.parties.length === 0 && tut && !tut.isDone('orderTaken');
     if (tut?.spawnsBlocked && !firstParty) return;
@@ -846,27 +887,44 @@ export class DayRun implements ActionHost {
 
   private showHint(chef: Chef, pick: Action | null, use: Action | null): void {
     const label = chef.hint!;
+    const carry = this.carryHtml(chef);
     if (chef.workingAt || (!pick && !use)) {
-      label.visible = false;
+      label.visible = !!carry && !chef.workingAt;
+      label.html = carry;
       return;
     }
     const keys = this.slotKeys(this.opts.playerCount === 1 ? 0 : chef.controller);
     const row = (k: string, a: Action) => `<div class="hint${a.disabled ? ' off' : ''}"><kbd>${a.disabled ? '✖' : k}</kbd>${a.label}</div>`;
-    let html = '';
+    let html = carry;
     if (pick) html += row(keys.pick, pick);
     if (use && use.label !== pick?.label) html += row(keys.use, use);
     label.visible = true;
     label.html = html;
   }
 
+  /** Selinho com o que o herói está carregando (emoji + nome; dourado se o prato está pronto). */
+  private carryHtml(chef: Chef): string {
+    if (!chef.held) return '';
+    const { icons, ready } = itemIcons(chef.held);
+    return `<div class="carry${ready ? ' ready' : ''}"><span class="carry-ico">${icons}</span>${itemName(chef.held)}</div>`;
+  }
+
   private showIdleHint(chef: Chef): void {
     const label = chef.hint!;
-    label.visible = this.opts.playerCount === 1;
-    label.html = `<div class="hint idle"><kbd>${this.slotKeys(0).swap}</kbd>${t('day.swap')}</div>`;
+    const carry = this.carryHtml(chef);
+    label.visible = this.opts.playerCount === 1 || !!carry;
+    label.html = carry + (this.opts.playerCount === 1 ? `<div class="hint idle"><kbd>${this.slotKeys(0).swap}</kbd>${t('day.swap')}</div>` : '');
   }
 
   private refreshChefRings(): void {
     this.chefs.forEach((c) => c.setRingColor(c.controller >= 0 ? PLAYER_COLORS[c.controller]! : null));
+  }
+
+  private cardKeys(slot: number, arrows: boolean, k: { pick: string; use: string }): string {
+    const dev = this.ctx.input.device(slot);
+    if (dev === 'touch') return t('hud.keys.touch', { pick: k.pick, use: k.use });
+    if (isPadDevice(dev)) return t('hud.keys.pad', { pick: k.pick, use: k.use });
+    return arrows ? t('hud.keys.arrows', { pick: k.pick, use: k.use }) : t('hud.keys.wasd', { pick: k.pick, use: k.use });
   }
 
   updatePlayerCards(): void {
@@ -878,7 +936,7 @@ export class DayRun implements ActionHost {
         return {
           hero: c.hero,
           label: two ? t('hud.player', { n: i + 1 }) : c.controller === 0 ? t('hud.you') : t('hud.waiting', { key: k.swap }),
-          keys: this.ctx.input.touchMode && slot === 0 ? t('hud.keys.touch', { pick: k.pick, use: k.use }) : two && i === 1 ? t('hud.keys.arrows', { pick: k.pick, use: k.use }) : t('hud.keys.wasd', { pick: k.pick, use: k.use }),
+          keys: this.cardKeys(slot, two && i === 1, k),
           color: PLAYER_COLORS[slot]!,
           active: c.controller >= 0,
         };
@@ -892,7 +950,8 @@ export class DayRun implements ActionHost {
     const list = chef.hero.phrases[kind];
     const text = list[Math.floor(Math.random() * list.length)];
     if (!text) return;
-    if (!chef.speech) chef.speech = this.ctx.worldUI.add('speech', chef.creature.head, 1.45);
+    // Mesma âncora das dicas; updateSpeech empurra o balão para cima delas (nunca cobre o selinho)
+    if (!chef.speech) chef.speech = this.ctx.worldUI.add('speech', chef.creature.head, 0.55);
     chef.speech.html = `<div class="bubble-say" style="--hc:#${chef.hero.accent.toString(16).padStart(6, '0')}">${text}</div>`;
     chef.speech.visible = true;
     chef.speechLeft = 2.1;
@@ -906,6 +965,10 @@ export class DayRun implements ActionHost {
       if (c.speechLeft > 0) {
         c.speechLeft -= dt;
         if (c.speechLeft <= 0 && c.speech) c.speech.visible = false;
+      }
+      if (c.speech?.visible) {
+        const below = c.hint?.visible ? c.hint.el.offsetHeight : 0;
+        c.speech.el.style.paddingBottom = `${Math.max(below, 40) + 6}px`;
       }
     }
   }
@@ -970,9 +1033,13 @@ export class DayRun implements ActionHost {
       case 'board':
         pos = find((s) => s.kind === 'board' && !!s.item) ?? find((s) => s.kind === 'board');
         break;
-      case 'bowls':
-        pos = find((s) => s.kind === 'stack' && s.vessel === 'bowl');
+      case 'bowls': {
+        // Se a alface picada ainda está na tábua (ou num balcão), a seta aponta para ela primeiro
+        const carrying = this.chefs.some((c) => c.held?.type === 'ingredient' && c.held.chopped);
+        const left = carrying ? null : find((s) => s.item?.type === 'ingredient' && s.item.chopped);
+        pos = left ?? find((s) => s.kind === 'stack' && s.vessel === 'bowl');
         break;
+      }
       case 'sink':
         pos = find((s) => s.kind === 'sink');
         break;

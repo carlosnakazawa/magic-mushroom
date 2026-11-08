@@ -131,10 +131,11 @@ export class Game {
     this.buildWorld();
     const lineup = new URLSearchParams(location.search).get('lineup');
     if (lineup !== null) {
-      // Ferramenta de design: heróis lado a lado (?lineup) ou em silhueta (?lineup=sombra)
+      // Ferramenta de design: heróis lado a lado (?lineup), em silhueta (?lineup=sombra) ou andando (?lineup=andar)
       this.world.root.visible = false;
       this.state = 'lineup';
-      this.lineup = new Lineup(this.stage, this.worldUI, lineup === 'sombra');
+      this.lineup = new Lineup(this.stage, this.worldUI, lineup === 'sombra' || lineup === 'andar' ? lineup : 'cores');
+      if (lineup !== 'sombra') this.lineup.creatures.forEach((c) => this.fx.attachQuirks(c));
     } else this.showTitle();
     this.loop();
   }
@@ -240,6 +241,7 @@ export class Game {
     this.titleCreatures = team.map((hero, i) => {
       const creature = new Creature(hero, 1.35);
       creature.root.position.set(x0 + i * 1.15, 0, 2.7 + (i % 2) * 0.3);
+      this.fx.attachQuirks(creature);
       this.stage.scene.add(creature.root);
       return { hero, creature };
     });

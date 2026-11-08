@@ -3,7 +3,7 @@
  * o ciclo completo, salvando screenshots em .screenshots/. Falha (exit 1) se algo quebrar.
  *
  *  1. Título → mapa de níveis → Nível 1: tutorial inteiro (anotar → alface → cortar →
- *     tigela → servir → recolher → lavar)
+ *     levar a alface picada até as tigelas → servir → recolher → lavar)
  *  2. Fim do dia → resultado → noite: compra e posiciona o Tronco Encantado e uma luminária
  *  3. Mapa de níveis → Nível 3: chapa pega fogo e o extintor apaga; família de pandas
  *     senta na mesa grande; tocar na comanda abre o "Como fazer"
@@ -95,12 +95,10 @@ try {
   await shot('04-cortando');
   await until(() => window.game.world.stations.some((s) => s.kind === 'board' && s.item?.chopped), 'alface picada');
   await press('Space'); // pega picada
-  await tp(4, 2, N);
-  await press('Space'); // deixa no balcão
   await tp(8, 2, N);
-  await press('Space'); // tigela
-  await tp(4, 2, N);
-  await press('Space'); // junta
+  await shot('04b-carregando'); // selinho com o que o herói carrega
+  await press('Space'); // alface picada direto numa tigela da pilha (pedido das crianças)
+  await until(() => window.game.day.chefs[0].held?.type === 'vessel' && window.game.day.chefs[0].held.contents.length === 1, 'salada na mão');
   await tp(tx, tz - 0.85, S);
   await press('Space'); // serve
   await shot('05-comendo');
@@ -115,7 +113,7 @@ try {
   if (day1.coins <= 0 || day1.stats.served < 1) throw new Error('Nenhuma moeda/prato após o tutorial');
 
   // ───────── 2. Resultado e noite ─────────
-  await page.evaluate(() => (window.game.day.timeLeft = 0.3));
+  await page.evaluate(() => (window.game.day.timeLeft = -100));
   await page.waitForSelector('.results', { timeout: 30_000 });
   await page.waitForTimeout(2000);
   await shot('06-resultado');

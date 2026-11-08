@@ -60,6 +60,7 @@ O projeto tem **3 etapas** (ver ROADMAP). Cada etapa:
 4. **Revisão do Gemini Code Assist:** ele revisa automaticamente ao abrir o PR (configuração em `.gemini/`). Se não aparecer, comente `/gemini review` no PR.
 5. Trate os comentários do Gemini: corrija o que fizer sentido, responda o que não for aplicar (com o porquê), rode a verificação de novo e faça push.
 6. O **Carlos decide o merge**. Agentes só fazem merge quando ele pedir explicitamente naquela conversa; nunca fazem push direto em `main`.
+7. **Toda revisão de PR feita por um agente deve ser publicada no próprio PR** (resumo + comentários inline nas linhas do diff via `gh api repos/carlosnakazawa/magic-mushroom/pulls/<n>/reviews`), para que tudo fique registrado no histórico do GitHub.
 
 Para ler a revisão: `gh pr view <n> --comments` e `gh api repos/carlosnakazawa/magic-mushroom/pulls/<n>/comments`.
 

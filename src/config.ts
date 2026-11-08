@@ -16,6 +16,12 @@ export const TUNING = {
     runRamp: 0.35,
     runBoost: 1.4,
   },
+  day: {
+    /** Nos últimos segundos do dia não entram clientes novos (antes: 12 s). */
+    lastCall: 30,
+    /** Relógio zerado com clientes esperando: até quantos segundos de "hora de fechar". */
+    overtimeMax: 45,
+  },
   work: {
     /** Segundos para picar um ingrediente na tábua. */
     chopTime: 1.6,
@@ -24,6 +30,8 @@ export const TUNING = {
   },
   customer: {
     walkSpeed: 2.2,
+    /** Tamanho do cliente andando para os heróis esbarrarem (antes atravessavam). */
+    radius: 0.3,
     eatTime: 4,
   },
   patience: {

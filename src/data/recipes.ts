@@ -120,6 +120,18 @@ export function canAddIngredient(method: Method, contents: readonly IngredientKi
   return RECIPE_LIST.some((r) => r.method === method && next.every((k) => r.ingredients.includes(k)));
 }
 
+/** Dá para juntar dois conteúdos (duas meias-saladas) sem repetir e ainda virar receita? */
+export function canCombine(method: Method, a: readonly IngredientKind[], b: readonly IngredientKind[]): boolean {
+  if (a.some((k) => b.includes(k))) return false;
+  const all = [...a, ...b];
+  return RECIPE_LIST.some((r) => r.method === method && all.every((k) => r.ingredients.includes(k)));
+}
+
+/** Métodos das receitas que usam este ingrediente (ex.: cogumelo vai em salada, suco e sopa). */
+export function methodsFor(kind: IngredientKind): Method[] {
+  return [...new Set(RECIPE_LIST.filter((r) => r.ingredients.includes(kind)).map((r) => r.method))];
+}
+
 /** Atalho para a montagem na tigela (Etapa 1). */
 export function canAddToBowl(contents: readonly IngredientKind[], kind: IngredientKind): boolean {
   return canAddIngredient('assemble', contents, kind);

@@ -8,15 +8,18 @@ import type { WorldUI } from '../ui/worldui';
  * Ferramenta de design de personagens (`?lineup` na URL): todos os heróis lado a lado,
  * de frente e em 3/4. Com `?lineup=sombra`, tudo vira silhueta preta — o "teste da sombra":
  * se dá para reconhecer cada herói só pelo formato, o design está bom.
+ * Com `?lineup=andar`, a fileira de trás anda sem sair do lugar (para ver o jeito de andar
+ * de cada um) e `game.lineup.quirks()` faz todos mostrarem a mania ao mesmo tempo.
  */
 export class Lineup {
-  private creatures: Creature[] = [];
+  readonly creatures: Creature[] = [];
 
   constructor(
     stage: Stage,
     worldUI: WorldUI,
-    silhouette: boolean,
+    private mode: 'cores' | 'sombra' | 'andar',
   ) {
+    const silhouette = mode === 'sombra';
     const n = HEROES.length;
     const spacing = 1.25;
     HEROES.forEach((hero, i) => {
@@ -42,6 +45,16 @@ export class Lineup {
   }
 
   update(dt: number): void {
-    for (const c of this.creatures) c.update(dt);
+    this.creatures.forEach((c, i) => {
+      if (this.mode === 'andar' && i % 2 === 1) c.moving = 1;
+      c.update(dt);
+    });
+  }
+
+  /** Todos os heróis parados fazem a mania agora (para screenshots). */
+  quirks(): void {
+    this.creatures.forEach((c, i) => {
+      if (this.mode !== 'andar' || i % 2 === 0) c.playQuirk();
+    });
   }
 }

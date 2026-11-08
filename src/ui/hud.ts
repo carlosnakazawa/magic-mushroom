@@ -1,3 +1,4 @@
+import { TUNING } from '../config';
 import { speciesFamilyName, type HeroDef, type Species } from '../data/characters';
 import { heroFaceHtml } from '../render/portraits';
 import { INGREDIENTS } from '../data/ingredients';
@@ -134,12 +135,16 @@ export class Hud {
     this.tickets.clear();
   }
 
-  setClock(timeLeft: number, total: number, frozen: boolean): void {
+  /** Relógio do dia. Na hora de fechar (`overtime`) mostra uma lua em vez de 0:00. */
+  setClock(timeLeft: number, total: number, frozen: boolean, overtime = false): void {
     const t = Math.max(0, Math.ceil(timeLeft));
-    this.clockText.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
-    const frac = Math.max(0, timeLeft / total);
-    this.clockRing.style.background = `conic-gradient(${timeLeft < 30 ? '#ff6b6b' : '#ffc94d'} ${frac * 360}deg, rgba(255,255,255,0.25) 0deg)`;
-    this.clock.classList.toggle('urgent', timeLeft < 30 && !frozen);
+    this.clockText.textContent = overtime ? '🌙' : `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+    this.clock.classList.toggle('overtime', overtime);
+    // Na hora de fechar o anel mostra quanto resta dos minutos extras (lilás, sem piscar)
+    const frac = overtime ? Math.max(0, 1 + timeLeft / TUNING.day.overtimeMax) : Math.max(0, timeLeft / total);
+    const color = overtime ? '#c9b8ff' : timeLeft < 30 ? '#ff6b6b' : '#ffc94d';
+    this.clockRing.style.background = `conic-gradient(${color} ${frac * 360}deg, rgba(255,255,255,0.25) 0deg)`;
+    this.clock.classList.toggle('urgent', !overtime && timeLeft < 30 && !frozen);
     this.clock.classList.toggle('frozen', frozen);
   }
 
