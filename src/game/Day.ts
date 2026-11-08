@@ -118,7 +118,8 @@ export class DayRun implements ActionHost {
       chef.pos.copy(world.spawns[i] ?? new THREE.Vector3(3, 0, 4 + i));
       chef.facing = Math.PI / 2;
       chef.controller = opts.playerCount === 2 ? i : i === 0 ? 0 : -1;
-      chef.hint = worldUI.add('chef-hint', chef.creature.head, 0.55);
+      // Dicas presas ao corpo (altura fixa da cabeça), não à cabeça: com o andar pulando, o texto tremia
+      chef.hint = worldUI.add('chef-hint', chef.root, labelHeight(chef) + 0.55);
       // A mania de cada herói solta partículas (personalidade — docs/PERSONAGENS.md)
       chef.creature.onQuirk = (q) => {
         const head = chef.creature.head.getWorldPosition(new THREE.Vector3());
@@ -951,7 +952,7 @@ export class DayRun implements ActionHost {
     const text = list[Math.floor(Math.random() * list.length)];
     if (!text) return;
     // Mesma âncora das dicas; updateSpeech empurra o balão para cima delas (nunca cobre o selinho)
-    if (!chef.speech) chef.speech = this.ctx.worldUI.add('speech', chef.creature.head, 0.55);
+    if (!chef.speech) chef.speech = this.ctx.worldUI.add('speech', chef.root, labelHeight(chef) + 0.55);
     chef.speech.html = `<div class="bubble-say" style="--hc:#${chef.hero.accent.toString(16).padStart(6, '0')}">${text}</div>`;
     chef.speech.visible = true;
     chef.speechLeft = 2.1;
@@ -1051,6 +1052,13 @@ export class DayRun implements ActionHost {
       arrow.rotation.y += dt * 2;
     }
   }
+}
+
+/** Altura da cabeça do herói parado, medida em relação aos pés. */
+function labelHeight(chef: Chef): number {
+  chef.root.updateMatrixWorld(true);
+  const head = chef.creature.head.getWorldPosition(new THREE.Vector3());
+  return head.y - chef.root.getWorldPosition(new THREE.Vector3()).y;
 }
 
 function makeArrow(): THREE.Group {
