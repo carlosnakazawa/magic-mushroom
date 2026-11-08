@@ -218,7 +218,7 @@ export class Hud {
     if (!lines) return;
     const fmt = (t: string) => t.replaceAll('{pick}', `<kbd>${keys.pick}</kbd>`).replaceAll('{use}', `<kbd>${keys.use}</kbd>`);
     const [title, ...rest] = lines;
-    this.tips.innerHTML = `<h3>${fmt(title ?? '')}</h3>${rest.map((l) => `<div class="tstep current">💡 ${fmt(l)}</div>`).join('')}`;
+    this.tips.innerHTML = `<div class="tut-bar"><b class="tut-title">${fmt(title ?? '')}</b>${rest.map((l) => `<span class="tut-text">💡 ${fmt(l)}</span>`).join('')}</div>`;
   }
 
   /** Selinhos de status (charme, descanso, modo sem pressa). */
@@ -226,14 +226,36 @@ export class Hud {
     this.chips.innerHTML = chips.map((c) => `<span class="chip">${c}</span>`).join('');
   }
 
+  /**
+   * Tutorial compacto: só o passo atual numa faixa no rodapé, com bolinhas de progresso.
+   * (A lista inteira tampava o salão onde os clientes chegam, principalmente no celular.)
+   */
   setTutorial(steps: { text: string; done: boolean }[] | null, current: number, keys = { pick: t('key.space'), use: 'E' }): void {
     this.tutorial.classList.toggle('hidden', !steps);
     if (!steps) return;
-    this.tutorial.innerHTML =
-      `<h3>${t('hud.learning')}</h3>` +
-      steps
-        .map((s, i) => `<div class="tstep${s.done ? ' done' : ''}${i === current ? ' current' : ''}">${s.done ? '✅' : i === current ? '👉' : '⬜'} ${s.text.replaceAll('{pick}', `<kbd>${keys.pick}</kbd>`).replaceAll('{use}', `<kbd>${keys.use}</kbd>`)}</div>`)
-        .join('');
+    const step = steps[current];
+    if (!step) return;
+    const text = step.text.replaceAll('{pick}', `<kbd>${keys.pick}</kbd>`).replaceAll('{use}', `<kbd>${keys.use}</kbd>`);
+    const dots = steps.map((s, i) => `<i class="${s.done ? 'done' : i === current ? 'now' : ''}"></i>`).join('');
+    const changed = this.tutorial.dataset.step !== String(current);
+    this.tutorial.dataset.step = String(current);
+    this.tutorial.innerHTML = `<div class="tut-bar${changed ? ' pop' : ''}" title="${t('hud.learning')}"><span class="tut-dots" aria-label="${current + 1}/${steps.length}">${dots}</span><span class="tut-text">👉 ${text}</span></div>`;
+  }
+
+  /**
+   * Deixa a faixa do tutorial/dicas transparente quando um herói passa por baixo dela,
+   * para o jogador nunca perder o personagem de vista. Recebe as posições dos heróis na tela.
+   */
+  seeThrough(points: readonly { x: number; y: number }[]): void {
+    for (const box of [this.tutorial, this.tips]) {
+      if (box.classList.contains('hidden')) continue;
+      const bar = box.firstElementChild;
+      if (!bar) continue;
+      const r = bar.getBoundingClientRect();
+      const m = 40; // folga: o corpo do herói fica acima do ponto dos pés
+      const under = points.some((p) => p.x > r.left - m && p.x < r.right + m && p.y > r.top - m && p.y < r.bottom + m * 2);
+      box.classList.toggle('see-through', under);
+    }
   }
 
   toast(text: string, kind: 'info' | 'good' | 'bad' = 'info', ms = 2200): void {

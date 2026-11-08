@@ -68,28 +68,18 @@
     top: 96px;
   }
 
-  /* Tutorial: só o passo atual, texto legível */
-  .tutorial,
-  .tutorial.tips {
-    top: 70px;
-    bottom: auto;
-    right: 8px;
-    width: 280px;
-    padding: 6px 10px 8px;
+  /* Tutorial: faixa baixinha, texto legível */
+  .tut-bar {
+    padding: 5px 10px;
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .tut-title {
     font-size: 14px;
   }
 
-  .tutorial h3 {
-    font-size: 14px;
-    margin-bottom: 2px;
-  }
-
-  .tutorial .tstep:not(.current) {
-    display: none;
-  }
-
-  .tutorial.tips .tstep {
-    display: block;
+  .tutorial.tips .tut-text {
     font-size: 13px;
   }
 

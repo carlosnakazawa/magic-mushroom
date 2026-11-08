@@ -63,7 +63,7 @@ config.ts  — todos os números de balanceamento (TUNING)
 | `render/merge.ts` | Junta malhas estáticas por material (menos draw calls) |
 | `core/input.ts` | Teclado (teclas remapeáveis), gamepad (jogo e menus), `keyLabel` |
 | `core/storage.ts` | Lê/grava o save no `localStorage` sem nunca quebrar |
-| `ui/hud.ts` | Relógio, comandas (banner de família, selo dourado), moedas, metas, cartões, tutorial, dicas, selos |
+| `ui/hud.ts` | Relógio, comandas (banner de família, selo dourado), moedas, metas, cartões, tutorial e dicas (faixa compacta no rodapé, transparente quando o herói passa por baixo — `seeThrough`), selos |
 | `ui/screens.ts` | Título (heróis bloqueados), mapa de níveis, pausa, resultado (desbloqueios), opções, contagem |
 | `ui/night.ts` | Painel da loja noturna |
 | `ui/nav.ts` | Foco espacial para menus com controle/setas |

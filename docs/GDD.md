@@ -64,7 +64,7 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 5. **Finalização do Banquete:** Quando o último prato chega à mesa, a família comemora em conjunto com brilhos mágicos, concede um bônus especial de gorjeta e deixa a mesa pronta para ser limpa.
 
 ### 6. Progressão de Estações e Desbloqueio Futuro de Famílias
-- **Tutorial (Nível 1):** Salada Feérica (ensina movimentação, pegar itens, cortar na tábua e montar tigelas sem perigo de queimar).
+- **Tutorial (Nível 1):** Salada Feérica (ensina movimentação, pegar itens, cortar na tábua e montar tigelas sem perigo de queimar). Na tela aparece só o **passo atual**, numa faixa compacta no rodapé com bolinhas de progresso; a faixa fica transparente quando um herói passa por baixo dela, para nunca esconder o personagem nem o salão.
 - **Nível 2:** Liquidificador de Cristal (adiciona tempo de espera das máquinas e gerenciamento de sucos e poções).
 - **Níveis Avançados:** Caldeirões e Chapas Mágicas (introduz pratos quentes, risco de queimar a comida e uso de extintor mágico).
 - **Desbloqueio Progressivo de Famílias (Conteúdo Futuro):**
