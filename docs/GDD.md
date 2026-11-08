@@ -101,6 +101,7 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 - **Modo solo:** o jogador controla 2 personagens e alterna com `Q` (o outro fica parado — estilo Overcooked). Quem estava cortando/lavando/apagando continua o trabalho.
 - **Modo 2 jogadores:** cooperação local no mesmo teclado (ou teclado + controle).
 - **Controles do PlayStation** (DualSense/DualShock) funcionam mesmo quando o navegador não usa o "mapa padrão" (`core/pad.ts` reordena ✕ □ ○ △ e lê o direcional "chapéu"). Ao reconhecer um controle aparece "🎮 Controle conectado! Jogador N". Os textos mostram as duas famílias: "A/✕ pegar · X/□ usar · Y/△ trocar".
+- **Dicas seguem o aparelho em uso:** o jogo lembra o último aparelho de cada jogador (teclado, toque ou controle) e as dicas, o tutorial e os cartões mostram os botões dele — `A`/`X`/`Y` no Xbox, `✕`/`□`/`△` no PlayStation, ✋/⭐ no toque (`Input.device`, `PAD_LABELS`).
 - Tábua/pia/extintor: apertar **usar uma vez** inicia o trabalho, que continua sozinho enquanto o personagem fica parado. Andar pausa (o progresso é mantido).
 
 ### B3. Itens e estações
@@ -121,7 +122,8 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 | Espaço da mesa família | `F F` | 2 células; recebe a mesa comprada na loja (senão é chão livre) |
 | Heróis / Porta | `P` / `D` | Início dos heróis / entrada e saída dos clientes |
 
-- **Montagem (saladas):** ingrediente **picado** + tigela limpa, em qualquer ordem.
+- **Montagem (saladas):** ingrediente **picado** + tigela limpa, em qualquer ordem. Atalho (pedido das crianças): segurando o ingrediente picado, aperte **pegar** na **pilha de tigelas** — o herói pega uma tigela já com ele dentro. Ingrediente inteiro na pilha → "Corte primeiro na tábua".
+- **O que estou carregando?** O item na mão aparece um pouco maior e, sobre o herói, um **selinho** com emoji + nome ("🥬 Alface picada", "🥣🍅 Montando…"); prato pronto fica **dourado**.
 - **Máquinas:** coloque os ingredientes; quando pronto, leve o **recipiente vazio certo** (copo/tigela/prato) e aperte pegar para servir.
 - **Queimar (caldeirão/chapa):** pronto → 7 s seguro → ⚠️ aviso (5 s, bipes e fumaça) → 💨 queimado (dá para limpar com as mãos livres) → 4 s → 🔥 **fogo**. Fogo: pegue o extintor e segure **usar** na frente da máquina. O fogo não se espalha (caos gentil).
 - **Louça:** depois de comer, o cliente deixa o recipiente sujo e moedas. Pegar a louça coleta as moedas. A mesa só libera quando toda a louça sai **e** o último cliente atravessa a porta.
@@ -148,8 +150,9 @@ Comandas e balões mostram os **ingredientes em emoji** e o formato do recipient
 - **Estados:** `chegando` → `esperando anotar` (❗, ou 📜 para famílias) → `pedido anotado` (comanda no topo; famílias com banner "Família …") → `comendo` → `saindo`.
 - **Paciência compartilhada**: cai devagar esperando anotar e mais rápido esperando comida; cada prato entregue recupera **+35%** para o grupo todo; em 0% o grupo vai embora (💢), sem pagar.
 - **Moedas:** preço + gorjeta pela paciência (até +50%). Grupo de 3+ que recebe tudo ganha **bônus de banquete** (+5 por membro), com brilhos e zoom de câmera.
+- **Fechando o bistrô:** nos últimos **30 s** não entram clientes novos (aviso "Últimos 30 segundos — não entram mais clientes!"). Se o relógio zerar com clientes esperando, vem a **hora de fechar** 🌙: o relógio vira uma lua e dá para atender quem ficou, por até **45 s** (`sim/dayclock.ts`, `TUNING.day`). Antes, o dia acabava com clientes que tinham acabado de pedir.
 - **Fim do dia:** estrelas por meta de moedas. Moedas esquecidas nas mesas entram mesmo assim. As moedas vão para a **carteira** (loja noturna).
-- Clientes caminham por **A\*** (desviam de balcões, mesas e móveis).
+- Clientes caminham por **A\*** (desviam de balcões, mesas e móveis). Heróis **esbarram** nos clientes que estão andando (antes atravessavam); só o herói é empurrado, o cliente segue a rota.
 
 ### B6. Ciclo dia/noite
 - Fluxo: **Título** (escolha 2 heróis, solo/dupla) → **Mapa de níveis** → contagem → **Dia** → **Resultado** → **Noite** → Mapa de níveis…
@@ -200,6 +203,7 @@ Cada herói tem **acessório**, **jeito de se mexer** (pulinhos, flutuar, balan�
 | Gota 🐸 | coroa | **Língua comprida:** alcança estações mais longe | loja da noite, 🪙 150 |
 | Lumi 🐱 | presilha de lua | **Ronronar lunar:** todos os clientes 15% mais pacientes | loja da noite, 🪙 200 |
 
+- **Jeito de andar e mania:** cada herói anda de um jeito (pulinhos, trote, pisadas, marcha, flutuar, gingado…) com passos de verdade — os pés acompanham a velocidade em vez de deslizar — e, parado, faz a sua **mania** (rodopio, espirro de faíscas, uivo, girar a cabeça, língua…). Tabela completa e regras para heróis novos em [`PERSONAGENS.md`](PERSONAGENS.md).
 - Heróis são contratados com **moedas do jogo** (aba 🦸 Heróis da loja noturna) — nunca com dinheiro real.
 - No título, cards compactos + painel de detalhes (descrição, super-poder, como liberar).
 
@@ -208,7 +212,7 @@ Cada herói tem **acessório**, **jeito de se mexer** (pulinhos, flutuar, balan�
 - **Corrida automática** (pedido das crianças): segurando o direcional por 0,45 s o herói acelera até **1,4×** em 0,35 s, soltando poeirinha nos pés. Soltou, volta ao normal. Sem botão novo (`sim/run.ts`, `TUNING.player.runAfter/runRamp/runBoost`).
 - **Mira instantânea:** a direção lógica muda no mesmo quadro em que o jogador aponta; só o modelo gira suave.
 - **Mira inteligente:** entre os vizinhos, prefere a estação/mesa onde há algo útil a fazer agora; aceita alvos ao lado quando úteis.
-- Dicas novas: "Mãos cheias — solte num balcão" (caixote) e "Solte a alface num balcão primeiro" (pilha de tigelas).
+- Dicas novas: "Mãos cheias — solte num balcão" (caixote). Na pilha de tigelas, a alface picada vai direto para uma tigela (Etapa 8).
 - Depois da 1ª entrega do tutorial, o próximo cliente chega em ~4 s.
 - **Presente de boas-vindas:** +40 🪙 na primeira noite.
 - Celular: a câmera acompanha os heróis de perto (faixa de 14,5 células).

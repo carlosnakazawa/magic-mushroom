@@ -55,17 +55,18 @@ config.ts  — todos os números de balanceamento (TUNING)
 | `game/fx.ts` | Partículas (respeitam "menos efeitos"), comemoração de cada herói, moedas voando |
 | `models/machines.ts` | Liquidificador, caldeirão e chapa animados conforme a fase (chamas, bolhas, líquido) |
 | `models/decor.ts` | Mesas de família, luminárias (com `PointLight`), enfeites, tapetes, parede |
-| `models/creature.ts` | Criatura chibi procedural: `PROFILES` por espécie (corpo, cabeça, focinho, olhos) + orelhas, caudas e detalhes que definem a silhueta |
-| `game/lineup.ts` | Ferramenta `?lineup` / `?lineup=sombra` (heróis lado a lado; teste da sombra) |
+| `models/creature.ts` | Criatura chibi procedural: `PROFILES` por espécie (corpo, cabeça, focinho, olhos) + orelhas, caudas e detalhes que definem a silhueta; jeitos de andar (`GAITS`) e manias (`quirk`) — ver `docs/PERSONAGENS.md` |
+| `game/lineup.ts` | Ferramenta `?lineup` / `?lineup=sombra` (heróis lado a lado; teste da sombra) / `?lineup=andar` (jeito de andar; `game.lineup.quirks()` mostra as manias) |
 | `models/food.ts` | Ingredientes crus/picados, tigela/copo/prato, extintor, moedas |
 | `render/stage.ts` | Renderer, câmera (56°), sombras, bloom, `zoomPulse`, `setInsetRight` (painel da noite) |
 | `render/lighting.ts` | Presets dia/noite interpolados |
 | `render/merge.ts` | Junta malhas estáticas por material (menos draw calls) |
-| `core/input.ts` | Teclado (teclas remapeáveis), gamepad (jogo e menus, qualquer posição da lista do navegador), aviso de controle conectado, `keyLabel` |
-| `core/pad.ts` | Normaliza controles para o mapa padrão (DualSense sem mapa: ✕/□ trocados, direcional "chapéu") — puro, testado |
+| `core/input.ts` | Teclado (teclas remapeáveis), gamepad (jogo e menus, qualquer posição da lista do navegador), aviso de controle conectado, `keyLabel`, último aparelho de cada jogador (`device`, `deviceVersion`) para as dicas |
+| `core/pad.ts` | Normaliza controles para o mapa padrão (DualSense sem mapa: ✕/□ trocados, direcional "chapéu") e nomes dos botões por família (`PAD_LABELS`) — puro, testado |
 | `render/portraits.ts` | Retratos 3D dos heróis (data URL, desenhados uma vez) para cartões; `heroFaceHtml` volta ao emoji sem WebGL |
 | `data/howto.ts` | Passo a passo em figuras de cada receita (gerado pelo método) para o cartão "Como fazer" — testado |
 | `sim/run.ts` | Corrida automática (`runMultiplier`) — testado |
+| `sim/dayclock.ts` | Fases do relógio: aberto → últimos pedidos → hora de fechar → fim (`clockPhase`) — testado |
 | `core/storage.ts` | Lê/grava o save no `localStorage` sem nunca quebrar |
 | `ui/hud.ts` | Relógio, comandas (banner de família, selo dourado), moedas, metas, cartões, tutorial e dicas (faixa compacta no rodapé, transparente quando o herói passa por baixo — `seeThrough`), selos |
 | `ui/screens.ts` | Título (heróis bloqueados), mapa de níveis, pausa, "Como fazer" (`recipes`), resultado (desbloqueios), opções, contagem |
@@ -103,7 +104,7 @@ config.ts  — todos os números de balanceamento (TUNING)
 - **Ingrediente:** `data/ingredients.ts` → modelo em `models/food.ts` → letra em `world.ts` (`CRATE_KINDS`).
 - **Máquina nova:** `MachineKind` + tempos em `TUNING.machines` + visual em `models/machines.ts` + letra em `world.ts` (`MACHINE_KINDS`) + testes.
 - **Móvel:** `FURNITURE` + modelo em `models/decor.ts` (`decorMesh`). Novo tipo de espaço → `SlotKind` + `DECOR_SLOTS`.
-- **Herói:** `data/characters.ts` (acessório, `perk`, `style`, `voice`, `phrases`, `price` se for contratável). Super-poder novo → `PerkId` + `sim/perks.ts` + teste. Acessório novo → `Creature.buildAccessory`.
+- **Herói:** `data/characters.ts` (acessório, `perk`, `style` com `gait` e `quirk`, `voice`, `phrases`, `price` se for contratável) — siga as regras de `docs/PERSONAGENS.md`. Super-poder novo → `PerkId` + `sim/perks.ts` + teste. Acessório novo → `Creature.buildAccessory`.
 - **Família:** `data/families.ts` (`available: true`) + `FAMILY_LOOKS` + espécie em `creature.ts`/`SPECIES_EMOJI`/`SPECIES_FAMILY_NAME` + herói com `family` + receita/móvel com `family`.
 - **Nível:** novo item em `LEVELS` (copie o salão das colunas 10–17), `intro` com dicas.
 
