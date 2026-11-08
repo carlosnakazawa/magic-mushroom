@@ -38,6 +38,8 @@ interface GaitDef {
   lean: number;
   /** Achatar ao pisar (0 = nada). */
   squash: number;
+  /** Rebolado: gira o corpo de leve a cada passo (é o que mais aparece vista de cima). */
+  yaw: number;
   /** Pés juntos, pulando (coelho, sapo). */
   hop?: boolean;
   /** Flutua acima do chão ao andar (coruja). */
@@ -45,15 +47,17 @@ interface GaitDef {
 }
 
 const GAITS: Record<Gait, GaitDef> = {
-  walk: { rate: 17, stride: 0.14, lift: 0.07, bounce: 0.06, roll: 0.07, lean: 0.1, squash: 0.3 },
-  hop: { rate: 11, stride: 0.1, lift: 0.05, bounce: 0.2, roll: 0, lean: 0.1, squash: 1, hop: true },
-  trot: { rate: 22, stride: 0.17, lift: 0.08, bounce: 0.05, roll: 0.04, lean: 0.18, squash: 0.2 },
-  stomp: { rate: 15, stride: 0.12, lift: 0.11, bounce: 0.05, roll: 0.17, lean: 0.06, squash: 0.7 },
-  march: { rate: 15, stride: 0.16, lift: 0.11, bounce: 0.04, roll: 0.03, lean: -0.03, squash: 0.15 },
-  glide: { rate: 7, stride: 0.03, lift: 0, bounce: 0.02, roll: 0.06, lean: 0.1, squash: 0, float: 0.2 },
-  waddle: { rate: 12, stride: 0.1, lift: 0.06, bounce: 0.04, roll: 0.24, lean: 0.04, squash: 0.4 },
-  scurry: { rate: 27, stride: 0.08, lift: 0.05, bounce: 0.03, roll: 0.05, lean: 0.14, squash: 0.2 },
-  tiptoe: { rate: 14, stride: 0.15, lift: 0.1, bounce: 0.07, roll: 0.1, lean: 0.05, squash: 0.15 },
+  // Valores exagerados de propósito: a câmera é alta e longe, movimento pequeno some
+  // (as crianças achavam que eles "deslizavam").
+  walk: { rate: 17, stride: 0.18, lift: 0.12, bounce: 0.13, roll: 0.14, lean: 0.1, squash: 0.6, yaw: 0.12 },
+  hop: { rate: 11, stride: 0.12, lift: 0.08, bounce: 0.34, roll: 0, lean: 0.12, squash: 1.4, yaw: 0, hop: true },
+  trot: { rate: 22, stride: 0.2, lift: 0.12, bounce: 0.11, roll: 0.1, lean: 0.18, squash: 0.5, yaw: 0.1 },
+  stomp: { rate: 15, stride: 0.14, lift: 0.16, bounce: 0.1, roll: 0.26, lean: 0.06, squash: 1.1, yaw: 0.1 },
+  march: { rate: 15, stride: 0.2, lift: 0.16, bounce: 0.09, roll: 0.06, lean: -0.03, squash: 0.35, yaw: 0.06 },
+  glide: { rate: 7, stride: 0.03, lift: 0, bounce: 0.06, roll: 0.14, lean: 0.12, squash: 0, yaw: 0.06, float: 0.26 },
+  waddle: { rate: 12, stride: 0.12, lift: 0.1, bounce: 0.09, roll: 0.34, lean: 0.04, squash: 0.7, yaw: 0.2 },
+  scurry: { rate: 30, stride: 0.1, lift: 0.08, bounce: 0.07, roll: 0.1, lean: 0.14, squash: 0.4, yaw: 0.08 },
+  tiptoe: { rate: 14, stride: 0.17, lift: 0.14, bounce: 0.14, roll: 0.16, lean: 0.05, squash: 0.3, yaw: 0.12 },
 };
 
 /** Jeito de andar padrão de cada espécie (clientes; heróis podem ter o próprio). */
@@ -1079,13 +1083,13 @@ export class Creature {
       spin += smooth(qp) * Math.PI * 2;
     }
     this.rig.position.y = y + (this.sitting ? 0.32 : 0);
-    this.rig.rotation.y = spin;
+    this.rig.rotation.y = spin + Math.sin(ph) * G.yaw * amp;
 
     // Corpo: inclina para frente, balança de lado e achata ao pisar
     const roll = Math.sin(ph) * G.roll * amp;
     let leanX = G.lean * amp;
     let tilt = roll;
-    let sq = land * G.squash * 0.1;
+    let sq = land * G.squash * 0.16;
     if (quirk === 'pose') tilt += 0.28 * qk;
     if (quirk === 'stretch') leanX += 0.5 * qk;
     if (quirk === 'curl') sq += 0.28 * qk;
