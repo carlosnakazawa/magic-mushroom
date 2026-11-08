@@ -134,3 +134,18 @@ export function tryMerge(held: Item, counter: Item): MergeResult | null {
   }
   return null;
 }
+
+const VESSEL_EMOJI: Record<Vessel, string> = { bowl: '🥣', cup: '🥤', plate: '🍽️' };
+
+/**
+ * Emojis do que o herói está carregando, para o selinho sobre ele
+ * (as crianças não percebiam o que o herói tinha na mão). `ready` = prato pronto para servir.
+ */
+export function itemIcons(item: Item): { icons: string; ready: boolean } {
+  if (item.type === 'tool') return { icons: '🧯', ready: false };
+  if (item.type === 'ingredient') return { icons: INGREDIENTS[item.kind].emoji, ready: false };
+  if (item.dirty) return { icons: `${VESSEL_EMOJI[item.vessel]}🫧`, ready: false };
+  const r = dishRecipe(item);
+  if (r) return { icons: r.emoji, ready: true };
+  return { icons: VESSEL_EMOJI[item.vessel] + item.contents.map((k) => INGREDIENTS[k].emoji).join(''), ready: false };
+}

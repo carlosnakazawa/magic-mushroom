@@ -134,9 +134,11 @@ export class Hud {
     this.tickets.clear();
   }
 
-  setClock(timeLeft: number, total: number, frozen: boolean): void {
+  /** Relógio do dia. Na hora de fechar (`overtime`) mostra uma lua em vez de 0:00. */
+  setClock(timeLeft: number, total: number, frozen: boolean, overtime = false): void {
     const t = Math.max(0, Math.ceil(timeLeft));
-    this.clockText.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+    this.clockText.textContent = overtime ? '🌙' : `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+    this.clock.classList.toggle('overtime', overtime);
     const frac = Math.max(0, timeLeft / total);
     this.clockRing.style.background = `conic-gradient(${timeLeft < 30 ? '#ff6b6b' : '#ffc94d'} ${frac * 360}deg, rgba(255,255,255,0.25) 0deg)`;
     this.clock.classList.toggle('urgent', timeLeft < 30 && !frozen);

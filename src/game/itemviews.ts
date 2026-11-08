@@ -6,6 +6,8 @@ interface View {
   item: Item;
   obj: THREE.Group;
   version: number;
+  /** Tamanho final (o "pop" cresce até ele). */
+  size: number;
 }
 
 /**
@@ -15,17 +17,18 @@ interface View {
 export class ItemViews {
   private views = new Map<number, View>();
 
-  attach(item: Item, parent: THREE.Object3D, y = 0): THREE.Group {
+  attach(item: Item, parent: THREE.Object3D, y = 0, size = 1): THREE.Group {
     let v = this.views.get(item.id);
     if (!v) {
-      v = { item, obj: new THREE.Group(), version: -1 };
+      v = { item, obj: new THREE.Group(), version: -1, size };
       this.views.set(item.id, v);
     }
     this.rebuild(v);
     parent.add(v.obj);
     v.obj.position.set(0, y, 0);
     v.obj.rotation.set(0, 0, 0);
-    v.obj.scale.setScalar(1);
+    v.size = size;
+    v.obj.scale.setScalar(size);
     return v.obj;
   }
 
@@ -56,13 +59,14 @@ export class ItemViews {
       }
       this.rebuild(v);
       // Pequeno "pop" quando o item acabou de ser colocado
-      if (v.obj.scale.x < 1) v.obj.scale.setScalar(Math.min(1, v.obj.scale.x + dt * 6));
+      if (v.obj.scale.x < v.size) v.obj.scale.setScalar(Math.min(v.size, v.obj.scale.x + dt * 6 * v.size));
     }
   }
 
   /** Faz o item "pular" de tamanho (feedback ao colocar). */
   pop(item: Item): void {
-    this.get(item)?.scale.setScalar(0.6);
+    const v = this.views.get(item.id);
+    v?.obj.scale.setScalar(0.6 * v.size);
   }
 
   clear(): void {

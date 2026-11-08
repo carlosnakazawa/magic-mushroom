@@ -91,6 +91,31 @@ kbd {
   animation: hint-in 0.2s ease-out;
 }
 
+.carry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 2px solid #ffd79a;
+  border-radius: 999px;
+  padding: 1px 10px 1px 4px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  box-shadow: 0 3px 0 rgba(74, 47, 35, 0.18);
+}
+
+.carry-ico {
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+/* Prato pronto para servir: dourado, para chamar atenção */
+.carry.ready {
+  background: #fff1a8;
+  border-color: #ffb627;
+}
+
 .hint.off {
   opacity: 0.7;
   color: var(--ink-soft);
@@ -272,6 +297,16 @@ kbd {
 
 .clock.urgent {
   animation: pulse 0.6s ease-in-out infinite;
+}
+
+.clock.overtime {
+  animation: none;
+  background: #6f5bb5;
+}
+
+.clock.overtime .clock-text {
+  background: #3d2f73;
+  font-size: 26px;
 }
 
 .clock.frozen::after {

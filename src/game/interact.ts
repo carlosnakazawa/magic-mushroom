@@ -11,6 +11,7 @@ import {
   makeIngredient,
   makeVessel,
   tryMerge,
+  type IngredientItem,
   type Item,
   vesselName,
   type VesselItem,
@@ -132,7 +133,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         };
       }
       if (!held) return deny(host, chef, tk(`deny.noVessels.${v}`));
-      if (held.type === 'ingredient') return deny(host, chef, t('deny.dropFirst', { item: itemName(held).toLowerCase() }));
+      if (held.type === 'ingredient') return ingredientAtStack(host, chef, s, held);
       if (isEmptyVessel(held, v)) {
         return {
           label: t('act.store'),
@@ -236,6 +237,30 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
   }
 }
 
+/**
+ * Segurando um ingrediente na pilha de tigelas: pega uma tigela já com ele dentro
+ * (as crianças tentavam "colocar a alface na tigela" direto e o jogo mandava soltar antes).
+ */
+function ingredientAtStack(host: ActionHost, chef: Chef, s: Station, held: IngredientItem): Action {
+  const v = s.vessel!;
+  const def = INGREDIENTS[held.kind];
+  if (v !== 'bowl') return deny(host, chef, t('deny.dropFirst', { item: itemName(held).toLowerCase() }));
+  if (!held.chopped) return deny(host, chef, def.choppable ? t('deny.chopFirst') : t('deny.machine'));
+  if (s.count <= 0) return deny(host, chef, tk(`deny.noVessels.${v}`));
+  if (!tryMerge(clone(held), makeVessel(v))) return deny(host, chef, t('deny.noMatch'));
+  return {
+    label: t('act.intoBowl', { item: def.name }),
+    run: () => {
+      const bowl = makeVessel(v);
+      if (!tryMerge(held, bowl)) return;
+      s.count--;
+      s.refreshStack();
+      host.hold(chef, bowl);
+      host.emit({ type: 'merge', chef, bowl, at: s.worldTop });
+    },
+  };
+}
+
 function machinePickAction(host: ActionHost, chef: Chef, s: Station): Action | null {
   const m = s.machine!;
   const held = chef.held;
@@ -283,7 +308,7 @@ function machinePickAction(host: ActionHost, chef: Chef, s: Station): Action | n
           };
         }
         const wantsChopped = needsChopped(m.method);
-        if (wantsChopped && !held.chopped && def.choppable) return deny(host, chef, 'Corte primeiro na tábua');
+        if (wantsChopped && !held.chopped && def.choppable) return deny(host, chef, t('deny.chopFirst'));
         if (!wantsChopped && held.chopped) return deny(host, chef, t('deny.whole'));
         return deny(host, chef, m.contents.includes(held.kind) ? t('deny.already') : t('deny.noMatchHere'));
       }
