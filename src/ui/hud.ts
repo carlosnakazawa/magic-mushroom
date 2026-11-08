@@ -1,7 +1,8 @@
 import { speciesFamilyName, type HeroDef, type Species } from '../data/characters';
+import { heroFaceHtml } from '../render/portraits';
 import { INGREDIENTS } from '../data/ingredients';
 import { t } from '../i18n';
-import { RECIPES } from '../data/recipes';
+import { RECIPES, type RecipeId } from '../data/recipes';
 import type { Party } from '../sim/party';
 
 export const SPECIES_EMOJI: Record<Species, string> = {
@@ -66,6 +67,8 @@ export class Hud {
   private chips: HTMLDivElement;
   private toastBox: HTMLDivElement;
   private tickets = new Map<number, Ticket>();
+  /** Tocar numa receita da comanda abre o "Como fazer". */
+  onRecipe: ((id: RecipeId) => void) | null = null;
   private shownCoins = 0;
   private targetCoins = 0;
   private goals: readonly [number, number, number] = [1, 2, 3];
@@ -161,7 +164,7 @@ export class Hud {
       const card = el('div', `pcard${c.active ? ' active' : ''}`);
       card.style.setProperty('--pc', hex(c.color));
       card.innerHTML = `
-        <div class="pcard-face" style="background:${hex(c.hero.body)}">${SPECIES_EMOJI[c.hero.species]}</div>
+        <div class="pcard-face" style="background:${hex(c.hero.body)}">${heroFaceHtml(c.hero, SPECIES_EMOJI[c.hero.species])}</div>
         <div class="pcard-info"><b>${c.hero.name}</b><small>${c.label}</small><small class="keys">${c.keys}</small></div>`;
       this.players.appendChild(card);
     }
@@ -186,7 +189,8 @@ export class Hud {
         const dishes = p.members.map((m) => {
           const r = RECIPES[m.recipe];
           const ings = r.ingredients.map((k) => INGREDIENTS[k].emoji).join('');
-          const d = el('div', 'dish', `<span class="dish-ings">${ings}</span><small>${r.name}</small><i class="seal">✔</i>`);
+          const d = el('div', 'dish', `<span class="dish-ings">${ings}</span><small>${r.name}</small><i class="seal">✔</i><i class="dish-help">?</i>`);
+          d.onclick = () => this.onRecipe?.(r.id);
           list.appendChild(d);
           return d;
         });
@@ -203,6 +207,11 @@ export class Hud {
       t.root.classList.toggle('hurry', p.patience < 0.3);
       p.members.forEach((m, i) => t!.dishes[i]!.classList.toggle('served', m.served));
     }
+    // Muitas comandas (ou uma família com muitos pratos): versão compacta (só figuras)
+    // para caber numa linha no tablet
+    let dishes = 0;
+    for (const id of alive) dishes += this.tickets.get(id)?.dishes.length ?? 0;
+    this.orders.classList.toggle('many', alive.size >= 4 || dishes >= 6);
     for (const [id, t] of this.tickets) {
       if (!alive.has(id)) {
         t.root.classList.add('leaving');

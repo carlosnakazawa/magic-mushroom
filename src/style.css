@@ -1039,3 +1039,52 @@ kbd {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Aviso "controle conectado" (aparece em qualquer tela) */
+.pad-notice {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 60;
+  background: var(--cream);
+  color: var(--ink);
+  font: 600 18px 'Fredoka', sans-serif;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 3px solid #ff9f1c;
+  box-shadow: var(--panel-shadow);
+  animation: seal 0.3s cubic-bezier(0.3, 1.8, 0.5, 1);
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+
+.pad-notice.out {
+  opacity: 0;
+}
+
+/* Retrato 3D do herói dentro dos círculos de rosto */
+.face-img {
+  width: 118%;
+  height: 118%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hero-face,
+.hd-face,
+.pcard-face,
+.np-emoji.face {
+  overflow: hidden;
+}
+
+/* Com retrato, fundo clarinho (verde no verde sumia, ex.: Gota) */
+.hero-face:has(> .face-img),
+.hero-face:has(.dim > .face-img),
+.hd-face:has(> .face-img),
+.pcard-face:has(> .face-img),
+.np-emoji.face:has(> .face-img) {
+  background: radial-gradient(circle at 50% 35%, #fff 30%, #ffeccc) !important;
+}

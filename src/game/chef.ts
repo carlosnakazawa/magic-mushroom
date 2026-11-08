@@ -5,6 +5,7 @@ import type { PlayerInput } from '../core/input';
 import { Creature } from '../models/creature';
 import type { Item } from '../sim/items';
 import { perkMods, type PerkMods } from '../sim/perks';
+import { runMultiplier } from '../sim/run';
 import type { WorldLabel } from '../ui/worldui';
 import { angleDiff } from './customer';
 import type { Station, World } from './world';
@@ -32,6 +33,10 @@ export class Chef {
   controller = -1;
   hint: WorldLabel | null = null;
   tag: WorldLabel | null = null;
+  /** Segundos segurando o direcional sem parar (corrida automática). */
+  private heldMove = 0;
+  /** Está correndo (para a poeirinha nos pés). */
+  running = false;
   /** Marcador sob os pés (cor do jogador). */
   readonly ring: THREE.Mesh;
 
@@ -68,7 +73,11 @@ export class Chef {
   move(input: PlayerInput | null, world: World, dt: number): void {
     const want = new THREE.Vector3(input?.moveX ?? 0, 0, input?.moveZ ?? 0);
     if (want.lengthSq() > 1) want.normalize();
-    const top = TUNING.player.speed * this.mods.speed;
+    // Corrida automática: conta o tempo segurando o direcional (empurrão leve não conta)
+    this.heldMove = want.lengthSq() > 0.5 ? this.heldMove + dt : 0;
+    const base = TUNING.player.speed * this.mods.speed;
+    const top = base * runMultiplier(this.heldMove);
+    this.running = top > base * 1.2;
     want.multiplyScalar(top);
     const k = Math.min(1, (TUNING.player.accel * dt) / top);
     this.vel.lerp(want, k);
@@ -80,8 +89,8 @@ export class Chef {
     this.pos.addScaledVector(this.vel, dt);
     this.collide(world);
 
-    const speed = this.vel.length() / top;
-    this.creature.moving = speed;
+    // Correndo, as patinhas mexem mais rápido (moving > 1)
+    this.creature.moving = this.vel.length() / base;
     this.creature.holding = !!this.held;
     this.creature.working = !!this.workingAt;
     this.root.position.copy(this.pos);

@@ -1,4 +1,5 @@
 import { DEFAULT_KEYS, type KeyBinds, type Settings } from '../sim/progress';
+import { normalizePad, padFamily, type PadFamily } from './pad';
 import { t } from '../i18n';
 
 /** Estado de controle de um jogador em um frame. */
@@ -160,20 +161,38 @@ export class Input {
     };
   }
 
+  /** Avisa quando um controle é conectado (o navegador só mostra depois de apertar um botão). */
+  onPadConnected(fn: (kind: PadFamily, slot: number) => void): void {
+    window.addEventListener('gamepadconnected', (e) => {
+      const kind = padFamily(e.gamepad.id);
+      const slot = this.connectedPads().findIndex((p) => p.index === e.gamepad.index);
+      // Ajuda a investigar controles que não respondem (console do navegador)
+      console.info('[controle]', e.gamepad.id, `mapping="${e.gamepad.mapping}"`, `index=${e.gamepad.index}`);
+      fn(kind, Math.max(0, slot));
+    });
+  }
+
+  /** Controles conectados, em ordem (o 1º é do jogador 1). Pode haver buracos na lista do navegador. */
+  private connectedPads(): Gamepad[] {
+    const list = navigator.getGamepads?.() ?? [];
+    return Array.from(list).filter((p): p is Gamepad => !!p && p.connected);
+  }
+
   private readPads(): ((PlayerInput & { pause: boolean; back: boolean }) | null)[] {
-    const pads = navigator.getGamepads?.() ?? [];
-    return [0, 1, 2, 3].map((index) => {
-      const pad = pads[index];
-      if (!pad || !pad.connected) return null;
-      const prev = this.padPrev.get(index) ?? [];
-      const now = pad.buttons.map((b) => b.pressed);
-      this.padPrev.set(index, now);
+    const pads = this.connectedPads();
+    return [0, 1, 2, 3].map((slot) => {
+      const pad = pads[slot];
+      if (!pad) return null;
+      const norm = normalizePad({ id: pad.id, mapping: pad.mapping, buttons: pad.buttons.map((b) => b.pressed), axes: pad.axes });
+      const prev = this.padPrev.get(pad.index) ?? [];
+      const now = norm.buttons;
+      this.padPrev.set(pad.index, now);
       const edge = (i: number) => !!now[i] && !prev[i];
       const dead = (v: number) => (Math.abs(v) < 0.25 ? 0 : v);
       const btn = (i: number) => (now[i] ? 1 : 0);
       return {
-        moveX: dead(pad.axes[0] ?? 0) || btn(15) - btn(14),
-        moveZ: dead(pad.axes[1] ?? 0) || btn(13) - btn(12),
+        moveX: dead(norm.axes[0]) || btn(15) - btn(14),
+        moveZ: dead(norm.axes[1]) || btn(13) - btn(12),
         pick: edge(0),
         use: edge(2),
         swap: edge(3),

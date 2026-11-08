@@ -6,7 +6,7 @@
  *     tigela → servir → recolher → lavar)
  *  2. Fim do dia → resultado → noite: compra e posiciona o Tronco Encantado e uma luminária
  *  3. Mapa de níveis → Nível 3: chapa pega fogo e o extintor apaga; família de pandas
- *     senta na mesa grande
+ *     senta na mesa grande; tocar na comanda abre o "Como fazer"
  *  4. Celular (toque, deitado): joystick move o herói, botão ✋ pega, aviso de girar em pé
  *  5. Idiomas: inglês por padrão; título, níveis e um dia em cada idioma (sem chaves cruas
  *     nem texto estourando botões)
@@ -198,6 +198,14 @@ try {
   });
   await page.waitForTimeout(1500);
   await shot('12-familia-panda');
+
+  // "Como fazer": tocar numa receita da comanda pausa e mostra o passo a passo
+  await page.locator('.ticket .dish').first().click();
+  await until(() => window.game.state === 'paused' && document.querySelectorAll('.how-step').length >= 3, 'guia de receita');
+  await page.waitForTimeout(600);
+  await shot('12b-como-fazer');
+  await click('Voltar ao jogo');
+  await until(() => window.game.state === 'day', 'voltar do guia');
 
   // ───────── 4. Celular (toque, deitado) ─────────
   await page.close(); // libera a GPU por software para a próxima página

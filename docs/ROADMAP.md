@@ -5,7 +5,7 @@ Fluxo detalhado em [`AGENTS.md`](../AGENTS.md#fluxo-de-etapas-e-pull-requests).
 
 Legenda: ✅ feito · 🚧 em andamento · ⬜ pendente
 
-**Status atual:** Etapas 1–3 e "Jogar no Celular" publicadas em https://carlosnakazawa.github.io/magic-mushroom/. Etapa 4 (personagens, usabilidade, preparação para lojas) no PR #4. Próximo grande passo: **Fase A do `docs/LANCAMENTO.md`** (idiomas, nome internacional, testes em celulares reais).
+**Status atual:** Etapas 6 e 7 mergeadas e publicadas (2026-11-07). Etapas 1–3 e "Jogar no Celular" publicadas em https://carlosnakazawa.github.io/magic-mushroom/. Etapa 4 (personagens, usabilidade, preparação para lojas) no PR #4. Próximo grande passo: **Fase A do `docs/LANCAMENTO.md`** (idiomas, nome internacional, testes em celulares reais).
 
 ---
 
@@ -72,6 +72,16 @@ Branch: `etapa-6/tutorial-compacto`
 - ✅ No celular: entre o joystick e os botões; selos saem do caminho enquanto ela aparece
 - ✅ Smoke confere que a faixa não encosta nos botões de toque
 
+## Etapa 7 — "Feedback das crianças" — ✅ (PR #7)
+Branch: `etapa-7/feedback-criancas`
+- ✅ Gota virou sapo de verdade: verde-limão, pintas, barriga amarelinha, olhos saltados, bochechas e dedinhos
+- ✅ Item selecionado nos menus bem visível (anel dourado, fundo amarelinho, pulsar)
+- ✅ Corrida automática ao segurar o direcional (até 1,4×, com poeirinha)
+- ✅ Controle DualSense/PlayStation no Windows: normalização de botões e direcional, aviso "Controle conectado", textos A/✕ X/□ Y/△
+- ✅ Comandas compactas com 4+ pedidos (tablet) — ⬜ confirmar no tablet real das crianças (não reproduzido no emulador)
+- ✅ "Como fazer": tocar numa comanda ou 📖 Receitas na pausa mostra o passo a passo em figuras
+- ✅ Retratos 3D dos heróis nos cartões (seleção, loja da noite, cartões de jogador)
+
 ## Próximo: Lançamento (ver `docs/LANCAMENTO.md`)
 - 🚧 Fase A — ✅ idiomas; ⬜ revisão nativa zh/ja, nome internacional, celulares reais, trilha sonora, conteúdo extra, créditos
 - ⬜ Fase B — Android/Google Play (teste fechado de 14 dias com 12 testadores)
@@ -92,6 +102,7 @@ Adicione uma linha por sessão de trabalho (mais recente no topo).
 
 | Data | Etapa | Resumo |
 |---|---|---|
+| 2026-11-07 | 7 | Feedback dos filhos do Carlos: Gota verde/sapo, destaque forte nos menus, corrida automática, DualSense no Windows, comandas no tablet, guia "Como fazer" das receitas, retratos 3D dos heróis. Revisão do Gemini tratada; PRs #6 e #7 mergeados (pedido do Carlos). |
 | 2026-10-12 | 6 | Tutorial compacto no rodapé (antes tampava o salão e o herói no celular). PR #6. |
 | 2026-10-11 | 5 | Heróis redesenhados com silhuetas únicas (teste da sombra antes/depois) e nome Mushmallow em todo o jogo. PR #5. |
 | 2026-10-11 | 4 | Revisão do PR #4 tratada (gorjeta sem mutar evento). Traduções completas: inglês (padrão), espanhol, português, francês, chinês e japonês. |

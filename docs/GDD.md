@@ -100,6 +100,7 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 - As teclas de **pegar/usar/trocar** podem ser **remapeadas** em ⚙️ Opções (movimento é fixo).
 - **Modo solo:** o jogador controla 2 personagens e alterna com `Q` (o outro fica parado — estilo Overcooked). Quem estava cortando/lavando/apagando continua o trabalho.
 - **Modo 2 jogadores:** cooperação local no mesmo teclado (ou teclado + controle).
+- **Controles do PlayStation** (DualSense/DualShock) funcionam mesmo quando o navegador não usa o "mapa padrão" (`core/pad.ts` reordena ✕ □ ○ △ e lê o direcional "chapéu"). Ao reconhecer um controle aparece "🎮 Controle conectado! Jogador N". Os textos mostram as duas famílias: "A/✕ pegar · X/□ usar · Y/△ trocar".
 - Tábua/pia/extintor: apertar **usar uma vez** inicia o trabalho, que continua sozinho enquanto o personagem fica parado. Andar pausa (o progresso é mantido).
 
 ### B3. Itens e estações
@@ -139,6 +140,8 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 | Sopa de Bambu 🐼 | tigela | caldeirão | bambu + cenoura picados | 3 (Família Panda) | 16 |
 
 Comandas e balões mostram os **ingredientes em emoji** e o formato do recipiente (balão arredondado = prato, "copo" = bebida).
+
+**Como fazer (guia de receitas):** tocar/clicar numa receita da comanda (tem um "?" azul) **pausa o jogo** e abre um cartão com o passo a passo em figuras (ex.: 🥕 ➜ 🔪 · 🥕 ➜ 🍲 · 🥣 ➜ 🍲 · ⚠️🔥 ➜ 🧯 · 🥕 ➜ 🐾). O mesmo guia fica no botão **📖 Receitas** da pausa (funciona com controle: o direcional troca de receita). Os passos são gerados pelo método da receita (`data/howto.ts`), então receitas novas já ganham guia. No primeiro pedido do dia aparece o aviso "Toque ou clique numa comanda para ver como fazer!". Com 4+ comandas, elas ficam compactas (só figuras) para caber numa linha no tablet.
 
 ### B5. Grupos, paciência e moedas
 - Todo atendimento é um **grupo** (`Party`): 1–2 clientes nas mesas pequenas; **famílias de 3–6** só na mesa família (quando comprada e posicionada).
@@ -202,6 +205,7 @@ Cada herói tem **acessório**, **jeito de se mexer** (pulinhos, flutuar, balan�
 
 ### B11. Movimento e mira (revisão de usabilidade)
 - Velocidade 5,3 (era 4,6) e aceleração mais rápida.
+- **Corrida automática** (pedido das crianças): segurando o direcional por 0,45 s o herói acelera até **1,4×** em 0,35 s, soltando poeirinha nos pés. Soltou, volta ao normal. Sem botão novo (`sim/run.ts`, `TUNING.player.runAfter/runRamp/runBoost`).
 - **Mira instantânea:** a direção lógica muda no mesmo quadro em que o jogador aponta; só o modelo gira suave.
 - **Mira inteligente:** entre os vizinhos, prefere a estação/mesa onde há algo útil a fazer agora; aceita alvos ao lado quando úteis.
 - Dicas novas: "Mãos cheias — solte num balcão" (caixote) e "Solte a alface num balcão primeiro" (pilha de tigelas).
@@ -230,6 +234,10 @@ Nas lojas de celular: Nível 1 + noites grátis; "Bistrô Completo" (compra úni
 - O japonês usa bastante hiragana (público infantil).
 
 ### B14. Silhuetas únicas (teste da sombra)
+**Cartões com o próprio personagem:** a seleção de heróis, a loja da noite e os cartões de jogador mostram um **retrato 3D** de cada herói (desenhado uma vez a partir do modelo, `render/portraits.ts`), não mais um emoji. Sem WebGL, volta ao emoji.
+
+**Menus:** o botão selecionado (teclado/controle) tem anel dourado grosso, fundo amarelinho e pulsa — antes só crescia 3% e as crianças não viam.
+
 Pintados de preto, os heróis precisam ser reconhecidos só pelo formato. Use `?lineup` (cores) e `?lineup=sombra` na URL, ou `node scripts/lineup.mjs <prefixo>` para gerar as imagens.
 
 | Herói | Formato que identifica |
@@ -241,7 +249,7 @@ Pintados de preto, os heróis precisam ser reconhecidos só pelo formato. Use `?
 | Estrelinha 🦉 | **Formato de ovo**; disco facial; olhos enormes; tufos altos; tom caramelo |
 | Mochi 🐼 | Redondo e grande; orelhas e patas pretas; manchas nos olhos |
 | Bolota 🦔 | **Coberto de espinhos** (costas e cabeça); focinho pontudo |
-| Gota 🐸 | **Achatada e larga**; olhos no topo; sorriso enorme; **rosa** (não confunde com o Pipoca) |
+| Gota 🐸 | **Achatada e larga**; olhos bem saltados no topo; sorriso enorme; bochechas rosadas; pés com 3 dedinhos; **verde-limão** com barriga amarelinha e pintas (o Pipoca é verde-menta, com chapéu e espinhos) |
 | Lumi 🐱 | Orelhas de gato; **bigodes**; cauda em "?" |
 
 Os perfis ficam em `src/models/creature.ts` (`PROFILES`) e valem também para os clientes da mesma espécie.
