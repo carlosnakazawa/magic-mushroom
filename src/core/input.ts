@@ -1,5 +1,5 @@
 import { DEFAULT_KEYS, type KeyBinds, type Settings } from '../sim/progress';
-import { normalizePad, padFamily, type PadFamily } from './pad';
+import { normalizePad, padFamily, type Device, type PadFamily } from './pad';
 import { t } from '../i18n';
 
 /** Estado de controle de um jogador em um frame. */
@@ -64,6 +64,11 @@ export function keyLabel(code: string): string {
   return code;
 }
 
+/** O jogador mexeu neste aparelho neste frame? (empurrãozinho no analógico não conta) */
+function active(p: PlayerInput): boolean {
+  return Math.abs(p.moveX) > 0.5 || Math.abs(p.moveZ) > 0.5 || p.pick || p.use || p.swap;
+}
+
 /** Teclas que o jogo nunca deixa remapear (usadas por menus). */
 const RESERVED = new Set(['Escape', 'KeyP', 'KeyM', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab']);
 
@@ -79,12 +84,28 @@ export class Input {
   private listeners: ((code: string) => void)[] = [];
   private capture: ((code: string) => void) | null = null;
   private keys: Settings['keys'] = structuredClone(DEFAULT_KEYS);
-  private lastPads: ((PlayerInput & { pause: boolean; back: boolean }) | null)[] = [];
+  private lastPads: ({ pause: boolean } | null)[] = [];
   private touch: TouchSource | null = null;
+  /** Último aparelho usado por cada jogador (as dicas mostram os botões dele). */
+  private devices: Device[] = ['keys', 'keys'];
+  /** Muda sempre que algum jogador troca de aparelho (quem mostra dicas redesenha). */
+  deviceVersion = 0;
 
   /** Liga os controles de toque (sempre controlam o jogador 1). */
   attachTouch(t: TouchSource): void {
     this.touch = t;
+    this.setDevice(0, 'touch');
+  }
+
+  /** Aparelho que o jogador `slot` usou por último. */
+  device(slot: number): Device {
+    return this.devices[slot === 1 ? 1 : 0]!;
+  }
+
+  private setDevice(slot: number, d: Device): void {
+    if (this.devices[slot] === d) return;
+    this.devices[slot] = d;
+    this.deviceVersion++;
   }
 
   /** Jogando por toque: dicas mostram ícones dos botões em vez de teclas. */
@@ -178,7 +199,7 @@ export class Input {
     return Array.from(list).filter((p): p is Gamepad => !!p && p.connected);
   }
 
-  private readPads(): ((PlayerInput & { pause: boolean; back: boolean }) | null)[] {
+  private readPads(): ((PlayerInput & { pause: boolean; back: boolean; family: PadFamily }) | null)[] {
     const pads = this.connectedPads();
     return [0, 1, 2, 3].map((slot) => {
       const pad = pads[slot];
@@ -198,6 +219,7 @@ export class Input {
         swap: edge(3),
         pause: edge(9),
         back: edge(1),
+        family: padFamily(pad.id),
       };
     });
   }
@@ -209,9 +231,11 @@ export class Input {
     this.lastPads = pads;
     return keys.map((k, slot) => {
       const padsForSlot = playerCount === 1 ? pads : [pads[slot] ?? null];
+      if (active(k)) this.setDevice(slot, 'keys');
       let out = { ...k };
       const t = slot === 0 ? this.touch : null;
       if (t) {
+        if (t.moveX || t.moveZ) this.setDevice(slot, 'touch');
         out = {
           moveX: out.moveX || t.moveX,
           moveZ: out.moveZ || t.moveZ,
@@ -219,9 +243,11 @@ export class Input {
           use: out.use || t.hit('use'),
           swap: out.swap || t.hit('swap'),
         };
+        if ((out.pick || out.use || out.swap) && !k.pick && !k.use && !k.swap) this.setDevice(slot, 'touch');
       }
       for (const p of padsForSlot) {
         if (!p) continue;
+        if (active(p)) this.setDevice(slot, p.family);
         out = {
           moveX: out.moveX || p.moveX,
           moveZ: out.moveZ || p.moveZ,
@@ -253,11 +279,13 @@ export class Input {
     if (k(['ArrowRight', 'KeyD'])) dx = 1;
     if (k(['ArrowUp', 'KeyW'])) dy = -1;
     if (k(['ArrowDown', 'KeyS'])) dy = 1;
+    if (dx || dy || k(['Enter', 'Space', 'Escape'])) this.setDevice(0, 'keys');
     let confirm = false;
     let back = k(['Escape']);
     let pause = false;
     pads.forEach((p, i) => {
       if (!p) return;
+      if (active(p) || p.back || p.pause) this.setDevice(Math.min(i, 1), p.family);
       confirm ||= p.pick;
       back ||= p.back;
       pause ||= p.pause;

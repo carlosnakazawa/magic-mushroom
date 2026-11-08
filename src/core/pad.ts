@@ -73,3 +73,16 @@ export function normalizePad(p: RawPad): NormPad {
   for (let i = 0; i < 16; i++) buttons[i] ??= false;
   return { buttons, axes };
 }
+
+/** Aparelho que o jogador usou por último (as dicas mostram os botões dele). */
+export type Device = 'keys' | 'touch' | PadFamily;
+
+/** Nome dos botões de cada família de controle, para as dicas na tela. */
+export const PAD_LABELS: Record<PadFamily, { pick: string; use: string; swap: string }> = {
+  xbox: { pick: 'A', use: 'X', swap: 'Y' },
+  ps: { pick: '✕', use: '□', swap: '△' },
+};
+
+export function isPadDevice(d: Device): d is PadFamily {
+  return d === 'xbox' || d === 'ps';
+}
