@@ -163,11 +163,13 @@
     border-radius: 16px;
   }
 
+  .hero-cards.compact .hero-card {
+    height: 76px;
+  }
+
   .hero-cards.compact .hero-face {
-    width: 44px;
-    height: 44px;
-    font-size: 28px;
     border-radius: 12px;
+    font-size: 32px;
   }
 
   .hero-cards.compact .hero-card b {

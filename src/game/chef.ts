@@ -91,6 +91,7 @@ export class Chef {
 
     // Correndo, as patinhas mexem mais rápido (moving > 1)
     this.creature.moving = this.vel.length() / base;
+    this.creature.speed = this.vel.length();
     this.creature.holding = !!this.held;
     this.creature.working = !!this.workingAt;
     this.root.position.copy(this.pos);

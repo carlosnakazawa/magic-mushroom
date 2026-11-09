@@ -151,7 +151,7 @@ function canJoin(a: VesselItem, b: VesselItem): boolean {
   return isSaladBowl(a) && isSaladBowl(b) && a.contents.length > 0 && b.contents.length > 0 && canCombine('assemble', a.contents, b.contents);
 }
 
-const VESSEL_EMOJI: Record<Vessel, string> = { bowl: '🥣', cup: '🥤', plate: '🍽️' };
+export const VESSEL_EMOJI: Record<Vessel, string> = { bowl: '🥣', cup: '🥤', plate: '🍽️' };
 
 /**
  * Emojis do que o herói está carregando, para o selinho sobre ele

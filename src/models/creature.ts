@@ -186,6 +186,12 @@ export class Creature {
   quirks = true;
   /** 0..1 — quão rápido está andando (controlado de fora). */
   moving = 0;
+  /**
+   * Velocidade real no chão (unidades/s), se quem controla souber. Os passos acompanham
+   * a distância percorrida: o herói anda 2–3× mais rápido que os clientes e, com o mesmo
+   * ritmo de passos, parecia deslizar.
+   */
+  speed = 0;
   /** Segurando algo: braços para frente. */
   holding = false;
   /** Trabalhando (cortando/lavando): braços batendo. */
@@ -982,6 +988,14 @@ export class Creature {
     this.hopLeft = 0.18;
   }
 
+  /** Ritmo dos passos: pela velocidade real (herói) ou por `moving` (clientes, vitrine). */
+  private cadence(): number {
+    if (this.speed <= 0) return Math.min(this.moving, 1.6);
+    // 2.2 = passo dos clientes (TUNING.customer.walkSpeed); quem pula não pode pular rápido demais
+    const k = Math.pow(this.speed / 2.2, 0.85);
+    return Math.min(k, this.gait.hop ? 1.7 : 2.4);
+  }
+
   update(dt: number): void {
     this.t += dt;
     const t = this.t;
@@ -1048,7 +1062,7 @@ export class Creature {
     // Andar de verdade: o ciclo de passos avança com a velocidade (pés não deslizam)
     const G = this.gait;
     const amp = Math.min(1, this.moving);
-    this.stepPhase += dt * G.rate * Math.min(this.moving, 1.6);
+    this.stepPhase += dt * G.rate * this.cadence();
     const ph = this.stepPhase;
     const lively = 0.5 + 0.5 * this.style.bounce;
     let bounce: number;

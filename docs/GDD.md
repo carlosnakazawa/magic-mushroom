@@ -102,6 +102,7 @@ Todos os personagens são versáteis e não possuem papéis fixos: qualquer um p
 - **Modo 2 jogadores:** cooperação local no mesmo teclado (ou teclado + controle).
 - **Controles do PlayStation** (DualSense/DualShock) funcionam mesmo quando o navegador não usa o "mapa padrão" (`core/pad.ts` reordena ✕ □ ○ △ e lê o direcional "chapéu"). Ao reconhecer um controle aparece "🎮 Controle conectado! Jogador N". Os textos mostram as duas famílias: "A/✕ pegar · X/□ usar · Y/△ trocar".
 - **Dicas seguem o aparelho em uso:** o jogo lembra o último aparelho de cada jogador (teclado, toque ou controle) e as dicas, o tutorial e os cartões mostram os botões dele — `A`/`X`/`Y` no Xbox, `✕`/`□`/`△` no PlayStation, ✋/⭐ no toque (`Input.device`, `PAD_LABELS`).
+- **Dicas em figurinha:** fora do tutorial a dica é só botão + emojis (✋🍄 pegar cogumelo, 🔪 cortar, 🛎️🥗 servir, 📝 anotar, 🧽 lavar…) e o selinho do item carregado mostra só os emojis — texto ocupava muito espaço. No tutorial aparece o texto junto; avisos de "não dá" (cinza) sempre têm texto, porque explicam o que fazer (`Action.icon`).
 - Tábua/pia/extintor: apertar **usar uma vez** inicia o trabalho, que continua sozinho enquanto o personagem fica parado. Andar pausa (o progresso é mantido).
 
 ### B3. Itens e estações

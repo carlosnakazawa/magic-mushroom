@@ -237,10 +237,10 @@ export class Game {
     this.lighting.set(false);
     this.clearTitle();
     const team = teamHeroes(this.save);
-    // A fila cabe sempre no salão (x 11–17.4): com muitos heróis eles ficam mais juntos, em zigue-zague.
-    // Antes, com 7+ heróis, o da ponta ficava escondido atrás do balcão da cozinha.
-    const gap = Math.min(1.15, 6.4 / Math.max(1, team.length - 1));
-    const x0 = 14.2 - ((team.length - 1) * gap) / 2;
+    // A fila cabe sempre no salão (x 11–16.6, entre o balcão da cozinha e a parede da porta):
+    // com muitos heróis eles ficam mais juntos, em zigue-zague.
+    const gap = Math.min(1.15, 5.6 / Math.max(1, team.length - 1));
+    const x0 = 13.8 - ((team.length - 1) * gap) / 2;
     const zig = gap < 1 ? 0.7 : 0.3;
     this.titleCreatures = team.map((hero, i) => {
       const creature = new Creature(hero, 1.35);
@@ -249,7 +249,7 @@ export class Game {
       this.stage.scene.add(creature.root);
       return { hero, creature };
     });
-    this.stage.frame(14, 4.1, 12.5, 3.2);
+    this.stage.frame(13.8, 4.1, 12.5, 3.2);
     this.screens.onSelectionChange = (sel) => {
       this.titleCreatures.forEach((c) => {
         if (sel.includes(c.hero)) {
