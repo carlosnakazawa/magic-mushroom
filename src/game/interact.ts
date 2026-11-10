@@ -7,12 +7,14 @@ import {
   emptyVessel,
   fillVessel,
   isEmptyVessel,
+  itemIcons,
   itemName,
   makeIngredient,
   makeVessel,
   tryMerge,
   type IngredientItem,
   type Item,
+  VESSEL_EMOJI,
   vesselName,
   type VesselItem,
 } from '../sim/items';
@@ -25,6 +27,11 @@ export type Target = { kind: 'station'; station: Station } | { kind: 'table'; ta
 /** Uma ação possível. A mesma estrutura gera a dica na tela e executa a ação — nunca divergem. */
 export interface Action {
   label: string;
+  /**
+   * Figurinha da ação (verbo + objeto, ex.: "✋🍄"). As dicas mostram só ela fora do tutorial:
+   * texto ocupava muito espaço (pedido do Carlos). Ações negadas não têm: o texto explica o porquê.
+   */
+  icon?: string;
   /** Identificador estável (o texto muda com o idioma). */
   id?: 'takeOrder';
   /** Ação existe mas não pode ser feita agora (mostra dica em cinza, toca "não"). */
@@ -111,6 +118,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       const kind = s.ingredient!;
       return {
         label: t('act.take', { item: INGREDIENTS[kind].name }),
+        icon: '✋' + INGREDIENTS[kind].emoji,
         run: () => {
           const item = makeIngredient(kind);
           host.hold(chef, item);
@@ -123,6 +131,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       if (!held && s.count > 0) {
         return {
           label: t('act.take', { item: vesselName(v) }),
+          icon: '✋' + VESSEL_EMOJI[v],
           run: () => {
             s.count--;
             s.refreshStack();
@@ -137,6 +146,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       if (isEmptyVessel(held, v)) {
         return {
           label: t('act.store'),
+          icon: '↩️' + VESSEL_EMOJI[v],
           run: () => {
             s.count++;
             s.refreshStack();
@@ -150,6 +160,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       if (held?.type === 'vessel' && held.dirty) {
         return {
           label: t('act.toSink'),
+          icon: '🫧🧽',
           run: () => {
             s.dirty.push(held);
             host.hold(chef, null);
@@ -164,6 +175,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       if (held.type === 'ingredient') {
         return {
           label: t('act.trash'),
+          icon: '🗑️',
           run: () => {
             host.hold(chef, null);
             host.emit({ type: 'trash', chef, at: s.worldTop });
@@ -173,6 +185,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       if (!held.dirty && held.contents.length > 0) {
         return {
           label: t('act.empty', { vessel: vesselName(held.vessel) }),
+          icon: '🗑️',
           run: () => {
             emptyVessel(held);
             host.emit({ type: 'trash', chef, at: s.worldTop });
@@ -189,6 +202,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
       if (!held && onTop) {
         return {
           label: t('act.take', { item: itemName(onTop) }),
+          icon: '✋' + itemIcons(onTop).icons,
           run: () => {
             host.place(s, null);
             s.progress = 0;
@@ -204,6 +218,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         }
         return {
           label: s.kind === 'board' ? t('act.putBoard') : t('act.put'),
+          icon: s.kind === 'board' ? '⬇️🔪' : '⬇️',
           run: () => {
             host.hold(chef, null);
             host.place(s, held);
@@ -224,6 +239,7 @@ export function pickAction(host: ActionHost, chef: Chef, target: Target | null):
         if (!probe) return deny(host, chef, t('deny.noMatch'));
         return {
           label: t('act.add', { item: INGREDIENTS[ing.kind].name }),
+          icon: INGREDIENTS[ing.kind].emoji + '➡️🥣',
           run: () => {
             const res = tryMerge(held, onTop);
             if (!res) return;
@@ -256,6 +272,7 @@ function ingredientAtStack(host: ActionHost, chef: Chef, s: Station, held: Ingre
   if (!tryMerge(clone(held), makeVessel(v))) return deny(host, chef, t('deny.noMatch'));
   return {
     label: t('act.intoBowl', { item: def.name }),
+    icon: def.emoji + '➡️🥣',
     run: () => {
       const bowl = makeVessel(v);
       if (!tryMerge(held, bowl)) return;
@@ -273,6 +290,7 @@ function joinBowls(host: ActionHost, chef: Chef, s: Station, held: VesselItem, o
   if (!tryMerge(clone(held), clone(onTop))) return deny(host, chef, t('deny.noMatch'));
   return {
     label: t('act.joinBowls'),
+    icon: '🥣➕🥣',
     run: () => {
       if (!tryMerge(held, onTop)) return;
       host.hold(chef, held);
@@ -292,6 +310,7 @@ function machinePickAction(host: ActionHost, chef: Chef, s: Station): Action | n
       if (held) return deny(host, chef, t('deny.burntHands'));
       return {
         label: t('act.dumpBurnt'),
+        icon: '🗑️🔥',
         run: () => {
           m.dump();
           host.emit({ type: 'dump', chef, station: s });
@@ -303,6 +322,7 @@ function machinePickAction(host: ActionHost, chef: Chef, s: Station): Action | n
         const recipe = m.recipe!;
         return {
           label: t('act.serve', { dish: recipe.name }),
+          icon: '✋' + recipe.emoji,
           run: () => {
             const out = m.take();
             if (!out) return;
@@ -321,6 +341,7 @@ function machinePickAction(host: ActionHost, chef: Chef, s: Station): Action | n
         if (m.canAdd(held.kind, held.chopped)) {
           return {
             label: t('act.add', { item: def.name }),
+            icon: def.emoji + '⬇️',
             run: () => {
               if (!m.add(held.kind)) return;
               host.hold(chef, null);
@@ -336,6 +357,7 @@ function machinePickAction(host: ActionHost, chef: Chef, s: Station): Action | n
       if (!held && m.contents.length) {
         return {
           label: t('act.emptyMachine'),
+          icon: '🗑️',
           run: () => {
             m.dump();
             host.emit({ type: 'dump', chef, station: s });
@@ -361,10 +383,10 @@ function tablePickAction(host: ActionHost, chef: Chef, table: Table): Action | n
     if (!party || party.isLeaving) return null;
     if (party.phase === 'waitingOrder') return deny(host, chef, t('deny.orderFirst'));
     if (party.wants(recipe.id) < 0) return deny(host, chef, t('deny.nobody'));
-    return { label: t('act.serve', { dish: recipe.name }), run: () => host.serve(table, chef) };
+    return { label: t('act.serve', { dish: recipe.name }), icon: '🛎️' + recipe.emoji, run: () => host.serve(table, chef) };
   }
-  if (party?.phase === 'waitingOrder') return { id: 'takeOrder', label: t('act.takeOrder'), run: () => host.takeOrder(table, chef) };
-  if (table.hasDirty) return { label: table.coins > 0 ? t('act.clearCoins') : t('act.clear'), run: () => host.clearDish(table, chef) };
+  if (party?.phase === 'waitingOrder') return { id: 'takeOrder', label: t('act.takeOrder'), icon: '📝', run: () => host.takeOrder(table, chef) };
+  if (table.hasDirty) return { label: table.coins > 0 ? t('act.clearCoins') : t('act.clear'), icon: table.coins > 0 ? '🪙🍽️' : '✋🍽️', run: () => host.clearDish(table, chef) };
   return null;
 }
 
@@ -373,26 +395,27 @@ export function useAction(host: ActionHost, chef: Chef, target: Target | null): 
   if (!target) return null;
   if (target.kind === 'table') {
     const party = target.table.party;
-    if (party?.phase === 'waitingOrder') return { id: 'takeOrder', label: t('act.takeOrder'), run: () => host.takeOrder(target.table, chef) };
+    if (party?.phase === 'waitingOrder') return { id: 'takeOrder', label: t('act.takeOrder'), icon: '📝', run: () => host.takeOrder(target.table, chef) };
     return null;
   }
   const s = target.station;
   if (chef.workingAt === s) return null;
   if (s.kind === 'board' && s.item?.type === 'ingredient' && !s.item.chopped && INGREDIENTS[s.item.kind].choppable) {
-    return { label: s.progress > 0 ? t('act.chopMore') : t('act.chop'), run: () => host.startWork(chef, s) };
+    return { label: s.progress > 0 ? t('act.chopMore') : t('act.chop'), icon: '🔪', run: () => host.startWork(chef, s) };
   }
   if (s.kind === 'sink' && s.dirty.length > 0) {
-    return { label: s.progress > 0 ? t('act.washMore') : t('act.wash'), run: () => host.startWork(chef, s) };
+    return { label: s.progress > 0 ? t('act.washMore') : t('act.wash'), icon: '🧽', run: () => host.startWork(chef, s) };
   }
   if (s.kind === 'machine') {
     const m = s.machine!;
     if (m.phase === 'fire') {
-      return chef.held?.type === 'tool' ? { label: t('act.extinguish'), run: () => host.startWork(chef, s) } : deny(host, chef, t('deny.grabExt'));
+      return chef.held?.type === 'tool' ? { label: t('act.extinguish'), icon: '🧯', run: () => host.startWork(chef, s) } : deny(host, chef, t('deny.grabExt'));
     }
     if (m.kind === 'blender' && m.phase === 'idle' && m.contents.length) {
       if (!m.recipe) return deny(host, chef, t('deny.missing'));
       return {
         label: t('act.start'),
+        icon: '▶️',
         run: () => {
           if (m.start()) host.emit({ type: 'machineStart', chef, station: s });
         },

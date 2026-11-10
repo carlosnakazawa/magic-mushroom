@@ -587,21 +587,70 @@
   gap: 8px;
 }
 
-.hero-cards.compact .hero-card {
-  width: 92px;
-  padding: 8px 4px 6px;
-  gap: 4px;
-}
-
-.hero-cards.compact .hero-card b {
-  font-size: 15px;
-}
-
 .hero-card .hero-face {
   position: relative;
 }
 
+/* Título: o retrato ocupa o cartão inteiro (sem a "moldura dentro da moldura") e o nome fica por cima */
+.hero-cards.compact .hero-card {
+  width: 92px;
+  gap: 4px;
+  height: 104px;
+  padding: 0;
+  justify-content: flex-end;
+}
+
+.hero-cards.compact .hero-face {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 16px;
+  font-size: 46px;
+}
+
+.hero-cards.compact .face-img {
+  width: 112%;
+  height: 112%;
+  margin-top: -6%;
+}
+
+.hero-cards.compact .hero-card b {
+  position: relative;
+  z-index: 1;
+  margin: 0 3px 5px;
+  padding: 1px 6px;
+  font-size: 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 2px 0 rgba(74, 47, 35, 0.15);
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-cards.compact .badge {
+  z-index: 2;
+}
+
+.hero-cards.compact .hero-card.picked b {
+  background: var(--ha);
+  color: #fff;
+}
+
+.hero-cards.compact .hero-card .lock {
+  right: 6px;
+  top: 6px;
+  bottom: auto;
+}
+
 .hero-card .dim {
+  /* Mesmo enquadramento do retrato liberado (a imagem de 112% não pode escapar para a direita) */
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
   opacity: 0.35;
   filter: grayscale(1);
 }

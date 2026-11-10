@@ -295,6 +295,7 @@ export class DayRun implements ActionHost {
     this.updateSpeech(dt);
     this.chefs.forEach((c) => {
       c.creature.moving = 0;
+      c.creature.speed = 0;
       c.creature.quirks = false;
       c.creature.update(dt);
       c.creature.quirks = true;
@@ -895,7 +896,16 @@ export class DayRun implements ActionHost {
       return;
     }
     const keys = this.slotKeys(this.opts.playerCount === 1 ? 0 : chef.controller);
-    const row = (k: string, a: Action) => `<div class="hint${a.disabled ? ' off' : ''}"><kbd>${a.disabled ? '✖' : k}</kbd>${a.label}</div>`;
+    // Fora do tutorial, só a figurinha (✋🍄, 🔪, 🛎️🥗…): o texto ocupava muito espaço.
+    // Avisos de "não dá" continuam com texto, porque explicam o que fazer.
+    const words = !!this.tutorial;
+    const row = (k: string, a: Action) => {
+      // No toque o botão já é ✋: não repete a mão na figurinha
+      const icon = k === '✋' && a.icon?.startsWith('✋') ? a.icon.slice('✋'.length) : a.icon;
+      const ico = icon ? `<span class="hint-ico">${icon}</span>` : '';
+      const text = !a.icon || a.disabled || words ? `<span class="hint-text">${a.label}</span>` : '';
+      return `<div class="hint${a.disabled ? ' off' : ''}${text ? '' : ' icon-only'}"><kbd>${a.disabled ? '✖' : k}</kbd>${a.disabled ? '' : ico}${text}</div>`;
+    };
     let html = carry;
     if (pick) html += row(keys.pick, pick);
     if (use && use.label !== pick?.label) html += row(keys.use, use);
@@ -907,7 +917,9 @@ export class DayRun implements ActionHost {
   private carryHtml(chef: Chef): string {
     if (!chef.held) return '';
     const { icons, ready } = itemIcons(chef.held);
-    return `<div class="carry${ready ? ' ready' : ''}"><span class="carry-ico">${icons}</span>${itemName(chef.held)}</div>`;
+    // Nome do item só no tutorial; depois, só os emojis (menos texto na tela)
+    const name = this.tutorial ? itemName(chef.held) : '';
+    return `<div class="carry${ready ? ' ready' : ''}${name ? '' : ' icon-only'}"><span class="carry-ico">${icons}</span>${name}</div>`;
   }
 
   private showIdleHint(chef: Chef): void {

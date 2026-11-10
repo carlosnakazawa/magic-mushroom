@@ -88,6 +88,7 @@ describe('recipientes', () => {
 describe('selinho do que o herói carrega', () => {
   it('mostra ingrediente, tigela montando e prato pronto', () => {
     expect(itemIcons(makeIngredient('lettuce')).icons).toBe('🥬');
+    expect(itemIcons(makeIngredient('lettuce', true)).icons).toBe('🥬🔪');
     const bowl = makeVessel('bowl');
     expect(itemIcons(bowl)).toEqual({ icons: '🥣', ready: false });
     tryMerge(makeIngredient('lettuce', true), bowl);
