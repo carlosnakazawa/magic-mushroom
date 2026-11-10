@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Accessory, Gait, MoveStyle, Quirk, Species, WingStyle } from '../data/characters';
+import { TUNING } from '../config';
 import { glow, mesh, toon, wingMaterial } from '../render/materials';
 
 export interface CreatureLook {
@@ -991,8 +992,8 @@ export class Creature {
   /** Ritmo dos passos: pela velocidade real (herói) ou por `moving` (clientes, vitrine). */
   private cadence(): number {
     if (this.speed <= 0) return Math.min(this.moving, 1.6);
-    // 2.2 = passo dos clientes (TUNING.customer.walkSpeed); quem pula não pode pular rápido demais
-    const k = Math.pow(this.speed / 2.2, 0.85);
+    // Relativo ao passo dos clientes; quem pula não pode pular rápido demais
+    const k = Math.pow(this.speed / TUNING.customer.walkSpeed, 0.85);
     return Math.min(k, this.gait.hop ? 1.7 : 2.4);
   }
 

@@ -159,7 +159,8 @@ export const VESSEL_EMOJI: Record<Vessel, string> = { bowl: '🥣', cup: '🥤',
  */
 export function itemIcons(item: Item): { icons: string; ready: boolean } {
   if (item.type === 'tool') return { icons: '🧯', ready: false };
-  if (item.type === 'ingredient') return { icons: INGREDIENTS[item.kind].emoji, ready: false };
+  // Picado ganha a faquinha: sem texto, era a única forma de saber se já foi cortado
+  if (item.type === 'ingredient') return { icons: INGREDIENTS[item.kind].emoji + (item.chopped ? '🔪' : ''), ready: false };
   if (item.dirty) return { icons: `${VESSEL_EMOJI[item.vessel]}🫧`, ready: false };
   const r = dishRecipe(item);
   if (r) return { icons: r.emoji, ready: true };

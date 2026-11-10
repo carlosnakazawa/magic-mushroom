@@ -900,7 +900,9 @@ export class DayRun implements ActionHost {
     // Avisos de "não dá" continuam com texto, porque explicam o que fazer.
     const words = !!this.tutorial;
     const row = (k: string, a: Action) => {
-      const ico = a.icon ? `<span class="hint-ico">${a.icon}</span>` : '';
+      // No toque o botão já é ✋: não repete a mão na figurinha
+      const icon = k === '✋' && a.icon?.startsWith('✋') ? a.icon.slice('✋'.length) : a.icon;
+      const ico = icon ? `<span class="hint-ico">${icon}</span>` : '';
       const text = !a.icon || a.disabled || words ? `<span class="hint-text">${a.label}</span>` : '';
       return `<div class="hint${a.disabled ? ' off' : ''}${text ? '' : ' icon-only'}"><kbd>${a.disabled ? '✖' : k}</kbd>${a.disabled ? '' : ico}${text}</div>`;
     };
